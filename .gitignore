@@ -1,0 +1,36 @@
+# 构建和发布产物
+build/
+dist/
+dist_installer/
+
+# Python 虚拟环境和缓存
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# 数据集、训练输出和模型权重
+datasets/
+runs/
+weights/
+*.pt
+*.onnx
+*.engine
+*.xml
+*.bin
+
+# 大型压缩包和视频素材
+*.7z
+*.zip
+*.mkv
+*.mp4
+
+# 本地日志
+*.log
+
+# 本地审计、样例数据和调试产物
+audit/
+apps/dws_batch_model_validator/data/
+DWSVisionCountService/cache/
+DWSVisionCountService/debug/

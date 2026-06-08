@@ -1,0 +1,11 @@
+opencv-python-headless
+numpy
+pydantic
+pyyaml
+pillow
+fastapi
+uvicorn
+loguru
+ultralytics
+openvino
+pytest

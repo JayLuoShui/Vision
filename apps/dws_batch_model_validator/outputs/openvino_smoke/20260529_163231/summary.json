@@ -1,0 +1,44 @@
+{
+  "total_images": 728,
+  "labeled_images": 728,
+  "count_accuracy": 0.04533,
+  "multi_gt_images": 13,
+  "multi_recall": 0.0,
+  "mean_ms": 150.743,
+  "p50_ms": 141.88,
+  "p95_ms": 240.495,
+  "max_ms": 304.707,
+  "status_counts": {
+    "UNKNOWN": 695,
+    "SINGLE": 32,
+    "SUSPECT_MULTI": 1
+  },
+  "run_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\outputs\\openvino_smoke\\20260529_163231",
+  "results_csv": "D:\\Demo\\Vision\\dws_batch_model_validator\\outputs\\openvino_smoke\\20260529_163231\\results.csv",
+  "config": {
+    "model_path": "D:\\Demo\\Vision\\dws_batch_model_validator\\build\\openvino_smoke\\yolo26s-seg_openvino_model\\yolo26s-seg.xml",
+    "images_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\data\\images",
+    "labels_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\data\\labels",
+    "output_base_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\outputs\\openvino_smoke",
+    "imgsz_h": 736,
+    "imgsz_w": 960,
+    "device": "cpu",
+    "half": false,
+    "retina_masks": true,
+    "low_conf": 0.25,
+    "high_conf": 0.55,
+    "iou": 0.5,
+    "multi_gt_min_count": 2,
+    "save_vis": false,
+    "save_error_images": true,
+    "vis_all": true,
+    "mock_delay_ms": 0.0,
+    "image_exts": [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".bmp"
+    ]
+  },
+  "cancelled": false
+}

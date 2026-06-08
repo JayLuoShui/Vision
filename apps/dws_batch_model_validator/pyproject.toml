@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dws-batch-model-validator"
+version = "1.0.0"
+description = "DWS top-view parcel detection and counting batch validator"
+requires-python = ">=3.10"
+dependencies = [
+  "ultralytics>=8.3.0",
+  "openvino>=2024.0.0",
+  "opencv-python>=4.8.0",
+  "numpy>=1.23.0",
+  "pandas>=2.0.0",
+  "PyYAML>=6.0.0",
+  "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.6.0"]
+dev = ["pyinstaller", "pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 160
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

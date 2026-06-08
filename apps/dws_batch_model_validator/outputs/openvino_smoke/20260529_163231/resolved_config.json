@@ -1,0 +1,25 @@
+{
+  "model_path": "D:\\Demo\\Vision\\dws_batch_model_validator\\build\\openvino_smoke\\yolo26s-seg_openvino_model\\yolo26s-seg.xml",
+  "images_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\data\\images",
+  "labels_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\data\\labels",
+  "output_base_dir": "D:\\Demo\\Vision\\dws_batch_model_validator\\outputs\\openvino_smoke",
+  "imgsz_h": 736,
+  "imgsz_w": 960,
+  "device": "cpu",
+  "half": false,
+  "retina_masks": true,
+  "low_conf": 0.25,
+  "high_conf": 0.55,
+  "iou": 0.5,
+  "multi_gt_min_count": 2,
+  "save_vis": false,
+  "save_error_images": true,
+  "vis_all": true,
+  "mock_delay_ms": 0.0,
+  "image_exts": [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".bmp"
+  ]
+}

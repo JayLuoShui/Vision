@@ -1,0 +1,97 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "CONTEXT.md",
+    "5.lessons.md",
+    "OPENCODE_TUNING.md"
+  ],
+  "default_agent": "codex-senior",
+  "share": "disabled",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+  "watcher": {
+    "ignore": [
+      ".git/**",
+      "build/**",
+      "dist/**",
+      "dist_installer/**",
+      "venv/**",
+      ".venv/**",
+      "datasets/**",
+      "runs/**",
+      "weights/**",
+      "**/__pycache__/**",
+      "**/.pytest_cache/**",
+      "**/.ruff_cache/**",
+      "**/.mypy_cache/**",
+      "**/node_modules/**"
+    ]
+  },
+  "permission": {
+    "read": "allow",
+    "list": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "edit": "allow",
+    "task": "allow",
+    "todowrite": "allow",
+    "question": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "external_directory": "ask",
+    "bash": {
+      "*": "ask",
+      "rg *": "allow",
+      "Get-Content *": "allow",
+      "Select-String *": "allow",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "python -m pytest*": "allow",
+      ".\\venv\\Scripts\\python.exe -m pytest*": "allow",
+      "ctest*": "allow",
+      "ruff*": "allow",
+      "mypy*": "allow",
+      "Remove-Item *": "ask",
+      "del *": "ask",
+      "rmdir *": "ask",
+      "git reset *": "ask",
+      "git clean *": "ask",
+      "git checkout *": "ask",
+      "git switch *": "ask",
+      "git branch *": "ask",
+      "git push *": "ask"
+    }
+  },
+  "mcp": {
+    "searxng-public": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "mcp-searxng-public"
+      ],
+      "enabled": true,
+      "timeout": 30000,
+      "environment": {
+        "SEARXNG_BASE_URL": "https://metacat.online;https://nyc1.sx.ggtyler.dev;https://ooglester.com;https://search.080609.xyz;https://search.canine.tools;https://search.citw.lgbt",
+        "DEFAULT_LANGUAGE": "zh-CN"
+      }
+    },
+    "tavily": {
+      "enabled": false
+    },
+    "brave": {
+      "enabled": false
+    },
+    "searxng": {
+      "enabled": false
+    }
+  }
+}

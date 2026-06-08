@@ -1,0 +1,729 @@
+﻿image,pred_count,suspect_count,status,signal,confidence,gt_count,is_correct,is_multi_gt,is_multi_pred,read_ms,preprocess_ms,infer_ms,post_ms,signal_ms,total_ms,vis_path,error_type,reasons
+B213395895964_Hikrobot MV-PD010003-12C-8C (DA8401808)_1943072.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.493,0.0,138.451,0.398,0.001,232.353,,unknown,no valid parcel candidate found
+B213397017916_Hikrobot MV-PD010003-12C-8C (DA8401808)_5543112.jpg,0,1,UNKNOWN,REVIEW,0.313461,1,0,0,0,73.946,0.0,190.384,0.405,0.001,264.744,,unknown,only low-confidence candidates found
+B213663414110_Hikrobot MV-PD010003-12C-8C (DA8401808)_2428931.jpg,0,1,UNKNOWN,REVIEW,0.352686,1,0,0,0,81.88,0.0,182.035,0.433,0.001,264.355,,unknown,only low-confidence candidates found
+B213663590440_Hikrobot MV-PD010003-12C-8C (DA8401808)_3655264.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.83,0.0,149.827,0.383,0.001,241.048,,unknown,no valid parcel candidate found
+B213733000914_Hikrobot MV-PD010003-12C-8C (DA8401808)_3352201.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.006,0.0,141.9,0.424,0.001,222.338,,unknown,no valid parcel candidate found
+B213745728260_Hikrobot MV-PD010003-12C-8C (DA8401808)_5142580.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.012,0.0,149.257,0.318,0.001,218.594,,unknown,no valid parcel candidate found
+B213747680534_Hikrobot MV-PD010003-12C-8C (DA8401808)_3052968.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.804,0.0,160.854,0.421,0.002,232.089,,unknown,no valid parcel candidate found
+B213831322932_Hikrobot MV-PD010003-12C-8C (DA8401808)_2320839.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.125,0.0,157.195,0.446,0.001,252.777,,unknown,no valid parcel candidate found
+B213843765884_Hikrobot MV-PD010003-12C-8C (DA8401808)_4627846.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.759,0.0,149.149,0.435,0.001,226.353,,unknown,no valid parcel candidate found
+B213844464786_Hikrobot MV-PD010003-12C-8C (DA8401808)_4623590.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,99.008,0.0,170.67,0.517,0.001,270.206,,unknown,no valid parcel candidate found
+B213845462442_Hikrobot MV-PD010003-12C-8C (DA8401808)_4248772.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.027,0.0,173.805,0.515,0.002,269.36,,unknown,no valid parcel candidate found
+B213857846129_Hikrobot MV-PD010003-12C-8C (DA8401808)_3606851.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.645,0.0,148.948,0.395,0.001,245.996,,unknown,no valid parcel candidate found
+B213858870834_Hikrobot MV-PD010003-12C-8C (DA8401808)_4857563.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.148,0.0,144.807,0.384,0.001,221.345,,unknown,no valid parcel candidate found
+B213997753688_Hikrobot MV-PD010003-12C-8C (DA8401808)_4930659.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.594,0.0,158.186,0.45,0.001,249.239,,unknown,no valid parcel candidate found
+B213999633906_Hikrobot MV-PD010003-12C-8C (DA8401808)_4226322.jpg,0,1,UNKNOWN,REVIEW,0.383451,1,0,0,0,87.777,0.0,170.366,0.513,0.002,258.666,,unknown,only low-confidence candidates found
+B214012975216_Hikrobot MV-PD010003-12C-8C (DA8401808)_5715559.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.004,0.0,141.946,0.429,0.001,213.386,,unknown,no valid parcel candidate found
+B214013752797_Hikrobot MV-PD010003-12C-8C (DA8401808)_3326149.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.42,0.0,137.762,0.305,0.001,211.494,,unknown,no valid parcel candidate found
+B214027423964_Hikrobot MV-PD010003-12C-8C (DA8401808)_4108080.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.949,0.0,147.997,0.461,0.001,225.416,,unknown,no valid parcel candidate found
+B214039911160_Hikrobot MV-PD010003-12C-8C (DA8401808)_1742666.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,93.176,0.0,211.199,0.322,0.002,304.707,,unknown,no valid parcel candidate found
+B214041619931_Hikrobot MV-PD010003-12C-8C (DA8401808)_5218415.jpg,0,1,UNKNOWN,REVIEW,0.270402,1,0,0,0,84.687,0.0,204.617,0.403,0.002,289.717,,unknown,only low-confidence candidates found
+B214054339882_Hikrobot MV-PD010003-12C-8C (DA8401808)_2400566.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.619,0.0,174.631,0.36,0.001,265.62,,unknown,no valid parcel candidate found
+B214123489464_Hikrobot MV-PD010003-12C-8C (DA8401808)_4521235.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.966,0.0,156.047,0.352,0.001,242.374,,unknown,no valid parcel candidate found
+B214123958851_Hikrobot MV-PD010003-12C-8C (DA8401808)_4751830.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.616,0.0,154.656,0.395,0.001,231.674,,unknown,no valid parcel candidate found
+B214137484774_Hikrobot MV-PD010003-12C-8C (DA8401808)_4907633.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.816,0.0,152.246,0.348,0.001,238.415,,unknown,no valid parcel candidate found
+B214138067568_Hikrobot MV-PD010003-12C-8C (DA8401808)_5159238.jpg,0,1,UNKNOWN,REVIEW,0.414441,1,0,0,0,94.133,0.0,168.848,0.336,0.001,263.324,,unknown,only low-confidence candidates found
+B214179288851_Hikrobot MV-PD010003-12C-8C (DA8401808)_3425128.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.026,0.0,146.804,0.359,0.001,223.195,,unknown,no valid parcel candidate found
+B214195348804_Hikrobot MV-PD010003-12C-8C (DA8401808)_2650365.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.969,0.0,157.185,0.488,0.001,244.653,,unknown,no valid parcel candidate found
+B214208449503_Hikrobot MV-PD010003-12C-8C (DA8401808)_3123469.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.899,0.0,154.484,0.321,0.001,238.712,,unknown,no valid parcel candidate found
+B214208930801_Hikrobot MV-PD010003-12C-8C (DA8401808)_1806761.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.995,0.0,170.952,0.42,0.001,254.376,,unknown,no valid parcel candidate found
+B215272243123_Hikrobot MV-PD010003-12C-8C (DA8401808)_2856604.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,105.644,0.0,168.098,0.411,0.001,274.161,,unknown,no valid parcel candidate found
+B215272249939_Hikrobot MV-PD010003-12C-8C (DA8401808)_2228772.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.898,0.0,189.745,0.436,0.001,279.089,,unknown,no valid parcel candidate found
+B215273754707_Hikrobot MV-PD010003-12C-8C (DA8401808)_2649013.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.682,0.0,171.336,0.306,0.002,252.333,,unknown,no valid parcel candidate found
+B215285344124_Hikrobot MV-PD010003-12C-8C (DA8401808)_2205951.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.119,0.0,144.958,0.318,0.001,230.403,,unknown,no valid parcel candidate found
+B504884603626_Hikrobot MV-PD010003-12C-8C (DA8401808)_3520484.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,100.207,0.0,147.861,0.386,0.001,248.462,,unknown,no valid parcel candidate found
+B504885073135_Hikrobot MV-PD010003-12C-8C (DA8401808)_2549424.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.979,0.0,136.335,0.447,0.001,219.77,,unknown,no valid parcel candidate found
+B504885224226_Hikrobot MV-PD010003-12C-8C (DA8401808)_4524448.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.566,0.0,151.651,0.427,0.001,242.653,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021541204_64_1541701_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.712,0.0,152.203,0.384,0.002,245.31,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021605596_69_1605997_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.173,0.0,140.296,0.379,0.001,222.856,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021609777_71_1610035_Panorama.jpg,1,0,SINGLE,PASS,0.628037,1,1,0,0,87.182,0.0,157.272,0.48,0.001,244.945,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021612867_73_1613258_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.72,0.0,147.819,0.404,0.001,220.95,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021614567_74_1615128_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.388033,1,0,0,0,85.328,0.0,160.932,0.459,0.002,246.728,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021619907_76_1620403_Panorama.jpg,1,0,SINGLE,PASS,0.61537,1,1,0,0,93.744,0.0,162.343,0.393,0.002,256.49,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021635787_80_1636183_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.01,0.0,143.206,0.459,0.001,230.682,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021638147_82_1638782_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.887,0.0,147.376,0.382,0.001,235.653,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021644320_85_1644760_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.608,0.0,150.623,0.455,0.001,221.695,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021646508_86_1646968_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.506906,1,0,0,0,99.695,0.0,164.076,0.445,0.001,264.226,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021647618_87_1648228_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.694,0.0,134.541,0.328,0.001,211.57,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021650767_89_1651350_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.495,0.0,137.396,0.489,0.001,216.391,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021651843_90_1652237_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.827,0.0,177.727,0.436,0.002,251.002,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021653739_91_1654114_Panorama.jpg,1,0,SINGLE,PASS,0.695251,1,1,0,0,86.171,0.0,180.638,0.405,0.002,267.224,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021654339_92_1654761_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.312,0.0,155.518,0.442,0.002,251.282,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021655152_93_1655523_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.390452,1,0,0,0,91.301,0.0,179.564,0.337,0.001,271.211,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021657961_94_1658420_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.845,0.0,139.41,0.338,0.001,219.6,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021703821_96_1704184_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.471,0.0,147.212,0.479,0.001,227.171,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021705119_97_1705730_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.320313,1,0,0,0,94.741,0.0,173.005,0.421,0.002,268.177,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021710040_100_1710604_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.898,0.0,166.351,0.487,0.001,241.745,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021713340_102_1713714_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.022,0.0,136.105,0.403,0.001,215.54,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021720992_106_1721487_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.339697,1,0,0,0,81.102,0.0,181.986,0.427,0.001,263.525,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021725441_108_1725962_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.559,0.0,144.831,0.338,0.001,236.735,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021727001_109_1727660_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.30339,1,0,0,0,79.236,0.0,169.485,0.463,0.002,249.195,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021730752_111_1731172_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.323695,1,0,0,0,93.227,0.0,165.304,0.414,0.001,258.955,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021735953_114_1736299_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,98.926,0.0,142.601,0.339,0.001,241.874,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021741802_116_1742241_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.34778,1,0,0,0,77.47,0.0,161.62,0.368,0.001,239.467,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021744303_117_1744682_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.391784,1,0,0,0,77.983,0.0,165.904,0.538,0.001,244.435,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021746432_118_1747082_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.350342,1,0,0,0,98.296,0.0,98.493,0.465,0.001,197.262,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021830572_128_1830918_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.339,0.0,56.929,0.561,0.002,149.839,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021843414_133_1843814_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,102.748,0.0,55.338,0.309,0.001,158.402,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021904705_137_1905317_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.412842,1,0,0,0,92.99,0.0,70.954,0.652,0.002,164.608,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_021930850_151_1931194_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.268799,1,0,0,0,105.413,0.0,72.767,0.493,0.001,178.683,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022039041_181_2039451_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.470703,1,0,0,0,94.661,0.0,101.522,0.431,0.001,196.622,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022040171_182_2040630_Panorama.jpg,1,0,SINGLE,PASS,0.588867,1,1,0,0,87.668,0.0,73.323,0.502,0.002,161.504,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022042201_183_2042547_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.68,0.0,58.876,0.439,0.001,148.007,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022044669_184_2045026_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.134,0.0,56.593,0.467,0.001,153.204,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022050021_186_2050426_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.336426,1,0,0,0,110.02,0.0,76.738,0.377,0.001,187.144,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022050783_187_2051231_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.912,0.0,55.766,0.438,0.001,154.127,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022056482_193_2057025_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.262939,1,0,0,0,103.561,0.0,77.114,0.432,0.001,181.116,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022100192_195_2100568_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.521484,2,0,1,0,80.787,0.0,77.613,0.465,0.002,158.875,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022104391_199_2104807_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,98.048,0.0,55.061,0.455,0.001,153.573,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022111583_205_2112076_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.462891,1,0,0,0,104.354,0.0,73.444,0.549,0.002,178.359,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022123212_210_2123927_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.214,0.0,54.23,0.524,0.002,141.98,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022125744_211_2126151_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.496094,1,0,0,0,114.051,0.0,82.424,0.499,0.002,196.985,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022126714_212_2127182_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.310791,1,0,0,0,110.106,0.0,83.693,0.387,0.002,194.195,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022127414_213_2127724_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,86.614,0.0,58.857,0.573,0.002,146.055,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022127766_214_2128088_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,76.889,0.0,52.953,0.543,0.001,130.397,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022128935_215_2129293_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.948,0.0,51.571,0.428,0.001,136.958,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022131762_218_2132071_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.932,0.0,56.2,0.503,0.001,145.642,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022134523_221_2134950_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,82.573,0.0,53.885,0.326,0.001,136.792,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022146475_232_2146897_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.863,0.0,53.834,0.363,0.001,138.069,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022159956_239_2200318_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.877,0.0,60.44,0.623,0.002,148.952,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022203615_242_2204055_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.111,0.0,55.531,0.423,0.001,153.076,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022204565_243_2205130_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.603,0.0,57.832,0.44,0.001,133.885,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022241007_259_2241791_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.40918,2,0,1,0,75.338,0.0,75.432,0.474,0.001,151.25,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022307248_272_2307843_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.725,0.0,55.003,0.348,0.001,153.084,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022311849_277_2312445_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.009,0.0,59.061,0.381,0.001,156.461,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022321208_283_2321860_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.368408,1,0,0,0,94.546,0.0,108.939,0.49,0.002,203.986,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022403261_305_2403752_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.417,0.0,51.754,0.445,0.001,131.625,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022407362_306_2407781_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,105.03,0.0,55.299,0.345,0.0,160.684,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022443113_322_2443490_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.041,0.0,52.772,0.29,0.001,157.11,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022450014_327_2450428_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.072,0.0,58.692,0.701,0.002,134.482,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022452805_328_2453189_Panorama.jpg,1,0,SINGLE,PASS,0.571777,1,1,0,0,102.454,0.0,76.356,0.527,0.002,179.348,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022511046_338_2511610_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,109.873,0.0,56.188,0.593,0.002,166.666,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022519316_341_2519601_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.819,0.0,56.671,0.484,0.001,147.983,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022524456_342_2525082_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.344971,1,0,0,0,82.66,0.0,80.363,0.466,0.002,163.5,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022535405_348_2535769_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.131,0.0,59.296,0.402,0.001,163.838,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022536066_349_2536695_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,100.153,0.0,54.699,0.395,0.001,155.254,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022538747_351_2539375_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.109,0.0,54.629,0.699,0.001,135.446,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022542136_353_2542505_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.352,0.0,49.571,0.686,0.001,123.62,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022604428_366_2604862_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.324219,1,0,0,0,109.302,0.0,77.026,0.529,0.002,186.867,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022614658_369_2615112_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.383301,1,0,0,0,94.615,0.0,76.044,0.36,0.001,171.027,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022632520_379_2633081_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.297607,1,0,0,0,71.185,0.0,79.266,0.509,0.002,150.969,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022634480_380_2635133_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,101.975,0.0,52.647,0.404,0.001,155.034,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022644622_385_2645223_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,101.639,0.0,50.114,0.493,0.001,152.255,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022645729_386_2646222_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,123.069,0.0,53.61,0.483,0.001,177.172,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022647112_387_2647692_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.289,0.0,54.558,0.357,0.001,150.21,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022702082_400_2702445_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.8,0.0,55.15,0.497,0.001,145.458,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022705611_403_2706183_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.357422,1,0,0,0,94.229,0.0,79.773,0.536,0.002,174.547,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022709432_406_2710063_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.329,0.0,53.237,0.404,0.001,133.977,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022716892_410_2717524_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.28,0.0,48.857,0.475,0.001,130.623,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022719711_413_2720233_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.974,0.0,52.704,0.449,0.001,146.138,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022722074_415_2722529_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,101.339,0.0,57.931,0.449,0.002,159.73,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022724461_417_2725027_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.364746,1,0,0,0,104.499,0.0,82.041,0.436,0.001,186.985,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022725503_418_2725971_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.195,0.0,48.244,0.709,0.002,120.161,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022733663_425_2734043_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.334717,1,0,0,0,103.857,0.0,86.526,0.553,0.002,190.947,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022735834_426_2736186_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.969,0.0,59.888,0.51,0.001,148.378,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022740135_430_2740658_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.859,0.0,59.388,0.401,0.001,154.659,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022746206_435_2746875_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.99,0.0,55.47,0.413,0.001,133.884,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022747573_436_2748032_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.29248,1,0,0,0,112.164,0.0,74.326,0.41,0.002,186.909,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022751832_439_2752138_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.384,0.0,56.674,0.367,0.001,132.433,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022755483_443_2755925_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.490479,1,0,0,0,78.645,0.0,76.665,0.439,0.001,155.757,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022756886_444_2757562_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.657,0.0,53.503,0.469,0.001,158.638,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022800204_447_2800862_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.622,0.0,58.79,0.4,0.001,134.821,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022819183_462_2819750_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.623,0.0,51.45,0.645,0.002,137.73,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022822224_464_2822797_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.324219,1,0,0,0,76.863,0.0,75.474,0.555,0.002,152.904,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022830995_472_2831666_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,99.16,0.0,55.198,0.485,0.001,154.853,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022835426_476_2835818_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.685,0.0,53.542,0.472,0.001,141.71,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_022840805_478_2841379_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.554,0.0,56.707,0.711,0.002,161.989,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023019424_536_3019841_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.37207,1,0,0,0,99.944,0.0,79.534,0.333,0.001,179.819,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023101640_554_3102095_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.626,0.0,55.35,0.395,0.001,139.379,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023101640_554_3102873_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.573,0.0,61.926,0.37,0.001,166.879,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023104289_555_3104697_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.808,0.0,55.578,0.473,0.001,130.869,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023234678_594_3234973_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.490479,1,0,0,0,94.622,0.0,80.822,0.543,0.002,175.999,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023240957_597_3241348_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.189,0.0,57.193,0.475,0.001,132.867,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023327204_614_3327715_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,117.441,0.0,56.547,0.47,0.001,174.468,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023330444_616_3331052_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,122.122,0.0,56.664,0.358,0.001,179.154,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023406577_639_3406954_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.261,0.0,58.767,0.445,0.001,135.485,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023411677_645_3412216_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,105.318,0.0,58.098,0.519,0.002,163.945,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023750474_732_3751114_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.962,0.0,54.822,0.509,0.001,147.301,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023751553_733_3752010_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,105.203,0.0,57.702,0.403,0.001,163.316,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023813565_743_3814126_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.569,0.0,53.913,0.448,0.001,140.94,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_023932539_758_3933091_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.338,0.0,54.152,0.474,0.001,148.975,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024031373_770_4031865_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.836,0.0,47.717,0.47,0.001,135.031,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024101593_779_4101981_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.081,0.0,55.076,0.437,0.001,152.605,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024150025_795_4150360_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,97.484,0.0,72.403,0.512,0.002,170.41,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024152106_796_4152384_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.85,0.0,51.715,0.535,0.001,139.11,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024154938_797_4155330_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.117,0.0,54.178,0.427,0.001,135.73,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024157868_798_4158476_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.11,0.0,56.304,0.475,0.001,160.898,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024250689_819_4251233_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.32,0.0,56.322,0.426,0.001,161.078,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024417734_865_4418262_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,98.582,0.0,63.201,0.517,0.001,162.309,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024428644_872_4429199_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,112.933,0.0,57.054,0.464,0.002,170.461,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024432404_873_4432684_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,99.787,0.0,58.737,0.437,0.001,158.97,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024435507_875_4435937_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.695,0.0,52.782,0.44,0.001,132.924,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024438255_876_4438556_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.4,0.0,52.796,0.444,0.001,135.65,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024440645_877_4441038_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,124.522,0.0,49.241,0.478,0.001,174.251,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024448977_883_4449456_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,92.855,0.0,55.194,0.527,0.001,148.586,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024505058_893_4505638_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.017,0.0,53.056,0.405,0.001,148.488,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024511788_899_4512104_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.468,0.0,53.855,0.355,0.001,148.685,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024522768_906_4523394_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,93.749,0.0,54.692,0.469,0.001,148.918,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024524108_907_4524697_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.154,0.0,50.032,0.502,0.001,123.697,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024527189_908_4527512_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.826,0.0,53.697,0.47,0.001,143.005,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024543830_915_4544437_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,107.558,0.0,54.628,0.449,0.002,162.646,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024545080_916_4545540_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.252441,1,0,0,0,98.159,0.0,81.911,0.438,0.001,180.516,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024546700_917_4547364_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.418701,1,0,0,0,70.764,0.0,69.49,0.6,0.002,140.867,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024549359_919_4549734_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,74.801,0.0,53.824,0.453,0.001,129.087,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024557732_922_4558130_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.515625,1,0,0,0,83.315,0.0,79.784,0.506,0.001,163.614,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024604241_925_4604664_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.27124,1,0,0,0,78.427,0.0,76.968,0.581,0.002,155.986,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024714005_935_4714440_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.444,0.0,56.121,0.342,0.001,134.914,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024722376_939_4722890_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.399902,1,0,0,0,81.64,0.0,71.207,0.491,0.001,153.346,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024730376_943_4730952_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.249,0.0,52.198,0.452,0.001,123.906,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024733575_946_4734245_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,96.133,0.0,54.602,0.499,0.001,151.245,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024741477_952_4741888_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.935,0.0,52.815,0.387,0.001,146.144,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024745538_955_4746005_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.333,0.0,51.768,0.544,0.001,125.655,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024748656_957_4749004_Panorama.jpg,1,0,SINGLE,PASS,0.914062,1,1,0,0,85.548,0.0,80.265,0.706,0.002,166.534,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024749557_958_4750147_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.275146,1,0,0,0,101.106,0.0,77.184,0.631,0.002,178.937,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024753497_961_4753969_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,103.17,0.0,55.155,0.712,0.002,159.049,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024816194_972_4816544_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.289551,1,0,0,0,106.663,0.0,74.893,0.608,0.002,182.175,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024818153_973_4818673_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.841,0.0,53.747,0.687,0.003,145.287,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024821434_974_4821996_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.577,0.0,50.5,0.446,0.001,148.532,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024849335_989_4849705_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.474,0.0,50.1,0.561,0.002,115.147,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024851176_990_4851600_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.37207,1,0,0,0,73.139,0.0,77.153,0.509,0.002,150.813,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024854267_991_4854883_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.445,0.0,51.416,0.413,0.001,144.281,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024857766_993_4858221_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,68.403,0.0,51.803,0.716,0.001,120.934,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024904268_997_4904675_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.061,0.0,49.466,0.45,0.001,134.985,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024910717_999_4911204_Panorama.jpg,1,0,SINGLE,PASS,0.720215,1,1,0,0,86.79,0.0,70.919,0.414,0.001,158.131,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024915738_1001_4916266_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.537,0.0,51.39,0.312,0.001,116.247,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024927109_1005_4927639_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.984,0.0,51.998,0.579,0.001,137.571,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024930559_1008_4931154_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.467,0.0,48.654,0.472,0.001,118.601,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024931479_1009_4932069_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.587,0.0,50.215,0.486,0.001,144.297,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_024936311_1011_4936943_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.389,0.0,49.614,0.683,0.002,127.699,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025013950_1030_5014308_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.268799,1,0,0,0,86.732,0.0,70.48,0.434,0.001,157.653,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025021901_1034_5022326_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.215,0.0,62.137,0.456,0.001,148.819,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025028722_1038_5029345_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.495,0.0,51.695,0.604,0.001,130.805,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025029922_1039_5030347_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.303,0.0,52.763,0.516,0.001,145.59,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025051574_1049_5052218_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.349,0.0,49.185,0.587,0.001,147.133,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025138078_1067_5138651_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.430176,1,0,0,0,97.685,0.0,77.154,0.515,0.002,175.366,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025140198_1068_5140919_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.236,0.0,57.52,0.423,0.001,135.191,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025142625_1070_5143169_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.578,0.0,55.852,0.431,0.002,136.871,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025145407_1071_5145694_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.55,0.0,50.731,0.491,0.001,130.782,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025151339_1074_5151867_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.176,0.0,47.446,0.392,0.001,125.021,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025153357_1075_5153798_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.493,0.0,49.529,0.674,0.001,143.708,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025159877_1078_5200193_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.174,0.0,52.197,0.48,0.001,144.861,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025201348_1079_5201655_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.924,0.0,49.671,0.602,0.001,127.207,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025203618_1080_5203984_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.92,0.0,50.87,0.423,0.001,137.222,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025205837_1082_5206340_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.544,0.0,45.973,0.37,0.001,127.893,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025209898_1087_5210566_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.139,0.0,50.97,0.491,0.001,135.613,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025212587_1089_5213222_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.948,0.0,48.096,0.47,0.001,131.522,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025218181_1091_5218532_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.648,0.0,51.055,0.518,0.001,124.232,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025251811_1112_5252335_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.502,0.0,47.727,0.58,0.001,122.817,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025301802_1117_5302315_Panorama.jpg,1,0,SINGLE,PASS,0.57373,1,1,0,0,85.025,0.0,66.753,0.45,0.001,152.236,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025305282_1120_5305920_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.029,0.0,50.939,0.826,0.002,141.807,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025310781_1123_5311400_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.35,0.0,46.133,0.371,0.001,134.86,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025324652_1131_5325013_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.958,0.0,45.242,0.459,0.001,118.669,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025327004_1133_5327629_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.959,0.0,46.602,0.398,0.001,127.965,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025330914_1135_5331451_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.446,0.0,47.818,0.528,0.002,121.803,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_025653465_1138_5654125_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.143,0.0,51.554,0.538,0.001,138.243,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_073445011_1_3445464_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.32251,1,0,0,0,65.731,0.0,73.219,0.756,0.003,139.719,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_200425141_1_0425620_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.250977,1,0,0,0,91.621,0.0,74.163,0.453,0.001,166.248,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211051117_206_1051543_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,60.526,0.0,47.025,0.385,0.001,107.944,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211052667_207_1053091_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.207,0.0,46.919,0.353,0.001,133.486,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211058537_210_1058922_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,59.09,0.0,49.257,0.551,0.002,108.909,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211059747_211_1100199_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.616,0.0,48.357,0.516,0.001,129.499,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211102737_213_1103100_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.297607,1,0,0,0,86.98,0.0,69.803,0.505,0.002,157.3,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211106138_214_1106552_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.04,0.0,47.793,0.471,0.001,114.314,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211151230_229_1151608_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,62.316,0.0,53.293,0.468,0.001,116.085,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211202741_232_1203049_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.303,0.0,48.316,0.419,0.001,124.047,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211220255_244_1220749_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.958,0.0,53.929,0.396,0.001,121.292,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211221795_245_1222207_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.835,0.0,50.396,0.561,0.001,117.8,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211256188_257_1256586_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.171,0.0,47.291,0.474,0.001,112.945,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211259518_259_1259920_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.411,0.0,50.498,0.469,0.001,124.387,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211300988_261_1301319_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.641,0.0,51.581,0.401,0.001,133.632,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211303459_262_1303784_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.653,0.0,47.365,0.457,0.001,119.484,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211305329_264_1305673_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.364746,1,0,0,0,91.408,0.0,78.49,0.539,0.002,170.447,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211318270_273_1318674_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.428,0.0,45.865,0.353,0.0,139.653,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211342580_285_1342924_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.319,0.0,52.825,0.414,0.001,136.569,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211346722_288_1347133_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.093,0.0,50.977,0.347,0.001,144.425,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211356142_292_1356460_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.348877,1,0,0,0,62.294,0.0,69.931,0.522,0.002,132.756,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211418212_300_1418797_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.755,0.0,51.768,0.52,0.001,127.053,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211422134_302_1422505_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.29,0.0,49.426,0.459,0.001,115.183,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211423153_303_1423562_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.256836,1,0,0,0,77.143,0.0,75.189,0.535,0.002,152.878,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211451235_318_1451581_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.478516,1,0,0,0,84.535,0.0,67.65,0.478,0.002,152.674,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211510594_329_1510935_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.678,0.0,50.018,0.398,0.001,128.104,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211513684_331_1514058_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.547,0.0,47.947,0.364,0.001,125.867,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211535777_340_1536131_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.201,0.0,49.947,0.384,0.001,138.541,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211616190_360_1616585_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.725,0.0,53.038,0.433,0.001,141.205,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211653240_378_1653608_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.061,0.0,48.218,0.482,0.001,132.771,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211704921_385_1705469_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.967,0.0,49.146,0.435,0.001,140.555,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211714329_390_1714671_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.598,0.0,47.622,0.471,0.001,117.7,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211725519_397_1726024_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.273438,1,0,0,0,76.675,0.0,72.098,0.516,0.001,149.298,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211731238_400_1731574_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.049,0.0,55.319,0.467,0.001,119.843,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211756891_413_1757236_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.856,0.0,49.926,0.486,0.001,120.277,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211801341_416_1801711_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,62.986,0.0,47.505,0.569,0.001,111.068,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211803922_418_1804253_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,63.812,0.0,47.132,0.391,0.001,111.342,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211806131_420_1806696_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.095,0.0,46.304,0.375,0.001,120.782,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211807200_421_1807539_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.112,0.0,45.449,0.383,0.001,115.95,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211826130_428_1826509_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.006,0.0,44.792,0.451,0.001,117.27,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211827193_429_1827564_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.752,0.0,47.349,0.798,0.001,115.909,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211834013_433_1834311_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.138,0.0,48.719,0.475,0.003,120.349,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211839623_436_1840039_Panorama.jpg,1,0,SINGLE,PASS,0.600098,1,1,0,0,69.963,0.0,69.692,0.762,0.001,140.427,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211851202_442_1851601_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.121,0.0,50.261,0.444,0.001,134.834,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211852183_443_1852600_Panorama.jpg,1,0,SINGLE,PASS,0.563965,1,1,0,0,55.814,0.0,71.038,0.463,0.002,127.325,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211908744_450_1909361_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.677,0.0,50.051,0.482,0.001,148.22,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_211913703_452_1914393_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.557,0.0,45.046,0.445,0.001,123.056,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212018197_482_2018783_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.317383,1,0,0,0,79.87,0.0,75.169,0.513,0.001,155.577,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212040178_490_2040499_Panorama.jpg,1,0,SINGLE,PASS,0.71875,1,1,0,0,84.057,0.0,66.686,0.356,0.001,151.107,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212050020_495_2050356_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.866,0.0,50.329,0.438,0.001,140.643,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212105740_502_2106160_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.939,0.0,49.698,0.331,0.001,128.973,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212108030_504_2108581_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.629,0.0,50.38,0.527,0.002,129.547,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212113041_507_2113440_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.45874,1,0,0,0,82.64,0.0,70.53,0.491,0.002,153.67,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212127400_514_2127778_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.368408,1,0,0,0,91.207,0.0,68.035,0.532,0.002,159.788,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212158263_526_2158700_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.558,0.0,53.147,0.459,0.001,132.174,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212241963_546_2242376_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.219,0.0,56.081,0.653,0.002,146.967,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212243653_548_2244138_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.252441,1,0,0,0,91.512,0.0,73.148,0.355,0.001,165.022,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212248315_551_2248736_Panorama.jpg,1,0,SINGLE,PASS,0.658691,1,1,0,0,71.079,0.0,71.001,0.479,0.001,142.568,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212249173_552_2249774_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.432129,1,0,0,0,74.632,0.0,70.796,0.597,0.002,146.035,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212251246_554_2251659_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,83.4,0.0,68.141,0.559,0.001,152.111,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212254476_558_2254873_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.261475,1,0,0,0,76.981,0.0,98.602,0.557,0.002,176.151,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212256606_560_2256917_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.457031,1,0,0,0,63.128,0.0,103.012,0.446,0.001,166.595,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212258435_562_2258824_Panorama.jpg,1,0,SINGLE,PASS,0.864746,1,1,0,0,76.553,0.0,70.813,0.413,0.001,147.786,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212303514_564_2304102_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.430176,1,0,0,0,89.26,0.0,72.001,0.867,0.003,162.143,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212305889_565_2306508_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.762,0.0,50.919,0.483,0.001,145.174,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212311047_567_2311574_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.320801,1,0,0,0,70.693,0.0,76.063,0.491,0.001,147.254,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212314737_568_2315353_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.271,0.0,52.437,0.405,0.001,120.12,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212322048_572_2322692_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.09,0.0,51.867,0.389,0.001,140.354,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212327237_573_2327636_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,62.694,0.0,45.948,0.828,0.001,109.477,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212328246_574_2328919_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.9,0.0,53.292,0.478,0.002,141.68,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212331687_575_2332088_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.969,0.0,48.227,0.44,0.001,133.645,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212335757_576_2336340_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.238,0.0,50.761,0.901,0.003,143.916,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212340828_577_2341469_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.441,0.0,53.435,0.44,0.001,147.326,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212344299_578_2344829_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.361084,1,0,0,0,75.141,0.0,94.564,0.429,0.001,170.141,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212345869_579_2346171_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.310791,1,0,0,0,77.072,0.0,72.999,0.643,0.002,150.724,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212349989_580_2350549_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.56,0.0,47.695,0.504,0.001,136.769,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212351460_581_2352055_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.835,0.0,47.527,0.349,0.001,127.717,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212354699_583_2355172_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.224,0.0,48.305,0.596,0.001,119.137,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212400319_588_2400984_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.275146,1,0,0,0,81.661,0.0,73.364,0.443,0.001,155.475,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212401591_589_2401961_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.259033,1,0,0,0,64.763,0.0,68.485,0.474,0.001,133.731,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212405590_591_2406081_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,84.84,0.0,74.018,0.383,0.001,159.249,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212407841_594_2408329_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,57.121,0.0,48.196,0.484,0.001,105.81,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212408800_595_2409223_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.32251,1,0,0,0,94.784,0.0,76.894,0.521,0.002,172.209,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212411220_596_2411605_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,60.039,0.0,44.413,0.521,0.001,104.981,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212414481_598_2414949_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.373779,1,0,0,0,82.761,0.0,73.793,0.528,0.002,157.095,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212415621_599_2416219_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.811,0.0,53.191,0.721,0.002,125.735,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212418301_601_2418723_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.077,0.0,52.662,0.494,0.001,144.244,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212423472_604_2423793_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.372,0.0,49.78,0.457,0.001,136.62,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212424432_605_2425068_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.877,0.0,51.611,0.47,0.001,138.967,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212432762_610_2433133_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.57,0.0,50.775,0.672,0.001,128.026,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212434032_611_2434670_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.998,0.0,52.2,0.328,0.0,125.533,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212446864_617_2447418_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.662,0.0,50.946,0.405,0.001,138.021,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212448033_618_2448554_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,79.436,0.0,76.228,0.49,0.002,156.164,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212453994_621_2454538_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.878,0.0,48.555,0.499,0.001,135.943,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212454964_622_2455293_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.821,0.0,55.149,0.513,0.001,140.493,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212457926_623_2458482_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.424,0.0,49.975,1.101,0.002,131.514,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212459023_624_2459371_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.348877,1,0,0,0,74.13,0.0,74.459,0.528,0.002,149.128,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212500895_626_2501433_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.066,0.0,47.594,0.666,0.001,122.337,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212502194_627_2502798_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.535,0.0,52.337,0.482,0.001,125.362,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212505224_629_2505741_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.386719,1,0,0,0,87.781,0.0,73.511,0.382,0.001,161.682,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212508705_630_2509218_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.736,0.0,49.619,0.465,0.001,140.829,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212510514_631_2510950_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.231,0.0,49.536,0.402,0.001,140.176,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212511576_632_2512160_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.7,0.0,53.705,0.556,0.002,138.972,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212515295_633_2515723_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.37207,1,0,0,0,92.338,0.0,80.217,0.482,0.014,173.059,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212516715_634_2517386_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.66,0.0,49.681,0.498,0.001,138.854,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212518896_635_2519545_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.188,0.0,48.299,0.466,0.001,125.962,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212521025_636_2521605_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.62,0.0,53.582,0.34,0.001,141.55,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212524356_637_2524866_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.021,0.0,51.186,0.493,0.001,121.708,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212525235_638_2525744_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.052,0.0,56.835,0.477,0.001,124.374,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212528055_640_2528563_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.458,0.0,48.061,0.351,0.001,120.878,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212529816_641_2530403_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.455,0.0,49.795,0.383,0.001,139.639,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212532145_642_2532761_Panorama.jpg,0,3,UNKNOWN,REVIEW,0.467041,1,0,0,0,63.929,0.0,118.254,0.436,0.001,182.627,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212533298_643_2533832_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.403809,1,0,0,0,87.893,0.0,71.968,0.424,0.001,160.294,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212535026_644_2535554_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.153,0.0,46.371,0.511,0.001,135.045,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212539168_645_2539735_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.886,0.0,49.942,0.491,0.001,130.327,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212545009_648_2545487_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.047,0.0,49.555,0.553,0.001,130.163,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212552027_652_2552647_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.029,0.0,50.077,0.335,0.001,146.453,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212557157_655_2557709_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.365,0.0,48.629,0.477,0.001,139.481,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212559669_656_2600315_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.645,0.0,50.143,0.451,0.001,129.248,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212602139_657_2602412_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.332,0.0,50.201,0.466,0.001,143.008,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212603259_658_2603898_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.226,0.0,52.661,0.471,0.001,149.368,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212607808_660_2608265_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.456,0.0,49.67,0.468,0.002,120.604,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212609789_662_2610289_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.271973,1,0,0,0,87.702,0.0,72.413,0.388,0.001,160.511,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212610889_663_2611288_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.714,0.0,51.051,0.632,0.001,121.406,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212612619_664_2613256_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,59.649,0.0,48.949,0.379,0.001,108.984,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212615599_667_2616264_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.512,0.0,48.805,0.832,0.001,122.161,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212617180_669_2617683_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.357422,1,0,0,0,99.132,0.0,78.731,0.455,0.001,178.325,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212618099_670_2618418_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.275,0.0,49.153,0.375,0.001,118.81,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212619182_671_2619757_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.385,0.0,52.678,0.337,0.001,130.408,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212622540_673_2622869_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.489,0.0,50.924,0.493,0.001,131.918,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212626212_675_2626808_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.745,0.0,51.799,0.547,0.001,140.102,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212632070_676_2632588_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.928,0.0,47.306,0.323,0.001,137.566,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212632933_677_2633340_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.516,0.0,56.642,0.488,0.001,148.656,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212636281_679_2636646_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.475,0.0,54.076,0.389,0.001,146.948,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212637603_681_2638096_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.895,0.0,58.021,0.734,0.002,140.663,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212642802_684_2643414_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.132,0.0,51.614,0.879,0.002,147.639,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212646681_686_2647168_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.219,0.0,50.166,0.448,0.001,134.841,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212654013_689_2654422_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.503906,1,0,0,0,90.244,0.0,76.747,0.484,0.001,167.485,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212655083_690_2655616_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.48,0.0,51.383,0.42,0.001,124.292,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212659891_692_2700409_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.222,0.0,47.862,0.707,0.001,144.804,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212719293_704_2719625_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.462,0.0,51.322,0.454,0.001,121.248,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212721214_705_2721560_Panorama.jpg,1,0,SINGLE,PASS,0.636719,1,1,0,0,88.504,0.0,87.609,0.477,0.012,176.613,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212737556_706_2738148_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.299,0.0,53.044,0.5,0.001,135.852,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212738174_707_2738577_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.482178,1,0,0,0,85.22,0.0,71.314,0.386,0.001,156.929,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212741025_709_2741545_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.823,0.0,54.656,0.448,0.001,122.935,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212742716_711_2743290_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,63.947,0.0,55.453,0.661,0.001,120.081,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212745355_713_2745966_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,100.233,0.0,56.847,0.571,0.001,157.662,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212746285_714_2746825_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,104.143,0.001,54.007,0.59,0.001,158.758,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212757685_720_2758181_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.334717,1,0,0,0,87.384,0.0,77.862,0.48,0.001,165.736,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212800636_721_2801014_Panorama.jpg,1,0,SINGLE,PASS,0.672363,1,1,0,0,98.272,0.0,74.356,0.644,0.001,173.285,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212802985_722_2803515_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.956,0.0,53.73,0.691,0.001,144.389,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212804386_723_2805073_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.711,0.0,45.457,0.52,0.001,143.697,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212806246_725_2806759_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.556,0.0,66.335,0.755,0.002,144.659,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212812096_729_2812584_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.42041,1,0,0,0,94.314,0.0,78.777,0.552,0.002,173.654,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212813317_730_2813730_Panorama.jpg,1,0,SINGLE,PASS,0.796875,1,1,0,0,67.816,0.001,69.204,0.426,0.001,137.456,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212814657_731_2815282_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.765,0.0,50.877,0.427,0.001,126.076,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212816185_732_2816718_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.967,0.0,51.638,0.577,0.001,123.192,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212819137_733_2819742_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.286133,1,0,0,0,77.393,0.0,73.188,0.517,0.002,151.109,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212823349_736_2823992_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.86,0.0,52.832,0.455,0.001,147.157,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212829428_738_2830087_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.691,0.0,53.18,0.35,0.001,145.23,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212831987_739_2832657_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.265869,1,0,0,0,83.806,0.0,74.145,0.492,0.002,158.452,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212834468_740_2835012_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.325928,1,0,0,0,74.349,0.0,92.785,0.501,0.002,167.648,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212836219_741_2836884_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.5,1,0,0,0,89.696,0.0,80.313,0.486,0.002,170.505,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212837187_742_2837785_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.089,0.0,52.93,0.431,0.001,125.46,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212838206_743_2838869_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.081,0.0,56.732,0.456,0.001,132.28,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212844788_745_2845452_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.494,0.0,48.912,0.468,0.001,134.883,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212845927_746_2846417_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.552,0.0,47.887,0.459,0.001,145.908,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212854159_748_2854690_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.789,0.0,51.567,0.513,0.001,141.879,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212857958_749_2858637_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.839,0.0,51.217,0.601,0.001,125.665,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212900500_750_2901090_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.092,0.0,50.421,0.472,0.001,128.996,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212902941_751_2903532_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,98.393,0.0,49.462,0.471,0.001,148.337,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212904641_752_2905188_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.072,0.0,50.231,0.497,0.001,135.809,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212906929_753_2907592_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.941,0.0,47.124,0.758,0.001,142.833,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212910560_754_2911099_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.498,0.0,51.358,0.766,0.003,129.634,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212917721_755_2918344_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.25,0.0,50.377,0.487,0.001,132.124,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212918791_756_2919496_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.938,0.0,51.901,0.704,0.001,127.556,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212920021_757_2920607_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.261475,1,0,0,0,74.101,0.0,70.086,0.437,0.001,144.631,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212932702_760_2933350_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.173,0.0,50.158,0.473,0.001,142.813,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212934673_761_2935274_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.403,0.0,48.799,0.601,0.002,137.816,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212935721_762_2936203_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.561,0.0,48.836,0.454,0.001,138.858,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212937881_763_2938368_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.861,0.0,46.655,0.347,0.001,144.869,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212943183_765_2943654_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.608,0.0,45.951,0.51,0.001,112.078,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212949631_768_2950190_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.295898,1,0,0,0,68.376,0.0,72.848,0.546,0.001,141.78,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212950991_769_2951530_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.507,0.0,49.167,0.453,0.001,143.141,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_212957743_773_2958310_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.955,0.0,50.168,0.431,0.001,140.563,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213003573_778_3004003_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.45874,1,0,0,0,86.184,0.0,76.887,0.556,0.002,163.64,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213008242_781_3008736_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.341553,1,0,0,0,69.451,0.0,77.622,0.842,0.003,147.93,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213009294_782_3009537_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.794,0.0,52.84,0.438,0.001,139.084,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213012054_784_3012475_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.443604,1,0,0,0,76.385,0.0,72.614,0.554,0.002,149.564,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213013103_785_3013532_Panorama.jpg,1,0,SINGLE,PASS,0.790527,1,1,0,0,84.711,0.0,67.309,0.501,0.001,152.529,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213017175_787_3017820_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.115,0.0,50.191,0.507,0.001,122.823,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213019145_788_3019554_Panorama.jpg,1,0,SINGLE,PASS,0.57373,1,1,0,0,82.166,0.0,76.172,0.482,0.002,158.828,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213020285_789_3020621_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.936,0.0,53.05,0.553,0.001,137.548,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213020934_790_3021389_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.436035,1,0,0,0,75.153,0.0,71.633,0.553,0.002,147.35,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213022744_792_3023209_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.336426,1,0,0,0,83.588,0.0,66.37,0.453,0.001,150.419,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213024405_793_3024839_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.276855,1,0,0,0,67.103,0.0,71.644,0.467,0.002,139.222,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213025376_794_3025929_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.42627,1,0,0,0,75.221,0.0,62.897,0.486,0.001,138.611,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213029895_796_3030540_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.532,0.0,51.609,0.462,0.001,116.614,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213035115_798_3035505_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,57.827,0.0,49.13,0.645,0.001,107.612,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213037425_799_3037834_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.67,0.0,51.295,0.482,0.001,127.454,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213038344_800_3038979_Panorama.jpg,1,0,SINGLE,PASS,0.644043,1,1,0,0,80.488,0.0,76.512,0.497,0.002,157.508,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213045315_804_3045704_Panorama.jpg,1,0,SINGLE,PASS,0.604004,1,1,0,0,80.224,0.0,66.878,0.443,0.001,147.553,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213045976_805_3046307_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,64.656,0.0,46.749,0.455,0.001,111.868,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213048597_806_3049089_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.748,0.0,48.658,0.344,0.001,126.757,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213052665_809_3053295_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.052,0.0,48.288,0.454,0.001,122.803,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213056468_811_3056745_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.419,0.0,53.724,0.771,0.002,128.926,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213104605_814_3105015_Panorama.jpg,1,0,SINGLE,PASS,0.598145,1,1,0,0,87.557,0.0,72.603,0.36,0.001,160.528,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213105686_815_3106255_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.155,0.0,52.453,0.485,0.001,145.103,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213107678_816_3108181_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.338135,1,0,0,0,62.393,0.0,89.752,0.572,0.002,152.729,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213108658_817_3109000_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.297607,1,0,0,0,89.622,0.0,69.206,0.452,0.001,159.288,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213111696_818_3111989_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.064,0.0,50.124,0.391,0.001,120.586,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213116288_819_3116632_Panorama.jpg,1,0,SINGLE,PASS,0.596191,1,1,0,0,58.18,0.0,77.8,0.585,0.002,136.576,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213123348_824_3123971_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.623,0.0,52.964,0.525,0.001,140.122,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213125848_826_3126208_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.352,0.0,51.458,0.651,0.002,131.472,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213127547_827_3127993_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.473,0.0,54.002,0.496,0.001,131.981,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213130819_829_3131440_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.682,0.0,50.104,0.583,0.001,122.38,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213135368_830_3135968_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.102,0.0,64.33,0.507,0.001,138.951,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213149318_833_3149968_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.617,0.0,50.633,0.423,0.001,139.681,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213155368_834_3156027_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,61.651,0.0,50.781,0.489,0.001,112.931,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213158341_835_3158983_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.501953,1,0,0,0,89.221,0.0,74.323,0.506,0.002,164.061,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213159490_836_3200064_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.44165,1,0,0,0,86.39,0.0,71.268,0.558,0.002,158.227,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213206309_840_3206847_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.418701,1,0,0,0,83.482,0.0,91.5,0.759,0.002,175.753,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213208699_841_3209243_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,98.618,0.0,55.418,0.561,0.001,154.609,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213211032_844_3211455_Panorama.jpg,1,0,SINGLE,PASS,0.729492,1,1,0,0,90.44,0.0,75.935,0.499,0.002,166.885,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213214129_845_3214606_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.318,0.0,48.898,0.506,0.001,113.731,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213214908_846_3215291_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.048,0.0,49.058,0.388,0.001,142.51,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213222160_848_3222880_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,60.978,0.0,47.708,0.393,0.001,109.086,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213232281_850_3232906_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.218,0.0,49.947,0.446,0.001,140.619,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213234011_851_3234545_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.776,0.0,55.781,0.528,0.001,151.094,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213243162_852_3243700_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.453125,1,0,0,0,95.264,0.0,81.926,0.384,0.001,177.582,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213244321_853_3244867_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.250977,1,0,0,0,62.341,0.0,65.33,0.589,0.002,128.27,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213245812_854_3246309_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.817,0.0,52.171,0.496,0.001,149.493,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213248281_856_3248830_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.72,0.0,51.647,0.525,0.001,144.901,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213251873_857_3252514_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.938,0.0,52.855,0.399,0.001,146.2,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213258182_858_3258797_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.242,0.0,51.898,0.522,0.001,127.671,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213259352_859_3259768_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.397,0.0,54.486,0.391,0.001,124.283,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213300193_860_3300740_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.392334,1,0,0,0,90.523,0.0,79.326,0.452,0.002,170.312,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213303483_861_3303940_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.206,0.0,64.303,0.49,0.001,150.01,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213305801_863_3306325_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.382,0.0,48.508,0.389,0.001,125.286,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213307642_864_3308202_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.012,0.0,49.303,0.383,0.001,128.705,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213314763_867_3315312_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.47,0.0,52.45,0.382,0.001,134.31,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213316572_868_3316951_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.008,0.0,54.282,0.589,0.002,133.893,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213317583_869_3318262_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.256836,1,0,0,0,92.763,0.0,73.852,0.54,0.002,167.166,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213319353_870_3319886_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.795,0.0,50.621,0.454,0.001,127.878,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213321594_871_3322111_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.384,0.0,48.662,0.454,0.001,130.51,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213323645_872_3324268_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.718,0.0,48.642,0.349,0.001,125.717,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213326563_874_3327106_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.443604,1,0,0,0,77.099,0.0,97.446,0.443,0.001,174.997,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213328593_876_3329152_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.309082,1,0,0,0,76.664,0.0,102.454,0.461,0.001,179.587,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213329873_877_3330325_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.203,0.0,63.071,0.567,0.001,152.854,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213331864_878_3332458_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.261475,1,0,0,0,73.851,0.0,71.351,0.639,0.002,145.853,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213333243_879_3333776_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.545,0.0,53.844,0.788,0.001,149.19,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213335314_880_3335835_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.288,0.0,52.633,0.585,0.001,144.518,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213344645_883_3345146_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.98,0.0,52.067,0.604,0.001,138.661,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213345814_884_3346316_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.327637,1,0,0,0,66.417,0.0,69.776,0.5,0.002,136.701,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213346885_885_3347347_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.055,0.0,48.9,0.453,0.001,121.419,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213348934_886_3349486_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,97.905,0.0,48.207,0.415,0.001,146.537,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213350354_887_3351000_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,92.271,0.0,72.652,0.536,0.002,165.472,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213352385_888_3352974_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.478516,1,0,0,0,82.201,0.0,87.137,0.518,0.001,169.865,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213354964_890_3355502_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.242,0.0,56.986,0.493,0.001,134.731,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213359995_891_3400569_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.981,0.0,49.624,0.363,0.001,134.975,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213402484_892_3403027_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.975,0.0,52.682,0.334,0.001,136.999,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213403775_893_3404255_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.591,0.0,46.864,0.451,0.001,111.914,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213405315_894_3405837_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.612,0.0,54.416,0.467,0.001,150.503,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213406116_895_3406609_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.111,0.0,65.755,0.629,0.001,138.507,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213408096_896_3408743_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.821,0.0,48.798,0.407,0.001,145.034,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213409795_897_3410310_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.294189,1,0,0,0,83.494,0.0,68.63,0.362,0.002,152.496,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213411835_898_3412305_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.734,0.0,48.96,0.565,0.001,115.269,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213413855_899_3414426_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,68.642,0.0,43.753,0.49,0.001,112.894,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213417696_900_3418301_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.267,0.0,46.787,0.381,0.001,126.446,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213426436_903_3427060_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.01,0.0,43.954,0.406,0.0,135.377,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213428696_904_3429340_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.368,0.0,48.164,0.471,0.001,115.012,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213429757_905_3430302_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.935,0.0,49.981,0.782,0.001,120.708,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213432567_906_3433047_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.41,0.0,53.891,0.454,0.002,118.765,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213435107_907_3435765_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.555,0.0,51.885,0.489,0.001,126.94,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213439107_908_3439665_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.281,0.0,48.455,0.468,0.001,123.213,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213441296_909_3441915_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.289551,1,0,0,0,67.177,0.0,68.684,0.508,0.002,136.38,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213442977_910_3443483_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.74,0.0,49.064,0.479,0.001,143.293,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213445778_911_3446185_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.771,0.0,50.172,0.758,0.002,137.713,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213448547_914_3448862_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.496094,1,0,0,0,78.184,0.0,67.983,0.535,0.002,146.713,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213449350_915_3449895_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.993,0.0,52.069,0.56,0.001,137.633,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213451768_916_3452098_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.494141,1,0,0,0,89.497,0.0,71.71,0.53,0.002,161.747,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213454319_917_3454764_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.279785,1,0,0,0,82.917,0.0,72.459,0.54,0.002,155.924,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213455548_918_3456074_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.480225,1,0,0,0,85.774,0.0,71.271,0.497,0.002,157.55,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213458817_919_3459261_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.250977,1,0,0,0,67.537,0.0,70.123,0.393,0.001,138.059,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213504568_922_3505024_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.115,0.0,47.796,0.462,0.001,132.383,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213511010_925_3511554_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.01,0.0,49.39,0.472,0.001,141.882,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213514780_926_3515338_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.694,0.0,47.889,0.526,0.001,121.119,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213515939_927_3516465_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.089,0.0,49.017,0.363,0.001,142.476,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213518519_928_3518938_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.38,0.0,45.637,0.325,0.0,125.346,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213525999_931_3526382_Panorama.jpg,1,0,SINGLE,PASS,0.652832,1,1,0,0,65.693,0.0,70.963,0.497,0.002,137.164,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213531758_932_3532337_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.325928,1,0,0,0,92.462,0.0,74.01,0.408,0.001,166.89,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213538100_933_3538729_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.289,0.0,48.721,0.804,0.002,133.826,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213542121_936_3542739_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.324219,1,0,0,0,86.242,0.0,69.958,0.546,0.002,156.756,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213542990_937_3543646_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.378,0.0,48.932,0.466,0.001,124.784,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213545730_939_3546073_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.999,0.0,53.098,0.541,0.001,119.647,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213556141_945_3556644_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.548,0.0,47.765,0.415,0.001,130.734,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213602762_947_3603467_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.724,0.0,47.435,0.465,0.001,135.634,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213604151_948_3604719_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.364746,1,0,0,0,84.671,0.0,72.824,0.588,0.002,158.093,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213614171_951_3614542_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.215,0.0,47.81,0.414,0.001,112.445,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213616472_952_3616857_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.386719,1,0,0,0,84.939,0.0,68.867,0.521,0.376,154.714,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213620131_954_3620592_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.556,0.0,48.351,0.44,0.001,132.354,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213621042_955_3621456_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.365,0.0,50.721,0.462,0.001,127.558,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213622312_956_3622870_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.32959,1,0,0,0,71.048,0.0,84.483,0.442,0.001,155.981,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213624123_957_3624570_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.399902,1,0,0,0,65.071,0.0,92.101,0.735,0.003,157.923,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213627743_959_3628192_Panorama.jpg,1,0,SINGLE,PASS,0.583008,1,1,0,0,80.435,0.0,72.832,0.522,0.002,153.801,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213633032_961_3633660_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.933,0.0,46.936,0.395,0.001,132.271,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213640164_964_3640488_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.2,0.0,49.2,0.433,0.0,118.84,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213651613_967_3652096_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.194,0.0,49.377,0.494,0.002,120.074,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213653775_968_3654201_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.254639,1,0,0,0,87.221,0.0,75.387,0.515,0.002,163.133,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213655094_969_3655652_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.579,0.0,50.7,0.331,0.001,128.617,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213706425_971_3706953_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.727,0.0,52.691,0.484,0.001,123.912,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213707604_972_3708222_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.728,0.0,48.104,0.379,0.001,125.219,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213710104_973_3710598_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.794,0.0,48.644,0.424,0.001,114.87,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213717510_974_3718075_Panorama.jpg,1,0,SINGLE,PASS,0.609375,1,1,0,0,73.78,0.0,82.335,0.431,0.002,156.555,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213719060_975_3719697_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.627,0.0,61.961,0.606,0.001,145.209,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213728582_978_3729117_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.255371,1,0,0,0,67.214,0.0,73.522,0.505,0.002,141.252,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213733572_980_3734151_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.334717,1,0,0,0,88.274,0.0,69.493,0.459,0.001,158.234,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213740531_982_3741079_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.344971,1,0,0,0,85.157,0.0,109.37,0.563,0.002,195.1,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213753583_984_3754081_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.649,0.0,48.207,0.497,0.001,131.362,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213755472_985_3755985_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.723,0.0,49.962,0.451,0.001,136.147,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213757602_986_3758071_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.898,0.0,49.803,0.404,0.001,124.112,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213801314_987_3801835_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.422363,1,0,0,0,72.874,0.0,86.26,0.415,0.001,159.559,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213805013_988_3805655_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.817,0.0,65.422,0.747,0.001,143.996,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213808273_989_3808796_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.453125,1,0,0,0,88.3,0.0,87.463,0.538,0.002,176.315,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213810534_990_3811186_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.348,0.0,49.319,0.455,0.001,120.131,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213817664_995_3817965_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.361084,1,0,0,0,72.697,0.0,74.795,0.751,0.004,148.263,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213820554_997_3821177_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.259766,1,0,0,0,70.153,0.0,79.474,0.529,0.002,150.167,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213823604_999_3824203_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.295,0.0,50.963,0.476,0.001,130.744,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213824674_1000_3825258_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.691,0.0,48.972,0.5,0.001,131.173,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213828194_1002_3828501_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.476,0.0,48.782,0.406,0.001,121.671,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213829324_1003_3829797_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.303,0.0,45.242,0.464,0.001,112.019,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213835486_1005_3835816_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.519531,1,0,0,0,75.648,0.0,72.326,0.625,0.002,148.61,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213838083_1006_3838679_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.781,0.0,48.026,0.476,0.001,113.293,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213843196_1009_3843666_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.152,0.0,49.844,0.554,0.001,133.558,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213844316_1010_3844931_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.565,0.0,52.375,0.351,0.001,130.297,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213850765_1012_3851349_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.803,0.0,62.167,0.351,0.001,159.328,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213854255_1014_3854775_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.338135,1,0,0,0,91.03,0.0,84.88,0.513,0.002,176.433,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213855760_1015_3856395_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.55,0.0,45.128,0.451,0.001,130.135,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213858035_1016_3858651_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.321,0.0,49.054,0.345,0.001,115.727,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213859176_1017_3859692_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.284668,1,0,0,0,72.969,0.0,66.371,0.54,0.002,139.89,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213900275_1018_3900870_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.269,0.0,49.409,0.454,0.001,141.142,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213901976_1019_3902629_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.732,0.0,62.934,0.512,0.001,131.187,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213906757_1021_3907139_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.294189,1,0,0,0,83.885,0.0,80.14,0.547,0.002,164.583,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213911508_1022_3911853_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.786,0.0,50.399,0.611,0.001,118.807,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213912626_1023_3913214_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.331299,1,0,0,0,73.513,0.0,68.613,0.797,0.001,142.937,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213918668_1024_3919170_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.167,0.0,64.834,0.343,0.001,154.352,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213920748_1025_3921082_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.34,0.0,63.827,0.442,0.001,139.621,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213921928_1026_3922464_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.289,0.0,47.04,0.461,0.001,125.801,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213925098_1027_3925763_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.76,0.0,47.767,0.425,0.001,128.962,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213928540_1028_3929124_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.134,0.0,50.037,0.481,0.001,119.663,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213931778_1030_3932263_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.44165,1,0,0,0,82.384,0.0,87.133,0.559,0.002,170.089,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213932988_1031_3933649_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.089,0.0,52.129,0.644,0.002,145.875,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213935569_1032_3935937_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.501953,1,0,0,0,78.251,0.0,74.478,0.539,0.002,153.28,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213938559_1033_3939156_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.085,0.0,47.512,0.388,0.001,138.993,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213939700_1034_3940310_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.344971,1,0,0,0,93.78,0.0,85.527,0.509,0.002,179.826,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213948330_1038_3948805_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.44751,1,0,0,0,79.21,0.0,72.603,0.54,0.002,152.363,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213950580_1040_3951064_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.528,0.001,47.338,0.519,0.001,117.403,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213958011_1043_3958513_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.542,0.0,47.959,0.562,0.001,132.075,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_213959221_1044_3959673_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.542,0.0,54.74,0.545,0.002,139.839,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214004852_1046_4005302_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.27,0.0,48.602,0.415,0.001,134.295,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214006742_1047_4007219_Panorama.jpg,1,0,SINGLE,PASS,0.596191,1,1,0,0,94.035,0.0,74.179,0.369,0.001,168.59,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214013221_1051_4013593_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.797,0.0,49.131,0.502,0.001,115.44,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214014297_1053_4014643_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.254,0.0,47.005,0.459,0.001,134.729,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214016332_1056_4016876_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.011,0.0,48.507,0.474,0.001,132.002,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214017362_1057_4017715_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.594,0.0,47.163,0.503,0.001,118.269,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214019442_1059_4019802_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.043,0.0,49.66,0.415,0.001,135.125,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214027474_1065_4028118_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.4375,1,0,0,0,64.899,0.0,72.34,0.458,0.001,137.704,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214036565_1071_4037124_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.895,0.0,47.971,0.355,0.001,141.227,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214050675_1077_4051098_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.258,0.0,48.493,0.457,0.001,116.217,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214053595_1079_4054148_Panorama.jpg,1,0,SINGLE,PASS,0.583008,1,1,0,0,95.579,0.0,73.073,0.477,0.001,169.136,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214101805_1084_4102184_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,62.878,0.0,46.116,0.503,0.001,109.506,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214105667_1085_4106059_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.300781,1,0,0,0,75.679,0.0,71.752,0.557,0.002,148.0,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214110985_1089_4111526_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,86.164,0.0,52.628,0.489,0.001,139.29,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214112476_1090_4113029_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.41,0.0,50.789,0.472,0.002,117.681,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214118307_1093_4118803_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,95.121,0.0,48.368,0.44,0.001,143.937,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214119947_1094_4120195_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,2,0,1,0,74.576,0.0,47.567,0.447,0.001,122.599,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214126199_1097_4126538_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.389,0.0,60.533,0.542,0.001,127.475,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214131059_1098_4131576_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.788,0.0,57.165,0.349,0.001,139.309,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214135018_1099_4135510_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.474,0.0,52.328,0.759,0.002,117.575,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214136089_1100_4136376_Panorama.jpg,1,0,SINGLE,PASS,0.645996,1,1,0,0,73.982,0.0,73.54,0.449,0.001,147.978,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214144949_1104_4145593_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.859,0.0,49.097,0.414,0.001,138.377,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214149819_1106_4150478_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.267334,1,0,0,0,68.298,0.0,92.481,0.544,0.001,161.333,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214151881_1108_4152482_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.729,0.0,52.575,0.495,0.001,140.81,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214155461_1109_4156065_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.795,0.0,51.135,0.45,0.001,129.39,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214210001_1111_4210486_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.486328,1,0,0,0,72.645,0.0,69.788,0.458,0.001,142.899,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214212052_1112_4212702_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.389,0.0,48.443,0.482,0.001,126.323,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214213604_1113_4214243_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.147,0.0,50.403,0.461,0.001,125.02,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214221274_1116_4221764_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.603,0.0,49.751,0.425,0.001,140.787,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214223894_1117_4224409_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.001,0.0,52.845,0.513,0.001,122.37,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214225105_1118_4225528_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.673,0.0,48.108,0.396,0.001,140.184,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214226065_1119_4226652_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,68.796,0.0,45.553,0.296,0.001,114.651,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214228216_1120_4228729_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.041,0.0,46.996,0.473,0.001,121.52,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214252427_1136_4253002_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.338135,1,0,0,0,80.041,0.0,66.959,0.536,0.001,147.547,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214253487_1137_4253981_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.410889,1,0,0,0,88.042,0.0,70.455,0.509,0.002,159.017,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214256307_1139_4256912_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.392334,1,0,0,0,83.174,0.0,98.817,0.47,0.001,182.47,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214258297_1141_4258946_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.265869,1,0,0,0,77.265,0.0,71.447,0.619,0.002,149.344,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214311518_1145_4312146_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.262,0.0,47.664,0.613,0.001,114.549,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214316888_1146_4317571_Panorama - 副本.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.598,0.0,52.206,0.71,0.002,124.527,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214316888_1146_4317571_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.18,0.0,48.332,0.502,0.001,142.025,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214320868_1147_4321421_Panorama.jpg,0,3,UNKNOWN,REVIEW,0.303955,1,0,0,0,87.791,0.0,103.66,0.518,0.001,191.978,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214324780_1149_4325278_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.21,0.0,52.419,0.932,0.001,130.569,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214331100_1151_4331687_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.607,0.0,51.43,0.566,0.002,121.613,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214332199_1152_4332741_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,68.199,0.0,47.447,0.616,0.001,116.273,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214336550_1153_4337117_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.433838,1,0,0,0,89.904,0.0,75.024,0.515,0.001,165.453,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214346711_1156_4347330_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.314209,1,0,0,0,73.563,0.0,89.319,0.486,0.002,163.379,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214349570_1157_4350189_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.651,0.0,49.292,0.451,0.001,128.403,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214357041_1160_4357370_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,88.021,0.0,45.835,0.46,0.001,134.326,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214402361_1161_4402908_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.257,0.0,49.682,0.488,0.001,140.437,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214409302_1164_4409846_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.713,0.0,51.493,0.534,0.001,143.75,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214413301_1166_4413878_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.427979,1,0,0,0,94.448,0.0,78.381,0.476,0.001,173.313,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214415423_1167_4416096_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.397,0.0,48.02,0.361,0.001,127.785,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214418213_1168_4418674_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.309082,1,0,0,0,67.738,0.0,73.09,0.462,0.001,141.303,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214423933_1170_4424496_Panorama.jpg,1,1,SUSPECT_MULTI,INTERCEPT_REVIEW,0.562012,1,1,0,1,85.843,0.0,86.898,0.452,0.001,173.2,,false_multi,one high-confidence parcel plus low-confidence second candidate
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214427694_1171_4428270_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,74.914,0.0,50.721,0.509,0.001,126.162,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214432394_1172_4433055_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.265869,1,0,0,0,82.609,0.0,71.425,0.603,0.002,154.648,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214440415_1175_4440994_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,83.528,0.0,50.048,0.375,0.001,133.961,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214442313_1176_4442853_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.525,0.0,49.94,0.42,0.001,144.893,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214443826_1177_4444298_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.417,0.0,48.108,0.479,0.001,142.013,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214445205_1178_4445779_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.390625,1,0,0,0,91.641,0.0,85.131,0.479,0.001,177.26,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214452544_1181_4453047_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.288,0.0,51.87,0.432,0.001,122.598,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214458764_1183_4459409_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.442,0.0,46.816,0.475,0.001,117.741,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214501816_1184_4502298_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.774,0.0,49.93,0.522,0.001,115.235,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214505144_1185_4505762_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.340088,1,0,0,0,89.359,0.0,72.05,0.702,0.002,162.122,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214507106_1186_4507629_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.252441,1,0,0,0,86.754,0.0,64.574,0.743,0.002,152.086,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214508896_1187_4509492_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.009,0.0,51.316,0.42,0.001,140.755,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214515677_1189_4516197_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.035,0.0,46.592,0.464,0.001,114.101,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214516637_1190_4517149_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.513,0.0,47.224,0.452,0.001,123.198,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214519127_1191_4519657_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.216,0.0,65.9,0.735,0.001,148.862,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214521878_1192_4522404_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,96.418,0.0,47.56,0.323,0.001,144.309,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214526247_1193_4526901_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.021,0.0,63.683,0.515,0.001,158.228,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214530837_1196_4531380_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.219,0.0,50.752,0.474,0.001,132.455,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214536568_1198_4537097_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.301,0.0,47.934,0.413,0.001,118.657,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214540347_1199_4540982_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.764,0.0,49.459,0.576,0.001,125.808,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214541463_1200_4542067_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.341553,1,0,0,0,94.277,0.0,69.633,0.897,0.002,164.819,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214542788_1201_4543351_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.961,0.0,50.474,0.425,0.001,135.871,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214546117_1202_4546697_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.879,0.0,50.147,0.497,0.001,138.532,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214553660_1206_4554194_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,87.844,0.0,49.893,0.491,0.001,138.238,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214602089_1211_4602618_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,69.908,0.0,49.981,0.556,0.001,120.454,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214603620_1212_4604158_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.824,0.0,49.323,0.458,0.001,129.616,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214604940_1213_4605422_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,80.934,0.0,50.392,0.768,0.002,132.11,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214606389_1214_4607009_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.348,0.0,48.507,0.387,0.001,126.25,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214607890_1215_4608386_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.294189,1,0,0,0,85.505,0.0,66.257,0.571,0.002,152.343,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214609609_1216_4610131_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.273438,1,0,0,0,68.041,0.0,74.19,0.523,0.002,142.766,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214615230_1218_4615733_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.422363,1,0,0,0,88.527,0.0,92.254,0.402,0.001,181.19,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214618291_1219_4618938_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.586,0.0,50.934,0.459,0.001,142.988,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214619740_1220_4620388_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,67.809,0.0,54.521,0.976,0.002,123.322,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214620770_1221_4621368_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,99.222,0.0,55.297,0.467,0.001,154.997,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214625580_1223_4626137_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.320801,1,0,0,0,76.699,0.0,69.515,0.319,0.001,146.542,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214627031_1224_4627727_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.377686,1,0,0,0,80.679,0.0,67.563,0.477,0.001,148.726,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214633612_1227_4634169_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.488,0.0,50.766,0.48,0.001,122.745,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214634941_1228_4635581_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.945,0.0,50.693,0.503,0.001,136.151,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214640262_1229_4640776_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.825,0.0,48.632,0.484,0.001,133.95,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214642262_1230_4642838_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.30249,1,0,0,0,93.547,0.0,77.396,0.455,0.002,171.408,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214647972_1232_4648499_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.996,0.0,46.728,0.465,0.001,114.199,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214650321_1233_4650879_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,90.083,0.0,52.079,0.439,0.001,142.611,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214700722_1237_4701323_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.128,0.0,51.516,0.461,0.001,143.113,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214705693_1240_4706276_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.271973,1,0,0,0,70.044,0.0,71.083,0.612,0.002,141.751,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214711573_1242_4712007_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,70.93,0.0,46.943,0.515,0.001,118.398,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214715123_1243_4715793_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.324,0.0,49.705,0.473,0.001,132.511,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214716783_1244_4717433_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.591,0.0,51.238,0.482,0.001,123.322,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214719442_1245_4719902_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.655,0.0,49.09,0.514,0.001,126.27,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214721504_1246_4722085_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,89.632,0.0,51.129,0.378,0.001,141.148,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214722944_1247_4723643_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.511,0.0,52.907,0.523,0.001,126.952,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214727392_1250_4727988_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,94.357,0.0,50.16,0.343,0.001,144.869,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214729383_1251_4729977_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.941,0.0,49.394,0.405,0.001,126.749,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214731633_1252_4732198_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.232,0.0,49.232,0.511,0.001,113.986,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214735455_1254_4735854_Panorama.jpg,1,0,SINGLE,PASS,0.688965,1,1,0,0,81.579,0.0,72.82,0.512,0.001,154.923,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214737173_1255_4737619_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,79.503,0.0,49.181,0.446,0.001,129.14,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214740483_1257_4741075_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,78.876,0.0,48.17,0.402,0.001,127.455,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214745863_1260_4746396_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.521484,1,0,0,0,82.517,0.0,87.521,0.688,0.002,170.74,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214746895_1261_4747507_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.613,0.0,49.404,0.53,0.001,135.557,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214751746_1263_4752307_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,91.558,0.0,48.177,0.477,0.001,140.222,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214752855_1264_4753194_Panorama.jpg,1,0,SINGLE,PASS,0.864258,1,1,0,0,85.936,0.0,65.578,0.316,0.001,151.838,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214755735_1265_4756254_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.675,0.0,45.31,0.341,0.001,111.333,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214800256_1266_4800913_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.234,0.0,47.761,0.657,0.001,125.662,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214802625_1267_4803249_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,64.656,0.0,45.868,0.342,0.001,110.872,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214809177_1271_4809699_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,68.666,0.0,45.358,0.444,0.002,114.478,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214812427_1272_4812720_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.333008,1,0,0,0,80.948,0.0,76.53,0.443,0.001,157.93,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214814708_1273_4815121_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,72.148,0.0,46.441,0.496,0.001,119.094,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214817406_1274_4817782_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,81.756,0.0,52.429,0.496,0.002,134.691,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214825546_1276_4826057_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.30249,1,0,0,0,88.009,0.0,88.236,0.498,0.001,176.753,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214828307_1277_4828783_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,82.048,0.0,53.166,0.841,0.002,136.07,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214846408_1282_4847012_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.999,0.0,55.209,0.913,0.002,149.136,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214847747_1283_4848265_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,85.85,0.0,48.817,0.459,0.001,135.135,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214857060_1284_4857623_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,93.416,0.0,49.419,0.302,0.001,143.145,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214858789_1285_4859383_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.319,0.0,48.127,0.512,0.001,124.968,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214900890_1286_4901412_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.348877,1,0,0,0,74.539,0.0,69.427,0.527,0.002,144.502,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214907280_1287_4908199_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,3,0,1,0,63.114,0.0,52.809,0.444,0.001,116.374,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214917240_1292_4917880_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,66.537,0.0,43.971,0.437,0.001,110.955,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214919440_1293_4919920_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,103.291,0.0,48.688,0.359,0.001,152.344,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214921460_1294_4922030_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,84.975,0.0,53.035,0.811,0.002,138.837,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214923040_1295_4923580_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,92.479,0.0,50.428,0.445,0.001,143.362,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214928970_1297_4929654_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.275146,1,0,0,0,84.451,0.0,70.92,0.453,0.002,155.835,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214932830_1298_4933461_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,65.529,0.0,51.326,0.544,0.002,117.409,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214935371_1299_4935969_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.003,0.0,49.898,0.417,0.001,121.325,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214938661_1300_4939086_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,76.947,0.0,50.103,0.528,0.001,127.587,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214939681_1301_4940251_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.034,0.0,53.746,0.431,0.001,131.217,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214942692_1303_4943290_Panorama.jpg,0,2,UNKNOWN,REVIEW,0.478516,1,0,0,0,89.465,0.0,89.335,0.487,0.002,179.298,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214945381_1305_4945889_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,71.668,0.0,50.619,0.483,0.001,122.781,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_214952170_1308_4952702_Panorama.jpg,0,1,UNKNOWN,REVIEW,0.291016,1,0,0,0,98.528,0.0,70.118,0.797,0.002,169.458,,unknown,only low-confidence candidates found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_215002973_1313_5003514_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,73.819,0.0,51.395,0.448,0.001,125.672,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_215009432_1315_5010078_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,75.515,0.0,54.804,0.756,0.002,131.089,,unknown,no valid parcel candidate found
+Hikrobot MV-PD010003-12C-8C (DA8401808)_220022520_1225_0022923_Panorama.jpg,1,0,SINGLE,PASS,0.834473,1,1,0,0,74.787,0.001,79.053,0.42,0.001,154.297,,,exactly one high-confidence parcel
+Hikrobot MV-PD010003-12C-8C (DA8401808)_220027901_1226_0028242_Panorama.jpg,0,0,UNKNOWN,REVIEW,0.0,1,0,0,0,77.882,0.0,44.343,0.451,0.001,122.684,,unknown,no valid parcel candidate found

@@ -1,0 +1,31 @@
+# DWS batch validator default config
+
+model:
+  path: "models/yolo26s-seg.pt"
+  imgsz: [736, 960]      # [height, width], keep same as training input
+  device: "auto"         # auto / cpu / 0 / cuda:0
+  half: false            # for CUDA only; keep false for CPU/i7 validation
+  retina_masks: true
+
+data:
+  images: "data/images"
+  labels: "data/labels"
+  image_exts: [".jpg", ".jpeg", ".png", ".bmp"]
+
+thresholds:
+  low_conf: 0.25
+  high_conf: 0.55
+  iou: 0.50
+
+decision:
+  multi_gt_min_count: 2
+
+output:
+  base_dir: "outputs/runs"
+  save_vis: true
+  save_error_images: true
+  vis_all: true
+
+signal:
+  mode: "mock"
+  mock_delay_ms: 0.0

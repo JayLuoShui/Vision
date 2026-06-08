@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: dws-batch-model-validator
+Version: 1.0.0
+Summary: DWS top-view parcel detection and counting batch validator
+Requires-Python: >=3.10
+Requires-Dist: ultralytics>=8.3.0
+Requires-Dist: openvino>=2024.0.0
+Requires-Dist: opencv-python>=4.8.0
+Requires-Dist: numpy>=1.23.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: PyYAML>=6.0.0
+Requires-Dist: tqdm>=4.66.0
+Provides-Extra: gui
+Requires-Dist: PySide6>=6.6.0; extra == "gui"
+Provides-Extra: dev
+Requires-Dist: pyinstaller; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
