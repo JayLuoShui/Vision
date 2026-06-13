@@ -79,7 +79,7 @@ conda run -n yolo26 python .\scripts\track_count_packages.py --source D:\path\to
 启动 AI 辅助标注工具：
 
 ```powershell
-.\dist\CVDS_Annotation_Tool\CVDS_Annotation_Tool.exe
+.\dist\CVDS_Annotation_Tool_v2.3_AI\CVDS_Annotation_Tool_v2.3_AI.exe
 ```
 
 源码方式启动 GUI：
@@ -97,7 +97,7 @@ PT 视频流量监测脚本：
 C++ 检测部署版一键构建：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\packaging\build_release.ps1
+powershell -ExecutionPolicy Bypass -File .\apps\cvds_cpp_detector\packaging\build_release.ps1
 ```
 
 构建机需要 CMake、Ninja、MSVC、Qt、OpenCV 和 Inno Setup。终端用户安装后不需要 Python、Qt、OpenCV 或 conda。
@@ -105,7 +105,7 @@ powershell -ExecutionPolicy Bypass -File .\packaging\build_release.ps1
 标注工具 v2.3 AI 版打包：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\packaging\cvds_annotation_tool\build_release.ps1 -IncludeAI
+powershell -ExecutionPolicy Bypass -File .\apps\cvds_annotation_tool_v2_3\packaging\build_release.ps1 -IncludeAI
 ```
 
 输出：
@@ -119,9 +119,9 @@ DWS 批量模型检测验证工具：
 
 ```powershell
 cd .\apps\dws_batch_model_validator
-.\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe
-.\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe --diagnose
-.\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe --cli --model models\yolo26-s-seg.pt --images data\images --labels data\labels --device cpu
+..\..\dist\dws_batch_model_validator\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe
+..\..\dist\dws_batch_model_validator\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe --diagnose
+..\..\dist\dws_batch_model_validator\dist\DWSBatchModelValidator\DWSBatchModelValidator.exe --cli --model models\yolo26-s-seg.pt --images data\images --labels data\labels --device cpu
 ```
 
 CVDS 包裹堵塞视频合成工具：
@@ -133,13 +133,13 @@ CVDS 包裹堵塞视频合成工具：
 打包 Windows onedir：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\packaging\cvds_jam_video_synthesizer\build_release.ps1
+powershell -ExecutionPolicy Bypass -File .\apps\cvds_jam_video_synthesizer\packaging\build_release.ps1
 ```
 
 生成安装包：
 
 ```powershell
-iscc .\packaging\cvds_jam_video_synthesizer\make_installer.iss
+iscc .\apps\cvds_jam_video_synthesizer\packaging\make_installer.iss
 ```
 
 代码检查：
@@ -154,13 +154,13 @@ conda run -n yolo26 python .\tests\test_cpp_detector_structure.py
 源码方式启动标注工具：
 
 ```powershell
-conda run -n yolo26 python .\apps\cvds_annotation_tool.py
+conda run -n yolo26 python .\archive\legacy_apps\cvds_annotation_tool\cvds_annotation_tool.py
 ```
 
 诊断视频泛化问题：
 
 ```powershell
-conda run -n yolo26 python .\scripts\diagnose_video_package_model.py --source ".\Loop Cross-Belt Sorter in real operation [VSHu55q3tE8].mkv" --weights .\weights\cvds_yolo26n_package_best.pt --imgsz 640,960,1280 --device 0
+conda run -n yolo26 python .\scripts\diagnose_video_package_model.py --source ".\artifacts\samples\Loop Cross-Belt Sorter in real operation [VSHu55q3tE8].mkv" --weights .\weights\cvds_yolo26n_package_best.pt --imgsz 640,960,1280 --device 0
 ```
 
 审计 YOLO 数据集：
@@ -192,7 +192,7 @@ conda run -n yolo26 python .\scripts\audit_dataset.py --dataset .\datasets\cvds_
 抽取真实交叉带标注图片：
 
 ```powershell
-conda run -n yolo26 python .\scripts\extract_crossbelt_annotation_frames.py --source ".\Loop Cross-Belt Sorter in real operation [VSHu55q3tE8].mkv" --start-frame 240 --end-frame 1040 --count 120
+conda run -n yolo26 python .\scripts\extract_crossbelt_annotation_frames.py --source ".\artifacts\samples\Loop Cross-Belt Sorter in real operation [VSHu55q3tE8].mkv" --start-frame 240 --end-frame 1040 --count 120
 ```
 
 当前 GPU 版训练结果：
@@ -225,29 +225,30 @@ exe 路径：dist/CVDS_Qt_Platform/CVDS_Qt_Platform.exe
 源码：apps/cvds_cpp_detector
 安装包路径：dist_installer/CVDS_Package_Flow_Detector_Setup_<version>.exe
 默认权重：安装目录 weights 下的首个 .pt 文件
-窗口功能：视觉模型选择、路径记忆、本地视频/海康相机视频流、视频首帧多边形 ROI 绘制、右键或回车完成 ROI、ROI 点撤回、可选检测区域、ROI 流量统计、堵包报警
+窗口功能：视觉模型选择、路径记忆、本地视频/海康相机视频流、多 ROI 新增/命名/删除/绘制/保存/加载、主统计区域、可选检测区域、实时 KPI、区域状态表、分区堵包和红色闪烁报警
 界面风格：工业深色钢灰配色，运行/停止按钮颜色区分明显，类别和执行设备下拉栏有下拉图标，数字输入框增大/减小按钮为正/倒三角形
 已去除：模型训练、训练监控、PLC 接口
 推理链路：C++/Qt6 + OpenCV 界面；独立 Python worker exe 使用 Ultralytics PT + ByteTrack
 模型类别：根据 PT 权重内的类别信息自动读取到下拉框，不再写死 parcel
 默认设备：自动；有 CUDA 优先用 GPU，没有 CUDA 自动切到 CPU；环境自检会显示 NVIDIA 驱动、Torch 版本和 Torch CUDA 状态
 预览 FPS：60
-输出文件：pt_video_flow_monitor.mp4、flow_events.csv、jam_signals.jsonl、flow_summary.json、cvds_pt_preview.jpg
-堵包规则：ROI 内有包裹且流量数连续指定秒数不更新时触发，输出 IO_JAM_ON；解除时输出 IO_JAM_OFF
-当前状态：已补齐 worker 路径、AppData 输出、环境自检、打包脚本和 Inno Setup 安装包脚本
+统计规则：各 ROI 独立计数；顶部累计数量只取 total_count_region，T 型口不重复相加
+输出文件：regions.json、pt_video_flow_monitor.mp4、flow_events.csv、jam_signals.jsonl、flow_summary.json、cvds_pt_preview.jpg
+堵包规则：每个 ROI 独立判断；任一区域堵包时全局状态为 JAM，输出带区域信息的 IO_JAM_ON；解除时输出 IO_JAM_OFF
+当前状态：已完成多 ROI worker、Qt 区域管理、看板、分区堵包、旧 --roi 兼容和示例配置入包
 ```
 
 当前标注工具：
 
 ```text
-exe 路径：dist/CVDS_Annotation_Tool/CVDS_Annotation_Tool.exe
-源码：apps/cvds_annotation_tool.py
-2.0 exe 路径：dist/CVDS_Annotation_Tool_v2/CVDS_Annotation_Tool_v2.exe
-2.0 源码：apps/cvds_annotation_tool_v2.py
+历史 exe：artifacts/releases/archive/dist/CVDS_Annotation_Tool/CVDS_Annotation_Tool.exe
+历史源码：archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool.py
+2.0 历史 exe：artifacts/releases/archive/dist/CVDS_Annotation_Tool_v2.0/CVDS_Annotation_Tool_v2.exe
+2.0 历史源码：archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool_v2.py
 历史单文件版：apps/cvds_annotation_tool_legacy/
 2.3 入口：apps/cvds_annotation_tool_v2_3.py
 2.3 模块：apps/cvds_annotation_tool_v2_3/cvds_annotation_tool/
-2.3 打包脚本：packaging/cvds_annotation_tool/build_release.ps1
+2.3 打包脚本：apps/cvds_annotation_tool_v2_3/packaging/build_release.ps1
 2.3 基础版：dist/CVDS_Annotation_Tool_v2.3/CVDS_Annotation_Tool_v2.3.exe
 2.3 AI版：dist/CVDS_Annotation_Tool_v2.3_AI/CVDS_Annotation_Tool_v2.3_AI.exe
 2.3 AI版依赖：Torch 2.11.0+cu128、TorchVision 0.26.0+cu128、Ultralytics 8.4.53
@@ -397,7 +398,8 @@ PLC 事件格式：
 - 完成 C++ 发布形态改造：GUI 调用 `runtime/cvds_detector_worker.exe`，不再默认依赖开发机 Python。
 - 完成 C++ 检测页 PT 推理链路优化：自动/CPU/GPU 三种模式、预览 FPS 默认 60。
 - 完成 C++ 检测页多边形 ROI 绘制和流量监测：视频首帧逐点画 ROI，右键或回车完成，支持撤回点，可选检测区域，支持路径记忆和海康相机 RTSP 视频流，输出带框视频、事件 CSV、堵包信号 JSONL 和统计 JSON。
-- 完成 Windows 安装包脚本：`packaging/build_release.ps1`、`packaging/make_installer.iss`、worker requirements 和发布文档。
+- 完成 C++ 多 ROI 看板：区域新增/命名/删除/保存/加载、主统计区域、分区计数、分区堵包、KPI、区域状态表和红色闪烁告警；旧 `--roi` 命令继续兼容。
+- 完成 Windows 安装包脚本：`apps/cvds_cpp_detector/packaging/`、worker requirements 和发布文档。
 - 完成 CVDS 包裹堵塞视频合成工具首版：支持视频导入、抽帧、矩形 ROI、随机/手动堵塞片段、整帧冻结插入、ROI 冻结、合成帧、MP4 导出、`jam_segments.json/csv`、`project.json` 和 Windows 打包脚本；所有合成结果明确标记为 `synthetic/simulated`。
 - 完成 DatasetAssistant V1.0 功能收敛：移除内置堵包视频制作页面、CLI、工程字段、核心代码和测试，保留图片批处理、标注转换、数据集划分、模型推理和诊断。
 

@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+ultralytics
+torch==2.11.0+cu128
+torchvision==0.26.0+cu128
+opencv-python
+pillow
+numpy
+pyyaml
+pyinstaller

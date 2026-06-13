@@ -1,5 +1,70 @@
 # 当前上下文
 
+当前正在做什么：2026-06-13 已完成 Vision 仓库结构整理和本机产物清理。
+
+上次停在哪个位置：延迟测试已迁入 `tools/diagnostics/llm_latency/`，各应用的文档和打包脚本已归入应用目录，历史标注源码和旧打包配置已迁入 `archive/`；旧发布包移入本地忽略的 `artifacts/`，可重建的 build、缓存、调试输出和重复验证包已删除，释放约 48GB。
+
+近期的关键决定和原因：
+- 当前正式发布包、模型、数据集、训练结果、虚拟环境和 `ultralytics` 源码依赖全部保留。
+- vLLM 延迟测试不再保存固定口令，改为读取 `VLLM_API_KEY` 环境变量，避免敏感信息进入 GitHub。
+- 发布脚本只复制各自应用的文档，避免不同产品的说明混入同一个安装包。
+
+当前正在做什么：2026-06-13 已完成根目录未跟踪 `ultralytics/` 的来源与扫描影响检查。
+
+上次停在哪个位置：该目录确认是 2026-04-23 从 `https://github.com/ultralytics/ultralytics.git` 克隆、后续持续更新的独立源码仓库，不是运行产物或临时下载；当前训练脚本明确依赖该路径。目录约 168MB、1437 个文件，父仓库此前未忽略，OpenCode watcher 也会扫描。现已在 `.gitignore` 和 `opencode.json` 中排除整个目录，源码和训练结果均未删除或移动。
+
+近期的关键决定和原因：
+- 保留 `D:\Demo\Vision\ultralytics` 原路径，因为 `scripts/train_yolomask_yolo26seg.py` 和项目文档将其作为可复现的本地源码依赖；只阻止父 Git 收录和 OpenCode 扫描，避免仓库膨胀与无效索引。
+
+当前正在做什么：2026-06-12 已完成 `apps/cvds_cpp_detector` 源码复查、缺失项修复和 `CVDS_Cpp_Detector2.0` 正式发布。
+
+上次停在哪个位置：便携目录为 `D:\Demo\Vision\dist\CVDS_Cpp_Detector2.0`，安装包为 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`。92/92 测试通过，Ruff、Python 编译、C++ Release 编译、正式 worker 环境自检、模型读取、3 帧真实推理和 GUI 隐藏启动均通过。主程序、worker 和安装包已使用 `CN=CVDS Local Code Signing` 签名，本机 Authenticode 状态为 Valid；公钥证书为 `D:\Demo\Vision\dist_installer\CVDS_Local_Code_Signing.cer`。
+
+近期的关键决定和原因：
+- 模型类别读取改为异步 QProcess；读取失败或超时会明确停止检测，不再静默切到全部类别，避免窗口假死和错误检测范围。
+- RTSP 密码不写入配置，网络地址持久化前移除用户信息；运行中锁定路径、参数和 ROI 编辑，防止界面与 worker 配置不一致。
+- worker 改为 onedir 发布，并取消对 PyTorch、TorchVision、NVIDIA 的整包收集；正式目录仍约 4.9GB，因为 CUDA/cuDNN 离线 GPU 动态库本身约 4GB，继续删除会破坏 GPU 推理。
+
+当前正在做什么：2026-06-12 已修复 Windows PowerShell 配置文件被执行策略阻止的问题。
+
+上次停在哪个位置：当前用户执行策略从默认 `Restricted` 调整为 `RemoteSigned`；Windows PowerShell 5.1 的 `profile.ps1` 成功加载，Conda 初始化正常，PowerShell 7.6.2 也正常启动。未修改配置文件内容。
+
+近期的关键决定和原因：
+- 只修改当前用户执行策略，不修改整台电脑；`RemoteSigned` 允许本地脚本，同时继续限制未解锁的网络脚本。
+
+当前正在做什么：2026-06-12 已安装微软官方最新稳定版 PowerShell 7.6.2。
+
+上次停在哪个位置：通过 WinGet 安装 `Microsoft.PowerShell 7.6.2.0`，`pwsh.exe` 已可直接运行；UTF-8 中文输出正常。系统自带 Windows PowerShell 5.1 保留并与新版并存，WinGet 确认没有可用的更高版本。
+
+近期的关键决定和原因：
+- 使用微软官方 WinGet MSIX 包，不替换 Windows 自带 PowerShell 5.1，避免影响依赖旧版的系统脚本。
+
+当前正在做什么：2026-06-11 已完成 `apps/cvds_cpp_detector` 多 ROI 实时看板优化和最终验证。
+
+上次停在哪个位置：worker 已支持严格 `regions.json`、旧 `--roi` 兼容、分区计数、分区堵包、区域 CSV/JSONL/summary、中文区域名和红色画面告警；Qt 已支持区域新增/命名/删除/绘制/保存/加载、主统计区域、KPI、区域状态表和 500ms 红色闪烁。全项目测试 80/80 通过，Ruff 和 Python 编译检查通过，C++ Release 构建、隐藏启动、示例配置复制、独立 worker 打包、自诊断和 `--regions` 参数链路均通过。
+
+近期的关键决定和原因：
+- T 型口顶部总数只读取 `total_count_region`，不把主线和分流口相加，避免重复统计。
+- 未右键或回车完成的区域保留为编辑草稿，不能保存或启动；已有无效配置明确报错，不自动替换。
+- Qt 继续使用 `QThread + QProcess + preview.jpg`，worker 负责检测和状态，Qt 负责看板与闪烁，不引入 Web、数据库或新检测链路。
+- 发布包增加 `configs/regions.example.json` 和 Pillow 依赖；已用全新目录完成非破坏性 worker 打包验证。完整发布脚本会删除旧 build/dist 产物，因此未执行。
+
+当前正在做什么：2026-06-09 已完成海康 DS-8864N-R8(C) 网页回放卡顿的只读排查。
+
+上次停在哪个位置：网络 40/40 Ping 成功，平均 1.25ms；千兆网卡无错误包；8 块约 5.59TB 硬盘均正常可读写。目标 D39 主码流为 2560×1440、25fps、H.265、3072Kbps，网页默认 4×4 且电脑未安装 LocalServiceComponents。未修改设备配置，未安装软件。
+
+近期的关键决定和原因：
+- 首选处理是回放改为 1×1，并安装海康官方 LocalServiceComponents；安装软件前必须取得用户确认。
+- 不直接降低主码流，因为这会影响录像清晰度；只有组件安装后仍卡，才对具体通道做受控参数对比。
+
+当前正在做什么：2026-06-09 已完成按文本名单复制图片的 PowerShell 脚本，并修正双击入口。
+
+上次停在哪个位置：用户应双击 `C:\Users\lenovo\Desktop\noread\双击这里开始复制图片.bat`；后台 `.ps1` 已隐藏。脚本读取 `新建 文本文档.txt`，真实名单 111 条全部唯一匹配，未自动执行复制。
+
+近期的关键决定和原因：
+- 名单中的文件名没有 `.jpg` 后缀，因此按文件主名匹配；缺失、名单重复或来源重名时直接失败，完整检查通过后才复制。
+- 提供 PowerShell 正式脚本和可双击的 CMD 入口；脚本使用 UTF-8 BOM，保证 Windows PowerShell 5 正确读取中文路径。
+
 当前正在做什么：2026-06-08 已完成 Git 对象库清理，并补充本地审计、样例数据、缓存和调试产物的忽略规则。
 
 上次停在哪个位置：`.git` 从约 41GB 降至约 688MB；垃圾对象为 0，工作区文件未删除。新增忽略规则后正在执行最终压缩核验。

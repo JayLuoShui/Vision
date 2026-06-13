@@ -44,6 +44,20 @@ QString defaultOutputDir() {
     return path;
 }
 
+QString configDir() {
+    const QString path = QDir(writableAppDataDir()).filePath("configs");
+    QDir().mkpath(path);
+    return path;
+}
+
+QString defaultRegionsConfigPath() {
+    return QDir(configDir()).filePath("regions.json");
+}
+
+QString regionsExamplePath() {
+    return QDir(appDir()).filePath("configs/regions.example.json");
+}
+
 QString trackerConfigPath() {
     return QDir(appDir()).filePath("configs/bytetrack.yaml");
 }

@@ -50,9 +50,10 @@ def test_v23_sam_is_disabled_when_runtime_does_not_export_sam():
 
 
 def test_v23_ai_release_keeps_base_release_and_uses_ai_name():
-    build_script = read(ROOT / "packaging" / "cvds_annotation_tool" / "build_release.ps1")
-    spec = read(ROOT / "packaging" / "cvds_annotation_tool" / "cvds_annotation_tool.spec")
-    ai_requirements = read(ROOT / "packaging" / "cvds_annotation_tool" / "requirements-ai.txt")
+    packaging = ROOT / "apps" / "cvds_annotation_tool_v2_3" / "packaging"
+    build_script = read(packaging / "build_release.ps1")
+    spec = read(packaging / "cvds_annotation_tool.spec")
+    ai_requirements = read(packaging / "requirements-ai.txt")
 
     assert "CVDS_Annotation_Tool_v2.3_AI" in build_script
     assert "CVDS_Annotation_Tool_v2.3" in build_script

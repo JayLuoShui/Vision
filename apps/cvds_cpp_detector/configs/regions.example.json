@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "total_count_region": "main_in",
+  "regions": [
+    {
+      "id": "main_in",
+      "name": "主线入口",
+      "polygon": [
+        [120, 80],
+        [520, 80],
+        [520, 260],
+        [120, 260]
+      ],
+      "count_enabled": true,
+      "jam_enabled": true,
+      "jam_seconds": 5,
+      "priority": 1
+    },
+    {
+      "id": "left_branch",
+      "name": "左分流口",
+      "polygon": [
+        [80, 260],
+        [320, 260],
+        [320, 520],
+        [80, 520]
+      ],
+      "count_enabled": true,
+      "jam_enabled": true,
+      "jam_seconds": 5,
+      "priority": 2
+    },
+    {
+      "id": "right_branch",
+      "name": "右分流口",
+      "polygon": [
+        [420, 260],
+        [720, 260],
+        [720, 520],
+        [420, 520]
+      ],
+      "count_enabled": true,
+      "jam_enabled": true,
+      "jam_seconds": 5,
+      "priority": 3
+    }
+  ]
+}

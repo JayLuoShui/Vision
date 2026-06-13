@@ -86,6 +86,10 @@ def collect_runtime_diagnostics() -> dict[str, Any]:
     if not opencv_available:
         errors.append(f"opencv: {opencv_error}")
 
+    pillow_available, pillow_error = import_status("PIL")
+    if not pillow_available:
+        errors.append(f"pillow: {pillow_error}")
+
     numpy_available, numpy_error = import_status("numpy")
     if not numpy_available:
         errors.append(f"numpy: {numpy_error}")
@@ -109,6 +113,7 @@ def collect_runtime_diagnostics() -> dict[str, Any]:
         "cuda_available": cuda_available,
         "ultralytics_available": ultralytics_available,
         "opencv_available": opencv_available,
+        "pillow_available": pillow_available,
         "numpy_available": numpy_available,
         "nvidia_driver_available": bool(nvidia["available"]),
         "nvidia_gpu_name": nvidia["gpu_name"],
@@ -128,6 +133,7 @@ def diagnose() -> int:
         diagnostics["torch_available"]
         and diagnostics["ultralytics_available"]
         and diagnostics["opencv_available"]
+        and diagnostics["pillow_available"]
         and diagnostics["numpy_available"]
     )
     return 0 if required_ok else 1
@@ -164,6 +170,11 @@ def ensure_detect_inputs(args: argparse.Namespace) -> None:
         raise FileNotFoundError(f"找不到模型：{args.weights}")
     if args.tracker and not Path(args.tracker).exists():
         raise FileNotFoundError(f"找不到 tracker 配置：{args.tracker}")
+    if args.regions:
+        if not Path(args.regions).exists():
+            raise FileNotFoundError(f"找不到 regions.json：{args.regions}")
+    elif not args.roi:
+        raise ValueError("必须传入 --regions 或 --roi，不能留空")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     probe = output_dir / ".cvds_worker_write_test.tmp"
@@ -183,8 +194,6 @@ def detect(args: argparse.Namespace) -> int:
     if str(requested_device).strip().lower() not in {"", "auto", "cpu", "-1"} and args.device == "cpu":
         emit({"type": "status", "message": gpu_unavailable_message() + " 已自动切换 CPU。", "device": "cpu"})
 
-    import pt_video_flow_monitor
-
     argv = [
         "pt_video_flow_monitor.py",
         "--weights",
@@ -195,8 +204,6 @@ def detect(args: argparse.Namespace) -> int:
         args.output_dir,
         "--preview-path",
         args.preview_path,
-        "--roi",
-        args.roi,
         "--conf",
         str(args.conf),
         "--iou",
@@ -216,12 +223,18 @@ def detect(args: argparse.Namespace) -> int:
         "--jam-signal-path",
         args.jam_signal_path,
     ]
+    if args.regions:
+        argv.extend(["--regions", args.regions])
+    elif args.roi:
+        argv.extend(["--roi", args.roi])
     if args.max_frames > 0:
         argv.extend(["--max-frames", str(args.max_frames)])
     if args.detect_roi:
         argv.extend(["--detect-roi", args.detect_roi])
     sys.argv = argv
     try:
+        import pt_video_flow_monitor
+
         pt_video_flow_monitor.main()
     except SystemExit as exc:
         return int(exc.code or 0)
@@ -253,7 +266,8 @@ def build_parser() -> argparse.ArgumentParser:
     detect_parser.add_argument("--source", required=True)
     detect_parser.add_argument("--output-dir", required=True)
     detect_parser.add_argument("--preview-path", required=True)
-    detect_parser.add_argument("--roi", required=True)
+    detect_parser.add_argument("--roi", default=None)
+    detect_parser.add_argument("--regions", default=None)
     detect_parser.add_argument("--detect-roi", default=None)
     detect_parser.add_argument("--conf", type=float, default=0.25)
     detect_parser.add_argument("--iou", type=float, default=0.45)

@@ -14,6 +14,7 @@ __pycache__/
 datasets/
 runs/
 weights/
+/ultralytics/
 *.pt
 *.onnx
 *.engine
@@ -31,6 +32,7 @@ weights/
 
 # 本地审计、样例数据和调试产物
 audit/
+artifacts/
 apps/dws_batch_model_validator/data/
 DWSVisionCountService/cache/
 DWSVisionCountService/debug/

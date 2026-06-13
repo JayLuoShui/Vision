@@ -4,6 +4,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 
+#include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDateTime>
@@ -16,6 +17,7 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QHeaderView>
 #include <QHBoxLayout>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -36,8 +38,12 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSettings>
+#include <QSignalBlocker>
 #include <QSizePolicy>
 #include <QSpinBox>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <QWheelEvent>
@@ -114,6 +120,15 @@ bool canBeRuntimeSource(const QString& source) {
         || (isNumber && cameraIndex >= 0);
 }
 
+QString sourcePathForSettings(const QString& source) {
+    const QString trimmed = source.trimmed();
+    const QUrl url(trimmed);
+    if (!url.isValid() || url.scheme().isEmpty()) {
+        return trimmed;
+    }
+    return url.toString(QUrl::RemoveUserInfo | QUrl::FullyEncoded);
+}
+
 cv::VideoCapture openCapture(const QString& source) {
     const QString trimmed = source.trimmed();
     bool isNumber = false;
@@ -161,6 +176,67 @@ bool isOutputDirWritable(const QString& outputDir, QString* errorMessage = nullp
     return true;
 }
 
+RegionRuntimeState buildFallbackState(const RegionConfig& region) {
+    RegionRuntimeState state;
+    state.id = region.id;
+    state.name = region.name;
+    state.status = "待机";
+    return state;
+}
+
+QString regionStatusText(const RegionRuntimeState& state, bool running) {
+    if (state.jamActive) {
+        return "堵包";
+    }
+    const QString status = state.status.trimmed().toUpper();
+    if (status == "RUNNING") {
+        return "运行中";
+    }
+    if (status == "IDLE") {
+        return "空闲";
+    }
+    if (status == "JAM") {
+        return "堵包";
+    }
+    if (status == "ERROR") {
+        return "异常";
+    }
+    if (!state.status.trimmed().isEmpty()) {
+        return state.status.trimmed();
+    }
+    return running ? "运行中" : "待机";
+}
+
+QString dashboardStatusForStates(
+    const QVector<RegionRuntimeState>& states,
+    bool jamActive,
+    const QString& fallback
+) {
+    if (jamActive) {
+        return "堵包";
+    }
+    if (!states.isEmpty()) {
+        const bool allIdle = std::all_of(states.cbegin(), states.cend(), [](const RegionRuntimeState& state) {
+            return state.insideCount <= 0;
+        });
+        return allIdle ? "空闲" : "运行中";
+    }
+    const QString normalized = fallback.trimmed().toUpper();
+    if (normalized == "RUNNING") {
+        return "运行中";
+    }
+    if (normalized == "IDLE") {
+        return "空闲";
+    }
+    if (normalized == "JAM") {
+        return "堵包";
+    }
+    if (normalized == "ERROR") {
+        return "异常";
+    }
+    return fallback;
+}
+
 }  // namespace
 
 RoiPreviewLabel::RoiPreviewLabel(QWidget* parent)
@@ -183,10 +259,62 @@ void RoiPreviewLabel::setDrawMode(DrawMode mode) {
     update();
 }
 
+void RoiPreviewLabel::setFlowRegions(const QVector<RegionConfig>& regions) {
+    flowRegions_ = regions;
+    if (flowRegions_.isEmpty()) {
+        activeRegionId_.clear();
+        flowRoi_.clear();
+        flowRoiClosed_ = false;
+        update();
+        return;
+    }
+    if (activeRegionId_.trimmed().isEmpty() || activeRegionIndex() < 0) {
+        activeRegionId_ = flowRegions_.first().id;
+    }
+    const int index = activeRegionIndex();
+    if (index >= 0) {
+        flowRoi_ = flowRegions_[index].polygon;
+        flowRoiClosed_ = flowRegions_[index].polygonClosed;
+    }
+    update();
+}
+
+void RoiPreviewLabel::setActiveRegionId(const QString& regionId) {
+    activeRegionId_ = regionId.trimmed();
+    const int index = activeRegionIndex();
+    if (index >= 0) {
+        flowRoi_ = flowRegions_[index].polygon;
+        flowRoiClosed_ = flowRegions_[index].polygonClosed;
+    } else {
+        flowRoi_.clear();
+        flowRoiClosed_ = false;
+    }
+    hasDraftCursor_ = false;
+    update();
+}
+
+void RoiPreviewLabel::setJamRegionIds(const QStringList& regionIds) {
+    jamRegionIds_ = regionIds;
+    update();
+}
+
+void RoiPreviewLabel::setAlertFlashVisible(bool visible) {
+    alertFlashVisible_ = visible;
+    update();
+}
+
+void RoiPreviewLabel::setRoiEditingEnabled(bool enabled) {
+    roiEditingEnabled_ = enabled;
+    if (!enabled) {
+        hasDraftCursor_ = false;
+    }
+}
+
 void RoiPreviewLabel::clearCurrentRoi() {
     activePolygon().clear();
     activeRoiClosed() = false;
     hasDraftCursor_ = false;
+    syncActiveFlowRegion();
     emitCurrentRoi();
     update();
 }
@@ -198,6 +326,7 @@ void RoiPreviewLabel::undoCurrentPoint() {
     }
     activeRoiClosed() = false;
     hasDraftCursor_ = false;
+    syncActiveFlowRegion();
     emitCurrentRoi();
     update();
 }
@@ -205,6 +334,7 @@ void RoiPreviewLabel::undoCurrentPoint() {
 void RoiPreviewLabel::finishCurrentPolygon() {
     hasDraftCursor_ = false;
     activeRoiClosed() = activePolygon().size() >= 3;
+    syncActiveFlowRegion();
     emitCurrentRoi();
     update();
 }
@@ -212,6 +342,7 @@ void RoiPreviewLabel::finishCurrentPolygon() {
 void RoiPreviewLabel::setFlowRoiFromText(const QString& text) {
     flowRoi_ = textToPolygon(text);
     flowRoiClosed_ = flowRoi_.size() >= 3;
+    syncActiveFlowRegion();
     update();
 }
 
@@ -268,6 +399,26 @@ QPoint RoiPreviewLabel::imageToLabelPoint(const QPoint& point) const {
     );
 }
 
+int RoiPreviewLabel::activeRegionIndex() const {
+    for (int i = 0; i < flowRegions_.size(); ++i) {
+        if (flowRegions_[i].id == activeRegionId_) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void RoiPreviewLabel::syncActiveFlowRegion() {
+    if (drawMode_ != DrawMode::FlowRoi && activeRegionIndex() < 0) {
+        return;
+    }
+    const int index = activeRegionIndex();
+    if (index >= 0) {
+        flowRegions_[index].polygon = flowRoi_;
+        flowRegions_[index].polygonClosed = flowRoiClosed_;
+    }
+}
+
 QVector<QPoint>& RoiPreviewLabel::activePolygon() {
     return drawMode_ == DrawMode::FlowRoi ? flowRoi_ : detectRoi_;
 }
@@ -288,39 +439,21 @@ QString RoiPreviewLabel::polygonToText(const QVector<QPoint>& polygon, bool clos
     if (!closed || polygon.size() < 3) {
         return {};
     }
-    QStringList parts;
-    parts.reserve(polygon.size() * 2);
-    for (const QPoint& point : polygon) {
-        parts << QString::number(point.x()) << QString::number(point.y());
-    }
-    return parts.join(",");
+    return ::polygonToText(polygon);
 }
 
 QVector<QPoint> RoiPreviewLabel::textToPolygon(const QString& text) const {
-    const QStringList parts = text.split(",", Qt::SkipEmptyParts);
-    if (parts.size() < 6 || parts.size() % 2 != 0) {
+    try {
+        return polygonFromText(text, "ROI", true);
+    } catch (const std::exception&) {
         return {};
     }
-    QVector<QPoint> polygon;
-    polygon.reserve(parts.size() / 2);
-    for (int i = 0; i + 1 < parts.size(); i += 2) {
-        bool okX = false;
-        bool okY = false;
-        int x = parts[i].trimmed().toInt(&okX);
-        int y = parts[i + 1].trimmed().toInt(&okY);
-        if (!okX || !okY) {
-            return {};
-        }
-        if (!image_.isNull()) {
-            x = std::clamp(x, 0, image_.width() - 1);
-            y = std::clamp(y, 0, image_.height() - 1);
-        }
-        polygon.push_back(QPoint(x, y));
-    }
-    return polygon;
 }
 
 void RoiPreviewLabel::emitCurrentRoi() {
+    if (drawMode_ == DrawMode::FlowRoi) {
+        emit flowRegionChanged(activeRegionId_, activePolygon(), activeRoiClosed());
+    }
     emit roiChanged(drawMode_, polygonToText(activePolygon(), activeRoiClosed()));
 }
 
@@ -367,7 +500,18 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
     painter.fillRect(QRect(0, 0, width(), imageRect.top()), QColor(5, 9, 18, 160));
     painter.fillRect(QRect(0, imageRect.bottom() + 1, width(), height() - imageRect.bottom() - 1), QColor(5, 9, 18, 160));
 
-    drawPolygon(painter, flowRoi_, flowRoiClosed_, QColor("#d49a20"), "流量ROI");
+    for (const RegionConfig& region : flowRegions_) {
+        const bool isCurrent = region.id == activeRegionId_;
+        const bool jamActive = jamRegionIds_.contains(region.id);
+        const QColor color = jamActive && alertFlashVisible_
+            ? QColor("#ff4d4f")
+            : (isCurrent ? QColor("#55b982") : QColor("#d49a20"));
+        if (isCurrent) {
+            drawPolygon(painter, flowRoi_, flowRoiClosed_, color, region.name + "（当前区域）");
+        } else {
+            drawPolygon(painter, region.polygon, region.polygonClosed, color, region.name);
+        }
+    }
     drawPolygon(painter, detectRoi_, detectRoiClosed_, QColor("#4aa3b5"), "检测ROI");
 
     const QVector<QPoint>& polygon = activePolygon();
@@ -377,9 +521,21 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
         painter.setBrush(QColor("#1f6f50"));
         painter.drawEllipse(imageToLabelPoint(draftCursor_), 4, 4);
     }
+
+    painter.setPen(QColor("#d8e0df"));
+    painter.drawText(imageRect.adjusted(12, 18, -12, -18), Qt::AlignLeft | Qt::AlignTop, "当前区域: " + activeRegionId_);
+    if (alertFlashVisible_ && !jamRegionIds_.isEmpty()) {
+        painter.setPen(QPen(QColor("#ff4d4f"), 4));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawRect(rect().adjusted(2, 2, -2, -2));
+    }
 }
 
 void RoiPreviewLabel::mousePressEvent(QMouseEvent* event) {
+    if (!roiEditingEnabled_) {
+        event->ignore();
+        return;
+    }
     if (image_.isNull()) {
         return;
     }
@@ -392,19 +548,23 @@ void RoiPreviewLabel::mousePressEvent(QMouseEvent* event) {
     if (event->button() != Qt::LeftButton) {
         return;
     }
+    if (drawMode_ == DrawMode::FlowRoi && activeRegionId_.trimmed().isEmpty()) {
+        return;
+    }
     if (activeRoiClosed()) {
         activePolygon().clear();
     }
     activeRoiClosed() = false;
     activePolygon().push_back(labelToImagePoint(event->pos()));
     hasDraftCursor_ = false;
+    syncActiveFlowRegion();
     emitCurrentRoi();
     update();
     event->accept();
 }
 
 void RoiPreviewLabel::mouseMoveEvent(QMouseEvent* event) {
-    if (image_.isNull() || activePolygon().isEmpty() || activeRoiClosed()) {
+    if (!roiEditingEnabled_ || image_.isNull() || activePolygon().isEmpty() || activeRoiClosed()) {
         return;
     }
     draftCursor_ = labelToImagePoint(event->pos());
@@ -413,6 +573,10 @@ void RoiPreviewLabel::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void RoiPreviewLabel::keyPressEvent(QKeyEvent* event) {
+    if (!roiEditingEnabled_) {
+        QLabel::keyPressEvent(event);
+        return;
+    }
     if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
         finishCurrentPolygon();
         event->accept();
@@ -420,7 +584,7 @@ void RoiPreviewLabel::keyPressEvent(QKeyEvent* event) {
     }
     if (event->key() == Qt::Key_Escape
         || event->key() == Qt::Key_Backspace
-        || (event->matches(QKeySequence::Undo))) {
+        || event->matches(QKeySequence::Undo)) {
         undoCurrentPoint();
         event->accept();
         return;
@@ -446,6 +610,9 @@ void DetectionWorker::run() {
         if (!QFileInfo::exists(config_.trackerPath)) {
             throw std::runtime_error("缺少 tracker yaml");
         }
+        if (!QFileInfo::exists(config_.regionsPath)) {
+            throw std::runtime_error("缺少 regions.json");
+        }
         QDir().mkpath(config_.outputDir);
         const QString previewPath = QDir(config_.outputDir).filePath("cvds_pt_preview.jpg");
         QStringList args = {
@@ -454,7 +621,7 @@ void DetectionWorker::run() {
             "--source", config_.sourcePath,
             "--output-dir", config_.outputDir,
             "--preview-path", previewPath,
-            "--roi", config_.flowRoiText,
+            "--regions", config_.regionsPath,
             "--conf", QString::number(config_.confidence, 'f', 3),
             "--iou", QString::number(config_.iou, 'f', 3),
             "--imgsz", QString::number(config_.inputSize),
@@ -473,6 +640,7 @@ void DetectionWorker::run() {
         emit log("worker 路径：" + config_.workerPath);
         emit log("模型路径：" + config_.ptPath);
         emit log("输出目录：" + config_.outputDir);
+        emit log("区域配置：" + config_.regionsPath);
         emit log("检测模式：通过独立 worker 使用 PT 权重进行视频检测。");
         emit log("请求推理设备：" + config_.device);
         emit log("堵包信号文件：" + config_.jamSignalPath);
@@ -517,34 +685,23 @@ void DetectionWorker::run() {
                     if (!image.isNull()) {
                         emit frameReady(image);
                     }
-                    const int frame = object.value("frame").toInt();
-                    if (frame % std::max(1, config_.previewFps) == 0) {
-                        emit log(
-                            QString("已处理 %1 帧，流量 %2，ROI内 %3")
-                                .arg(frame)
-                                .arg(object.value("flow_count").toInt())
-                                .arg(object.value("inside_count").toInt())
-                        );
+                    emit dashboardPayloadReady(rawLine);
+                } else if (type == "jam" || type == "jam_clear" || type == "done") {
+                    emit dashboardPayloadReady(rawLine);
+                    if (type == "done") {
+                        const int totalCount = object.value("total_count").toInt(object.value("flow_count").toInt());
+                        doneSummary = QString("视频检测完成：总帧 %1，累计 %2，堵包 %3 次，最大同时在区域内 %4。输出：%5")
+                            .arg(object.value("frames").toInt())
+                            .arg(totalCount)
+                            .arg(object.value("jam_count").toInt())
+                            .arg(object.value("max_inside_count").toInt())
+                            .arg(object.value("output_video").toString());
                     }
-                } else if (type == "jam") {
-                    emit log(
-                        QString("堵包报警：ROI内 %1 个目标，%2 秒无流量更新，信号 %3")
-                            .arg(object.value("inside_count").toInt())
-                            .arg(object.value("stale_seconds").toDouble(), 0, 'f', 1)
-                            .arg(object.value("signal").toString())
-                    );
-                } else if (type == "jam_clear") {
-                    emit log("堵包解除，信号 " + object.value("signal").toString());
-                } else if (type == "done") {
-                    doneSummary = QString("视频检测完成：总帧 %1，流量 %2，堵包 %3 次，最大同时在ROI内 %4。输出：%5")
-                        .arg(object.value("frames").toInt())
-                        .arg(object.value("flow_count").toInt())
-                        .arg(object.value("jam_count").toInt())
-                        .arg(object.value("max_inside_count").toInt())
-                        .arg(object.value("output_video").toString());
                 } else if (type == "error") {
                     errorMessage = object.value("message").toString();
                     emit log("检测错误：" + errorMessage);
+                } else {
+                    emit log(QString::fromUtf8(rawLine));
                 }
             }
         };
@@ -578,11 +735,13 @@ void DetectionWorker::run() {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
-    setWindowTitle("CVDS包裹流量检测工具");
-    resize(1420, 900);
-    setMinimumSize(1100, 720);
+    setWindowTitle("CVDS包裹流量检测工具 " + RuntimePaths::versionText());
+    resize(1480, 940);
+    setMinimumSize(1180, 760);
 
     auto* root = new QWidget(this);
+    root->setObjectName("dashboardRoot");
+    dashboardRoot_ = root;
     auto* layout = new QHBoxLayout(root);
     layout->setContentsMargins(12, 12, 12, 12);
     layout->setSpacing(12);
@@ -592,9 +751,12 @@ MainWindow::MainWindow(QWidget* parent)
     auto* leftLayout = new QVBoxLayout(leftContent);
     leftLayout->setContentsMargins(0, 0, 8, 0);
     leftLayout->setSpacing(8);
-    leftLayout->addWidget(buildPathPanel());
-    leftLayout->addWidget(buildParamPanel());
-    leftLayout->addWidget(buildRoiPanel());
+    pathPanel_ = buildPathPanel();
+    paramPanel_ = buildParamPanel();
+    roiPanel_ = buildRoiPanel();
+    leftLayout->addWidget(pathPanel_);
+    leftLayout->addWidget(paramPanel_);
+    leftLayout->addWidget(roiPanel_);
     leftLayout->addWidget(buildActionPanel());
     leftLayout->addStretch(1);
 
@@ -612,12 +774,27 @@ MainWindow::MainWindow(QWidget* parent)
     auto* rightLayout = new QVBoxLayout(right);
     rightLayout->setContentsMargins(0, 0, 0, 0);
     rightLayout->setSpacing(10);
+    rightLayout->addWidget(buildDashboardPanel());
+
     previewLabel_ = new RoiPreviewLabel(right);
     previewLabel_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    regionTable_ = new QTableWidget(0, 6, right);
+    regionTable_->setHorizontalHeaderLabels({"区域状态", "累计包裹", "区域内", "当前状态", "堵包秒数", "堵包次数"});
+    regionTable_->verticalHeader()->setVisible(false);
+    regionTable_->horizontalHeader()->setStretchLastSection(true);
+    regionTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    regionTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    regionTable_->setSelectionMode(QAbstractItemView::NoSelection);
+    regionTable_->setFocusPolicy(Qt::NoFocus);
+    regionTable_->setMinimumHeight(210);
+
     logEdit_ = new QPlainTextEdit(right);
     logEdit_->setReadOnly(true);
-    logEdit_->setMaximumHeight(170);
+    logEdit_->setMaximumHeight(180);
+
     rightLayout->addWidget(previewLabel_, 1);
+    rightLayout->addWidget(regionTable_);
     rightLayout->addWidget(logEdit_);
 
     layout->addWidget(leftScroll);
@@ -635,7 +812,8 @@ MainWindow::MainWindow(QWidget* parent)
         "QGroupBox{border:1px solid #415357;border-radius:4px;margin-top:12px;padding:10px;color:#d49a20;background:#1f2a2e;}"
         "QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 6px;background:#1f2a2e;color:#d49a20;}"
         "QLabel{color:#c8d2d0;}"
-        "QLineEdit,QPlainTextEdit,QComboBox{background:#0b1114;border:1px solid #485b60;border-radius:2px;padding:6px;color:#edf2f1;selection-background-color:#d49a20;}"
+        "QLabel#dashboardValue{font-size:24px;font-weight:700;color:#edf2f1;}"
+        "QLineEdit,QPlainTextEdit,QComboBox,QTableWidget{background:#0b1114;border:1px solid #485b60;border-radius:2px;padding:6px;color:#edf2f1;selection-background-color:#d49a20;gridline-color:#334347;}"
         "QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus{border:1px solid #d49a20;}"
         "QSpinBox,QDoubleSpinBox{background:#0b1114;border:1px solid #485b60;border-radius:2px;padding:5px 30px 5px 6px;color:#edf2f1;selection-background-color:#d49a20;}"
         "QSpinBox:focus,QDoubleSpinBox:focus{border:1px solid #d49a20;}"
@@ -654,12 +832,31 @@ MainWindow::MainWindow(QWidget* parent)
         "QPushButton#dangerButton{background:#8f1d1d;border-color:#c54a4a;color:white;font-weight:600;}"
         "QPushButton#dangerButton:hover{background:#a62727;}"
         "QPushButton:disabled{background:#252d30;border-color:#3b474a;color:#7f8f8c;}"
+        "QCheckBox{spacing:8px;}"
+        "QCheckBox::indicator{width:16px;height:16px;border:1px solid #5c7075;background:#0b1114;}"
+        "QCheckBox::indicator:checked{background:#1f6f50;border:1px solid #55b982;}"
     );
 
+    flashTimer_ = new QTimer(this);
+    flashTimer_->setInterval(500);
+    connect(flashTimer_, &QTimer::timeout, this, &MainWindow::toggleAlarmFlash);
+
+    connect(previewLabel_, &RoiPreviewLabel::flowRegionChanged, this, [this](
+        const QString& regionId,
+        const QVector<QPoint>& polygon,
+        bool closed
+    ) {
+        const int index = findRegionIndexById(regionId);
+        if (index < 0) {
+            return;
+        }
+        regions_[index].polygon = polygon;
+        regions_[index].polygonClosed = closed;
+        flowRoiEdit_->setText(::polygonToText(polygon));
+        refreshRegionTable();
+    });
     connect(previewLabel_, &RoiPreviewLabel::roiChanged, this, [this](RoiPreviewLabel::DrawMode mode, const QString& text) {
-        if (mode == RoiPreviewLabel::DrawMode::FlowRoi) {
-            flowRoiEdit_->setText(text);
-        } else {
+        if (mode == RoiPreviewLabel::DrawMode::DetectRoi) {
             detectRoiEdit_->setText(text);
         }
     });
@@ -668,12 +865,37 @@ MainWindow::MainWindow(QWidget* parent)
     appendLog("worker 路径：" + RuntimePaths::workerExePath() + "（cvds_detector_worker.exe）");
     populateClassCombo({});
     loadSettings();
+    if (QFileInfo::exists(RuntimePaths::defaultRegionsConfigPath())) {
+        try {
+            restoreRegionConfigDocument(loadRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath()));
+            appendLog("已加载区域配置：" + RuntimePaths::defaultRegionsConfigPath());
+        } catch (const std::exception& ex) {
+            appendLog("加载区域配置失败：" + QString::fromUtf8(ex.what()));
+            QMessageBox::critical(this, "区域配置错误", QString::fromUtf8(ex.what()));
+            refreshRegionTable();
+        }
+    } else {
+        ensureDefaultRegion();
+        refreshRegionSelectors();
+        applyRegionSelection();
+        refreshRegionTable();
+    }
+    previewLabel_->setDetectRoiFromText(detectRoiEdit_->text().trimmed());
     appendLog("启动完成：已延迟加载模型类别和视频预览，选择模型或开始检测时再读取。");
 }
 
 MainWindow::~MainWindow() {
     saveSettings();
     stopDetection();
+    if (modelInspectProcess_ != nullptr && modelInspectProcess_->state() != QProcess::NotRunning) {
+        modelInspectProcess_->disconnect(this);
+        modelInspectProcess_->kill();
+        modelInspectProcess_->waitForFinished(3000);
+    }
+    if (workerThread_ != nullptr) {
+        workerThread_->quit();
+        workerThread_->wait();
+    }
 }
 
 QWidget* MainWindow::buildPathPanel() {
@@ -760,21 +982,44 @@ QWidget* MainWindow::buildRoiPanel() {
     auto* box = new QGroupBox("流量监测");
     auto* layout = new QVBoxLayout(box);
     auto* form = new QFormLayout();
+
+    regionCombo_ = new ScrollSafeComboBox(box);
+    totalCountRegionCombo_ = new ScrollSafeComboBox(box);
+    regionNameEdit_ = new QLineEdit(box);
     flowRoiEdit_ = new QLineEdit(box);
     detectRoiEdit_ = new QLineEdit(box);
+    countEnabledCheck_ = new QCheckBox("参与累计", box);
+    jamEnabledCheck_ = new QCheckBox("启用堵包", box);
     jamSecondsSpin_ = new ScrollSafeSpinBox(box);
     jamSecondsSpin_->setRange(1, 600);
     jamSecondsSpin_->setValue(5);
     flowRoiEdit_->setPlaceholderText("左键加点，右键完成，Esc/Ctrl+Z撤回");
     detectRoiEdit_->setPlaceholderText("可选，只在该多边形区域检测");
-    form->addRow("流量ROI", flowRoiEdit_);
+
+    form->addRow("当前区域", regionCombo_);
+    form->addRow("区域名称", regionNameEdit_);
+    form->addRow("当前区域ROI", flowRoiEdit_);
     form->addRow("检测区域", detectRoiEdit_);
+    form->addRow("主统计区域", totalCountRegionCombo_);
     form->addRow("堵包判定秒", jamSecondsSpin_);
+
+    auto* switchLayout = new QHBoxLayout();
+    switchLayout->addWidget(countEnabledCheck_);
+    switchLayout->addWidget(jamEnabledCheck_);
+    switchLayout->addStretch(1);
 
     auto* help = new QLabel("ROI绘制：左键逐点绘制，多边形至少3点，右键完成，Esc或Ctrl+Z撤回上一个点。", box);
     help->setWordWrap(true);
 
-    auto* buttons = new QHBoxLayout();
+    auto* regionButtons = new QHBoxLayout();
+    auto* addButton = new QPushButton("新增区域", box);
+    auto* renameButton = new QPushButton("重命名区域", box);
+    auto* deleteButton = new QPushButton("删除区域", box);
+    regionButtons->addWidget(addButton);
+    regionButtons->addWidget(renameButton);
+    regionButtons->addWidget(deleteButton);
+
+    auto* drawButtons = new QHBoxLayout();
     drawFlowRoiButton_ = new QPushButton("绘制流量ROI", box);
     drawDetectRoiButton_ = new QPushButton("绘制检测区域", box);
     auto* undoButton = new QPushButton("撤回ROI点", box);
@@ -782,15 +1027,45 @@ QWidget* MainWindow::buildRoiPanel() {
     drawFlowRoiButton_->setCheckable(true);
     drawDetectRoiButton_->setCheckable(true);
     drawFlowRoiButton_->setChecked(true);
-    buttons->addWidget(drawFlowRoiButton_);
-    buttons->addWidget(drawDetectRoiButton_);
-    buttons->addWidget(undoButton);
-    buttons->addWidget(clearButton);
+    drawButtons->addWidget(drawFlowRoiButton_);
+    drawButtons->addWidget(drawDetectRoiButton_);
+    drawButtons->addWidget(undoButton);
+    drawButtons->addWidget(clearButton);
+
+    auto* configButtons = new QHBoxLayout();
+    auto* saveButton = new QPushButton("保存区域配置", box);
+    auto* loadButton = new QPushButton("加载区域配置", box);
+    configButtons->addWidget(saveButton);
+    configButtons->addWidget(loadButton);
 
     layout->addLayout(form);
+    layout->addLayout(switchLayout);
     layout->addWidget(help);
-    layout->addLayout(buttons);
+    layout->addLayout(regionButtons);
+    layout->addLayout(drawButtons);
+    layout->addLayout(configButtons);
 
+    connect(regionCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+        applyRegionSelection();
+    });
+    connect(totalCountRegionCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+        const QString selectedId = totalCountRegionCombo_->currentData().toString();
+        const int selectedIndex = findRegionIndexById(selectedId);
+        if (selectedIndex >= 0 && !regions_[selectedIndex].countEnabled) {
+            QMessageBox::warning(this, "主统计区域错误", "主统计区域必须参与累计。");
+            const QSignalBlocker blocker(totalCountRegionCombo_);
+            totalCountRegionCombo_->setCurrentIndex(totalCountRegionCombo_->findData(totalCountRegionId_));
+            return;
+        }
+        totalCountRegionId_ = selectedId;
+        refreshRegionTable();
+    });
+    connect(regionNameEdit_, &QLineEdit::editingFinished, this, &MainWindow::renameCurrentRegion);
+    connect(addButton, &QPushButton::clicked, this, &MainWindow::addRegion);
+    connect(renameButton, &QPushButton::clicked, this, &MainWindow::renameCurrentRegion);
+    connect(deleteButton, &QPushButton::clicked, this, &MainWindow::deleteCurrentRegion);
+    connect(saveButton, &QPushButton::clicked, this, &MainWindow::saveRegionConfig);
+    connect(loadButton, &QPushButton::clicked, this, &MainWindow::loadRegionConfig);
     connect(drawFlowRoiButton_, &QPushButton::clicked, this, [this]() {
         setRoiDrawMode(RoiPreviewLabel::DrawMode::FlowRoi);
     });
@@ -804,10 +1079,47 @@ QWidget* MainWindow::buildRoiPanel() {
         previewLabel_->clearCurrentRoi();
     });
     connect(flowRoiEdit_, &QLineEdit::editingFinished, this, [this]() {
-        previewLabel_->setFlowRoiFromText(flowRoiEdit_->text());
+        const int index = findRegionIndexById(currentRegionId_);
+        if (index < 0) {
+            return;
+        }
+        try {
+            regions_[index].polygon = parseEditablePolygonText(flowRoiEdit_->text(), "当前区域 ROI", true);
+            regions_[index].polygonClosed = regions_[index].polygon.size() >= 3;
+            previewLabel_->setFlowRegions(regions_);
+            previewLabel_->setActiveRegionId(currentRegionId_);
+            refreshRegionTable();
+        } catch (const std::exception& ex) {
+            QMessageBox::warning(this, "区域配置错误", QString::fromUtf8(ex.what()));
+            flowRoiEdit_->setText(::polygonToText(regions_[index].polygon));
+        }
     });
-    connect(detectRoiEdit_, &QLineEdit::editingFinished, this, [this]() {
-        previewLabel_->setDetectRoiFromText(detectRoiEdit_->text());
+    connect(detectRoiEdit_, &QLineEdit::editingFinished, this, &MainWindow::updateDetectRoiFromEditor);
+    connect(countEnabledCheck_, &QCheckBox::toggled, this, [this](bool checked) {
+        const int index = findRegionIndexById(currentRegionId_);
+        if (index >= 0) {
+            if (totalCountRegionId_ == currentRegionId_ && !checked) {
+                QMessageBox::warning(this, "主统计区域错误", "主统计区域必须参与累计。");
+                const QSignalBlocker blocker(countEnabledCheck_);
+                countEnabledCheck_->setChecked(true);
+                return;
+            }
+            regions_[index].countEnabled = checked;
+            refreshRegionTable();
+        }
+    });
+    connect(jamEnabledCheck_, &QCheckBox::toggled, this, [this](bool checked) {
+        const int index = findRegionIndexById(currentRegionId_);
+        if (index >= 0) {
+            regions_[index].jamEnabled = checked;
+            refreshRegionTable();
+        }
+    });
+    connect(jamSecondsSpin_, qOverload<int>(&QSpinBox::valueChanged), this, [this](int value) {
+        const int index = findRegionIndexById(currentRegionId_);
+        if (index >= 0) {
+            regions_[index].jamSeconds = value;
+        }
     });
     return box;
 }
@@ -830,6 +1142,29 @@ QWidget* MainWindow::buildActionPanel() {
     return box;
 }
 
+QWidget* MainWindow::buildDashboardPanel() {
+    auto* box = new QGroupBox("看板");
+    auto* layout = new QGridLayout(box);
+
+    auto buildCard = [box](const QString& title, QLabel** valueLabel) {
+        auto* card = new QFrame(box);
+        auto* cardLayout = new QVBoxLayout(card);
+        cardLayout->setContentsMargins(10, 10, 10, 10);
+        auto* titleLabel = new QLabel(title, card);
+        *valueLabel = new QLabel("0", card);
+        (*valueLabel)->setObjectName("dashboardValue");
+        cardLayout->addWidget(titleLabel);
+        cardLayout->addWidget(*valueLabel);
+        return card;
+    };
+
+    layout->addWidget(buildCard("累计包裹", &kpiTotalCountValueLabel_), 0, 0);
+    layout->addWidget(buildCard("当前状态", &kpiStatusValueLabel_), 0, 1);
+    layout->addWidget(buildCard("区域内包裹", &kpiInsideCountValueLabel_), 1, 0);
+    layout->addWidget(buildCard("堵包次数", &kpiJamCountValueLabel_), 1, 1);
+    return box;
+}
+
 QString MainWindow::buildHikvisionRtsp() const {
     QUrl url;
     url.setScheme("rtsp");
@@ -845,41 +1180,36 @@ void MainWindow::loadSettings() {
     QSettings settings;
     const QString savedModel = settings.value("lastModelPath", ptEdit_->text()).toString();
     ptEdit_->setText(QFileInfo::exists(savedModel) ? savedModel : findDefaultModelPath());
-    sourceEdit_->setText(settings.value("lastSourcePath", sourceEdit_->text()).toString());
+    sourceEdit_->setText(sourcePathForSettings(settings.value("lastSourcePath", sourceEdit_->text()).toString()));
     const QString savedOutput = settings.value("lastOutputDir", outputEdit_->text()).toString().trimmed();
     outputEdit_->setText(savedOutput.isEmpty() ? RuntimePaths::defaultOutputDir() : savedOutput);
-    flowRoiEdit_->setText(settings.value("lastFlowRoi", flowRoiEdit_->text()).toString());
     detectRoiEdit_->setText(settings.value("lastDetectRoi", detectRoiEdit_->text()).toString());
     hikIpEdit_->setText(settings.value("hikvisionIp", hikIpEdit_->text()).toString());
     hikUserEdit_->setText(settings.value("hikvisionUser", hikUserEdit_->text()).toString());
-    hikPasswordEdit_->setText(settings.value("hikvisionPassword", hikPasswordEdit_->text()).toString());
+    settings.remove("hikvisionPassword");
+    hikPasswordEdit_->clear();
     hikChannelSpin_->setValue(settings.value("hikvisionChannel", hikChannelSpin_->value()).toInt());
     inputSizeSpin_->setValue(settings.value("inputSize", inputSizeSpin_->value()).toInt());
     videoFpsSpin_->setValue(settings.value("previewFps", videoFpsSpin_->value()).toInt());
-    jamSecondsSpin_->setValue(settings.value("jamSeconds", jamSecondsSpin_->value()).toInt());
     confidenceSpin_->setValue(settings.value("confidence", confidenceSpin_->value()).toDouble());
     iouSpin_->setValue(settings.value("iou", iouSpin_->value()).toDouble());
     const QString savedDevice = settings.value("deviceMode", "auto").toString();
     const int deviceIndex = deviceCombo_->findData(savedDevice);
     deviceCombo_->setCurrentIndex(deviceIndex >= 0 ? deviceIndex : 0);
-    previewLabel_->setFlowRoiFromText(flowRoiEdit_->text());
-    previewLabel_->setDetectRoiFromText(detectRoiEdit_->text());
 }
 
 void MainWindow::saveSettings() const {
     QSettings settings;
     settings.setValue("lastModelPath", ptEdit_->text().trimmed());
-    settings.setValue("lastSourcePath", sourceEdit_->text().trimmed());
+    settings.setValue("lastSourcePath", sourcePathForSettings(sourceEdit_->text()));
     settings.setValue("lastOutputDir", outputEdit_->text().trimmed());
-    settings.setValue("lastFlowRoi", flowRoiEdit_->text().trimmed());
     settings.setValue("lastDetectRoi", detectRoiEdit_->text().trimmed());
     settings.setValue("hikvisionIp", hikIpEdit_->text().trimmed());
     settings.setValue("hikvisionUser", hikUserEdit_->text().trimmed());
-    settings.setValue("hikvisionPassword", hikPasswordEdit_->text());
+    settings.remove("hikvisionPassword");
     settings.setValue("hikvisionChannel", hikChannelSpin_->value());
     settings.setValue("inputSize", inputSizeSpin_->value());
     settings.setValue("previewFps", videoFpsSpin_->value());
-    settings.setValue("jamSeconds", jamSecondsSpin_->value());
     settings.setValue("confidence", confidenceSpin_->value());
     settings.setValue("iou", iouSpin_->value());
     settings.setValue("deviceMode", deviceCombo_->currentData().toString());
@@ -900,6 +1230,213 @@ void MainWindow::setRoiDrawMode(RoiPreviewLabel::DrawMode mode) {
     previewLabel_->setDrawMode(mode);
     drawFlowRoiButton_->setChecked(mode == RoiPreviewLabel::DrawMode::FlowRoi);
     drawDetectRoiButton_->setChecked(mode == RoiPreviewLabel::DrawMode::DetectRoi);
+}
+
+void MainWindow::ensureDefaultRegion() {
+    if (!regions_.isEmpty()) {
+        return;
+    }
+    RegionConfig region;
+    region.id = "main_region";
+    region.name = "主统计区域";
+    region.priority = 1;
+    regions_.push_back(region);
+    totalCountRegionId_ = region.id;
+    currentRegionId_ = region.id;
+}
+
+QString MainWindow::nextRegionId() const {
+    for (int i = 1; ; ++i) {
+        const QString candidate = QString("region_%1").arg(i);
+        if (findRegionIndexById(candidate) < 0) {
+            return candidate;
+        }
+    }
+}
+
+int MainWindow::findRegionIndexById(const QString& regionId) const {
+    for (int i = 0; i < regions_.size(); ++i) {
+        if (regions_[i].id == regionId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void MainWindow::refreshRegionSelectors() {
+    ensureDefaultRegion();
+    if (currentRegionId_.trimmed().isEmpty() || findRegionIndexById(currentRegionId_) < 0) {
+        currentRegionId_ = regions_.first().id;
+    }
+    if (totalCountRegionId_.trimmed().isEmpty() || findRegionIndexById(totalCountRegionId_) < 0) {
+        totalCountRegionId_ = regions_.first().id;
+    }
+
+    {
+        const QSignalBlocker comboBlocker(regionCombo_);
+        regionCombo_->clear();
+        for (const RegionConfig& region : regions_) {
+            regionCombo_->addItem(region.name, region.id);
+        }
+        const int currentIndex = regionCombo_->findData(currentRegionId_);
+        regionCombo_->setCurrentIndex(currentIndex >= 0 ? currentIndex : 0);
+    }
+    {
+        const QSignalBlocker totalBlocker(totalCountRegionCombo_);
+        totalCountRegionCombo_->clear();
+        for (const RegionConfig& region : regions_) {
+            totalCountRegionCombo_->addItem(region.name, region.id);
+        }
+        const int totalIndex = totalCountRegionCombo_->findData(totalCountRegionId_);
+        totalCountRegionCombo_->setCurrentIndex(totalIndex >= 0 ? totalIndex : 0);
+    }
+
+    previewLabel_->setFlowRegions(regions_);
+    previewLabel_->setActiveRegionId(currentRegionId_);
+}
+
+void MainWindow::syncCurrentRegionEditors() {
+    const int index = findRegionIndexById(currentRegionId_);
+    if (index < 0) {
+        return;
+    }
+    const RegionConfig& region = regions_[index];
+    const QSignalBlocker nameBlocker(regionNameEdit_);
+    const QSignalBlocker roiBlocker(flowRoiEdit_);
+    const QSignalBlocker countBlocker(countEnabledCheck_);
+    const QSignalBlocker jamBlocker(jamEnabledCheck_);
+    const QSignalBlocker secondsBlocker(jamSecondsSpin_);
+    regionNameEdit_->setText(region.name);
+    flowRoiEdit_->setText(::polygonToText(region.polygon));
+    countEnabledCheck_->setChecked(region.countEnabled);
+    jamEnabledCheck_->setChecked(region.jamEnabled);
+    jamSecondsSpin_->setValue(region.jamSeconds);
+}
+
+void MainWindow::applyRegionSelection() {
+    const QString selectedId = regionCombo_->currentData().toString();
+    if (!selectedId.trimmed().isEmpty()) {
+        currentRegionId_ = selectedId;
+    }
+    previewLabel_->setActiveRegionId(currentRegionId_);
+    syncCurrentRegionEditors();
+    refreshRegionTable();
+}
+
+void MainWindow::refreshRegionTable() {
+    if (regionTable_ == nullptr) {
+        return;
+    }
+    regionTable_->setRowCount(regions_.size());
+    QStringList jamIds;
+    int insideSum = 0;
+    int jamSum = 0;
+    for (const RegionRuntimeState& state : regionRuntimeStates_) {
+        insideSum += state.insideCount;
+        jamSum += state.jamCount;
+        if (state.jamActive) {
+            jamIds.push_back(state.id);
+        }
+    }
+    if (dashboardInsideCount_ <= 0) {
+        dashboardInsideCount_ = insideSum;
+    }
+    if (dashboardJamCount_ <= 0) {
+        dashboardJamCount_ = jamSum;
+    }
+
+    for (int row = 0; row < regions_.size(); ++row) {
+        const RegionConfig& region = regions_[row];
+        RegionRuntimeState state = buildFallbackState(region);
+        for (const RegionRuntimeState& item : regionRuntimeStates_) {
+            if (item.id == region.id) {
+                state = item;
+                break;
+            }
+        }
+        if (state.name.trimmed().isEmpty()) {
+            state.name = region.name;
+        }
+
+        const QString statusText = regionStatusText(state, workerThread_ != nullptr);
+        const QString regionText = region.id == totalCountRegionId_
+            ? region.name + "（主统计区域）"
+            : region.name;
+        const QStringList values = {
+            regionText,
+            QString::number(state.flowCount),
+            QString::number(state.insideCount),
+            statusText,
+            QString::number(state.staleSeconds, 'f', 1),
+            QString::number(state.jamCount),
+        };
+
+        for (int column = 0; column < values.size(); ++column) {
+            QTableWidgetItem* item = regionTable_->item(row, column);
+            if (item == nullptr) {
+                item = new QTableWidgetItem();
+                regionTable_->setItem(row, column, item);
+            }
+            item->setText(values[column]);
+            if (state.jamActive && dashboardFlashVisible_) {
+                item->setBackground(QColor("#8f1d1d"));
+            } else if (region.id == currentRegionId_) {
+                item->setBackground(QColor("#1f2a2e"));
+            } else {
+                item->setBackground(QColor("#0b1114"));
+            }
+        }
+    }
+
+    previewLabel_->setJamRegionIds(jamIds);
+    previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
+    kpiTotalCountValueLabel_->setText(QString::number(dashboardTotalCount_));
+    kpiStatusValueLabel_->setText(dashboardStatusText_);
+    kpiInsideCountValueLabel_->setText(QString::number(dashboardInsideCount_));
+    kpiJamCountValueLabel_->setText(QString::number(dashboardJamCount_));
+    if (dashboardJamActive_ && dashboardFlashVisible_) {
+        kpiStatusValueLabel_->setStyleSheet("color:#ff4d4f;font-size:24px;font-weight:700;");
+    } else {
+        kpiStatusValueLabel_->setStyleSheet("color:#55b982;font-size:24px;font-weight:700;");
+    }
+}
+
+RegionConfigDocument MainWindow::buildRegionConfigDocument() const {
+    RegionConfigDocument document;
+    document.version = 1;
+    document.totalCountRegionId = totalCountRegionId_;
+    document.regions = regions_;
+    return regionConfigDocumentFromJson(regionConfigDocumentToJson(document));
+}
+
+void MainWindow::restoreRegionConfigDocument(const RegionConfigDocument& document) {
+    setDashboardAlarmActive(false);
+    regionRuntimeStates_.clear();
+    dashboardTotalCount_ = 0;
+    dashboardInsideCount_ = 0;
+    dashboardJamCount_ = 0;
+    dashboardStatusText_ = "待机";
+    regions_ = document.regions;
+    totalCountRegionId_ = document.totalCountRegionId;
+    currentRegionId_ = document.regions.isEmpty() ? QString() : document.regions.first().id;
+    refreshRegionSelectors();
+    applyRegionSelection();
+    refreshRegionTable();
+}
+
+QVector<QPoint> MainWindow::parseEditablePolygonText(const QString& text, const QString& label, bool allowEmpty) const {
+    return polygonFromText(text, label, allowEmpty);
+}
+
+void MainWindow::updateDetectRoiFromEditor() {
+    try {
+        const QVector<QPoint> detectPolygon = parseEditablePolygonText(detectRoiEdit_->text(), "检测 ROI", true);
+        detectRoiEdit_->setText(::polygonToText(detectPolygon));
+        previewLabel_->setDetectRoiFromText(detectRoiEdit_->text());
+    } catch (const std::exception& ex) {
+        QMessageBox::warning(this, "区域配置错误", QString::fromUtf8(ex.what()));
+        detectRoiEdit_->setText(previewLabel_->detectRoiText());
+    }
 }
 
 void MainWindow::browsePt() {
@@ -943,6 +1480,100 @@ void MainWindow::browseOutput() {
     }
 }
 
+void MainWindow::addRegion() {
+    RegionConfig region;
+    region.id = nextRegionId();
+    region.name = QString("区域 %1").arg(regions_.size() + 1);
+    region.priority = regions_.size() + 1;
+    regions_.push_back(region);
+    currentRegionId_ = region.id;
+    refreshRegionSelectors();
+    applyRegionSelection();
+    appendLog("已新增区域：" + region.name);
+}
+
+void MainWindow::renameCurrentRegion() {
+    const int index = findRegionIndexById(currentRegionId_);
+    if (index < 0) {
+        return;
+    }
+    const QString name = regionNameEdit_->text().trimmed();
+    if (name.isEmpty()) {
+        QMessageBox::warning(this, "区域配置错误", "区域名称不能为空。");
+        regionNameEdit_->setText(regions_[index].name);
+        return;
+    }
+    regions_[index].name = name;
+    refreshRegionSelectors();
+    applyRegionSelection();
+}
+
+void MainWindow::deleteCurrentRegion() {
+    if (regions_.size() <= 1) {
+        QMessageBox::warning(this, "无法删除", "至少保留一个区域。");
+        return;
+    }
+    const int index = findRegionIndexById(currentRegionId_);
+    if (index < 0) {
+        return;
+    }
+    QString nextTotalCountRegionId = totalCountRegionId_;
+    if (totalCountRegionId_ == currentRegionId_) {
+        nextTotalCountRegionId.clear();
+        for (int i = 0; i < regions_.size(); ++i) {
+            if (i != index && regions_[i].countEnabled) {
+                nextTotalCountRegionId = regions_[i].id;
+                break;
+            }
+        }
+        if (nextTotalCountRegionId.isEmpty()) {
+            QMessageBox::warning(this, "无法删除", "没有可作为主统计区域的计数区域，请先启用其他区域的累计。");
+            return;
+        }
+    }
+    const QString removedName = regions_[index].name;
+    regions_.removeAt(index);
+    if (totalCountRegionId_ == currentRegionId_) {
+        totalCountRegionId_ = nextTotalCountRegionId;
+    }
+    currentRegionId_ = regions_.first().id;
+    refreshRegionSelectors();
+    applyRegionSelection();
+    appendLog("已删除区域：" + removedName);
+}
+
+void MainWindow::saveRegionConfig() {
+    try {
+        updateDetectRoiFromEditor();
+        const RegionConfigDocument document = buildRegionConfigDocument();
+        saveRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath(), document);
+        appendLog("已保存区域配置：" + RuntimePaths::defaultRegionsConfigPath());
+    } catch (const std::exception& ex) {
+        QMessageBox::critical(this, "保存失败", QString::fromUtf8(ex.what()));
+    }
+}
+
+void MainWindow::loadRegionConfig() {
+    const QString initialPath = QFileInfo::exists(RuntimePaths::defaultRegionsConfigPath())
+        ? RuntimePaths::defaultRegionsConfigPath()
+        : RuntimePaths::regionsExamplePath();
+    const QString path = QFileDialog::getOpenFileName(
+        this,
+        "加载区域配置",
+        initialPath,
+        "区域配置 (*.json)"
+    );
+    if (path.isEmpty()) {
+        return;
+    }
+    try {
+        restoreRegionConfigDocument(loadRegionConfigDocument(path));
+        appendLog("已加载区域配置：" + path);
+    } catch (const std::exception& ex) {
+        QMessageBox::critical(this, "加载失败", QString::fromUtf8(ex.what()));
+    }
+}
+
 DetectJobConfig MainWindow::currentDetectConfig() const {
     const QString outputDir = outputEdit_->text().trimmed();
     return {
@@ -951,7 +1582,7 @@ DetectJobConfig MainWindow::currentDetectConfig() const {
         outputDir,
         RuntimePaths::workerExePath(),
         RuntimePaths::trackerConfigPath(),
-        flowRoiEdit_->text().trimmed(),
+        QDir(outputDir).filePath("regions.json"),
         detectRoiEdit_->text().trimmed(),
         QDir(outputDir).filePath("jam_signals.jsonl"),
         loadedLabels_,
@@ -986,10 +1617,6 @@ void MainWindow::startDetection() {
         QMessageBox::warning(this, "视频源不存在", "当前视频源不是本地文件、摄像头编号或网络流。");
         return;
     }
-    if (flowRoiEdit_->text().trimmed().isEmpty()) {
-        QMessageBox::warning(this, "缺少 ROI", "请先在右侧视频画面绘制至少3个点的流量 ROI。");
-        return;
-    }
     if (!QFileInfo::exists(RuntimePaths::trackerConfigPath())) {
         QMessageBox::critical(this, "缺少 tracker yaml", "未找到随程序发布的 ByteTrack tracker yaml。");
         return;
@@ -999,22 +1626,49 @@ void MainWindow::startDetection() {
         QMessageBox::warning(this, "输出目录不可写", outputError);
         return;
     }
+    const QString modelPath = ptEdit_->text().trimmed();
+    if (loadedModelPath_ != modelPath || loadedLabels_.isEmpty()) {
+        beginModelMetadataRefresh(true);
+        return;
+    }
+
+    try {
+        updateDetectRoiFromEditor();
+        const RegionConfigDocument document = buildRegionConfigDocument();
+        saveRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath(), document);
+        const QString runRegionPath = QDir(outputEdit_->text().trimmed()).filePath("regions.json");
+        saveRegionConfigDocument(runRegionPath, document);
+    } catch (const std::exception& ex) {
+        QMessageBox::critical(this, "区域配置错误", QString::fromUtf8(ex.what()));
+        return;
+    }
 
     saveSettings();
-    refreshModelMetadata();
+    regionRuntimeStates_.clear();
+    dashboardTotalCount_ = 0;
+    dashboardInsideCount_ = 0;
+    dashboardJamCount_ = 0;
+    dashboardJamActive_ = false;
+    dashboardFlashVisible_ = false;
+    dashboardStatusText_ = "启动中";
+    refreshRegionTable();
+
     workerThread_ = new QThread(this);
     worker_ = new DetectionWorker(currentDetectConfig());
     worker_->moveToThread(workerThread_);
     connect(workerThread_, &QThread::started, worker_, &DetectionWorker::run);
     connect(worker_, &DetectionWorker::frameReady, this, &MainWindow::showFrame);
+    connect(worker_, &DetectionWorker::dashboardPayloadReady, this, &MainWindow::updateDashboard);
     connect(worker_, &DetectionWorker::log, this, &MainWindow::appendLog);
     connect(worker_, &DetectionWorker::done, this, &MainWindow::detectionFinished);
     connect(worker_, &DetectionWorker::failed, this, &MainWindow::detectionFailed);
     connect(worker_, &DetectionWorker::done, workerThread_, &QThread::quit);
     connect(worker_, &DetectionWorker::failed, workerThread_, &QThread::quit);
+    connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
     connect(workerThread_, &QThread::finished, this, &MainWindow::cleanupWorker);
     startButton_->setEnabled(false);
     stopButton_->setEnabled(true);
+    setConfigurationEditingEnabled(false);
     workerThread_->start();
 }
 
@@ -1028,6 +1682,160 @@ void MainWindow::showFrame(const QImage& image) {
     previewLabel_->setImage(image);
 }
 
+void MainWindow::updateDashboard(const QByteArray& payload) {
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(payload, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        appendLog("看板更新失败：JSON 解析错误。");
+        return;
+    }
+    const QJsonObject object = document.object();
+    const QString type = object.value("type").toString();
+    const QString eventType = object.value("event_type").toString();
+
+    if (type == "frame" || type == "done") {
+        QVector<RegionRuntimeState> states;
+        const QJsonArray regionsArray = object.value("regions").toArray();
+        if (!regionsArray.isEmpty()) {
+            states.reserve(regionsArray.size());
+            for (const QJsonValue& value : regionsArray) {
+                if (value.isObject()) {
+                    states.push_back(regionRuntimeStateFromJson(value.toObject()));
+                }
+            }
+        } else if (!regions_.isEmpty()) {
+            RegionRuntimeState state = buildFallbackState(regions_.first());
+            state.flowCount = object.value("flow_count").toInt();
+            state.insideCount = object.value("inside_count").toInt();
+            state.jamCount = object.value("jam_count").toInt();
+            state.maxInsideCount = object.value("max_inside_count").toInt();
+            state.jamActive = object.value("jam_active").toBool();
+            state.status = state.jamActive ? "堵包" : "运行中";
+            states.push_back(state);
+        }
+        regionRuntimeStates_ = states;
+        dashboardTotalCount_ = object.contains("total_count")
+            ? object.value("total_count").toInt()
+            : object.value("flow_count").toInt();
+        if (!regionsArray.isEmpty()) {
+            dashboardInsideCount_ = 0;
+            for (const RegionRuntimeState& state : regionRuntimeStates_) {
+                dashboardInsideCount_ += state.insideCount;
+            }
+        } else {
+            dashboardInsideCount_ = object.value("inside_count").toInt();
+        }
+        if (!regionsArray.isEmpty()) {
+            dashboardJamCount_ = 0;
+            for (const RegionRuntimeState& state : regionRuntimeStates_) {
+                dashboardJamCount_ += state.jamCount;
+            }
+        } else {
+            dashboardJamCount_ = object.value("jam_count").toInt();
+        }
+        dashboardJamActive_ = object.value("jam_active").toBool();
+        if (!dashboardJamActive_) {
+            for (const RegionRuntimeState& state : regionRuntimeStates_) {
+                if (state.jamActive) {
+                    dashboardJamActive_ = true;
+                    break;
+                }
+            }
+        }
+        const QString fallbackStatus = type == "done"
+            ? QStringLiteral("已完成")
+            : object.value("global_status").toString();
+        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, dashboardJamActive_, fallbackStatus);
+        if (type == "done" && !dashboardJamActive_) {
+            dashboardStatusText_ = "已完成";
+        }
+        setDashboardAlarmActive(dashboardJamActive_);
+        refreshRegionTable();
+    }
+
+    if (type == "jam") {
+        const bool isClear = eventType == "jam_cleared";
+        if (object.contains("region_id")) {
+            const QString regionId = object.value("region_id").toString();
+            int stateIndex = -1;
+            for (int i = 0; i < regionRuntimeStates_.size(); ++i) {
+                if (regionRuntimeStates_[i].id == regionId) {
+                    stateIndex = i;
+                    break;
+                }
+            }
+            if (stateIndex < 0) {
+                RegionRuntimeState state;
+                state.id = regionId;
+                state.name = object.value("region_name").toString();
+                regionRuntimeStates_.push_back(state);
+                stateIndex = regionRuntimeStates_.size() - 1;
+            }
+            RegionRuntimeState& state = regionRuntimeStates_[stateIndex];
+            state.id = regionId;
+            state.name = object.value("region_name").toString(state.name);
+            state.signal = object.value("signal").toString();
+            state.eventType = eventType;
+            state.insideCount = object.value("inside_count").toInt(state.insideCount);
+            state.flowCount = object.value("flow_count").toInt(state.flowCount);
+            state.jamCount = object.value("jam_count").toInt(state.jamCount);
+            state.staleSeconds = object.value("stale_seconds").toDouble(state.staleSeconds);
+            state.jamActive = !isClear;
+            state.status = isClear
+                ? (state.insideCount <= 0 ? "空闲" : "运行中")
+                : "堵包";
+        } else if (isClear) {
+            for (RegionRuntimeState& state : regionRuntimeStates_) {
+                state.jamActive = false;
+                state.status = state.insideCount <= 0 ? "空闲" : "运行中";
+            }
+        }
+
+        dashboardJamActive_ = false;
+        dashboardInsideCount_ = 0;
+        dashboardJamCount_ = 0;
+        for (const RegionRuntimeState& state : regionRuntimeStates_) {
+            dashboardInsideCount_ += state.insideCount;
+            dashboardJamCount_ += state.jamCount;
+            if (state.id == totalCountRegionId_) {
+                dashboardTotalCount_ = state.flowCount;
+            }
+            if (state.jamActive) {
+                dashboardJamActive_ = true;
+            }
+        }
+        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, dashboardJamActive_, "运行中");
+        setDashboardAlarmActive(dashboardJamActive_);
+        refreshRegionTable();
+
+        const QString regionName = object.value("region_name").toString();
+        if (isClear) {
+            appendLog(QString("堵包解除：%1，信号 %2").arg(regionName, object.value("signal").toString()));
+        } else {
+            appendLog(
+                QString("堵包报警：%1，区域内 %2 个，停滞 %3 秒，信号 %4")
+                    .arg(regionName)
+                    .arg(object.value("inside_count").toInt())
+                    .arg(object.value("stale_seconds").toDouble(), 0, 'f', 1)
+                    .arg(object.value("signal").toString())
+            );
+        }
+    } else if (type == "jam_clear") {
+        const int legacyInsideCount = object.value("inside_count").toInt();
+        for (RegionRuntimeState& state : regionRuntimeStates_) {
+            state.jamActive = false;
+            state.insideCount = legacyInsideCount;
+            state.status = state.insideCount <= 0 ? "空闲" : "运行中";
+        }
+        dashboardJamActive_ = false;
+        dashboardInsideCount_ = legacyInsideCount;
+        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, false, "运行中");
+        setDashboardAlarmActive(false);
+        refreshRegionTable();
+        appendLog("堵包解除，信号 " + object.value("signal").toString());
+    }
+}
+
 void MainWindow::appendLog(const QString& message) {
     const QString text = message.trimmed();
     if (!text.isEmpty()) {
@@ -1036,32 +1844,137 @@ void MainWindow::appendLog(const QString& message) {
 }
 
 void MainWindow::refreshModelMetadata() {
-    if (!QFileInfo::exists(RuntimePaths::workerExePath()) || !QFileInfo::exists(ptEdit_->text())) {
+    beginModelMetadataRefresh(false);
+}
+
+void MainWindow::beginModelMetadataRefresh(bool startDetectionAfterSuccess) {
+    const QString modelPath = ptEdit_->text().trimmed();
+    if (!QFileInfo::exists(RuntimePaths::workerExePath()) || !QFileInfo::exists(modelPath)) {
+        if (modelInspectProcess_ != nullptr) {
+            modelInspectProcess_->disconnect(this);
+            if (modelInspectProcess_->state() != QProcess::NotRunning) {
+                modelInspectProcess_->kill();
+            }
+            modelInspectProcess_->deleteLater();
+            modelInspectProcess_ = nullptr;
+            modelInspectPath_.clear();
+            startDetectionAfterModelInspect_ = false;
+            modelInspectTimedOut_ = false;
+            startButton_->setEnabled(workerThread_ == nullptr);
+        }
         loadedLabels_.clear();
+        loadedModelPath_.clear();
         populateClassCombo({});
+        if (startDetectionAfterSuccess) {
+            QMessageBox::warning(this, "模型读取失败", "未找到模型文件或 worker exe，检测未启动。");
+        }
+        return;
+    }
+    if (loadedModelPath_ == modelPath && !loadedLabels_.isEmpty()) {
+        if (startDetectionAfterSuccess) {
+            QTimer::singleShot(0, this, &MainWindow::startDetection);
+        }
         return;
     }
 
-    QProcess process;
-    process.setProcessChannelMode(QProcess::MergedChannels);
-    process.start(RuntimePaths::workerExePath(), inspectModelArgs(ptEdit_->text()));
-    if (!process.waitForStarted(5000)) {
-        appendLog("模型类别读取失败：worker 进程启动失败。");
-        return;
+    if (modelInspectProcess_ != nullptr) {
+        if (modelInspectProcess_->state() != QProcess::NotRunning && modelInspectPath_ == modelPath) {
+            startDetectionAfterModelInspect_ =
+                startDetectionAfterModelInspect_ || startDetectionAfterSuccess;
+            if (startDetectionAfterModelInspect_) {
+                startButton_->setEnabled(false);
+            }
+            return;
+        }
+        modelInspectProcess_->disconnect(this);
+        if (modelInspectProcess_->state() != QProcess::NotRunning) {
+            modelInspectProcess_->kill();
+        }
+        modelInspectProcess_->deleteLater();
+        modelInspectProcess_ = nullptr;
+        startButton_->setEnabled(workerThread_ == nullptr);
     }
-    process.waitForFinished(-1);
-    const QByteArray output = process.readAllStandardOutput();
-    if (process.exitCode() != 0) {
-        appendLog("模型类别读取失败：" + QString::fromUtf8(output).trimmed());
-        loadedLabels_.clear();
-        populateClassCombo({});
+
+    modelInspectPath_ = modelPath;
+    startDetectionAfterModelInspect_ = startDetectionAfterSuccess;
+    modelInspectTimedOut_ = false;
+    if (startDetectionAfterModelInspect_) {
+        startButton_->setEnabled(false);
+    }
+    appendLog("正在读取模型类别：" + QFileInfo(modelPath).fileName());
+
+    auto* process = new QProcess(this);
+    modelInspectProcess_ = process;
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart) {
+            finishModelMetadataRefresh(process, "worker 进程启动失败。");
+        }
+    });
+    connect(
+        process,
+        qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
+        this,
+        [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
+            QString failure;
+            if (modelInspectTimedOut_) {
+                failure = "worker 进程 30 秒内未完成。";
+            } else if (exitStatus != QProcess::NormalExit || exitCode != 0) {
+                failure = QString::fromUtf8(process->readAllStandardOutput()).trimmed();
+                if (failure.isEmpty()) {
+                    failure = QString("worker 异常退出，代码 %1。").arg(exitCode);
+                }
+            }
+            finishModelMetadataRefresh(process, failure);
+        }
+    );
+    process->start(RuntimePaths::workerExePath(), inspectModelArgs(modelPath));
+    QTimer::singleShot(30000, this, [this, process]() {
+        if (modelInspectProcess_ == process && process->state() != QProcess::NotRunning) {
+            modelInspectTimedOut_ = true;
+            process->kill();
+        }
+    });
+}
+
+void MainWindow::finishModelMetadataRefresh(QProcess* process, const QString& failure) {
+    if (process == nullptr || process != modelInspectProcess_) {
         return;
     }
 
-    loadedLabels_ = parseClassLabelsFromJson(output);
+    const bool startAfterSuccess = startDetectionAfterModelInspect_;
+    const QString modelPath = modelInspectPath_;
+    const QByteArray output = process->readAllStandardOutput();
+    modelInspectProcess_ = nullptr;
+    modelInspectPath_.clear();
+    startDetectionAfterModelInspect_ = false;
+    modelInspectTimedOut_ = false;
+    process->deleteLater();
+
+    QString error = failure.trimmed();
+    const QStringList labels = error.isEmpty() ? parseClassLabelsFromJson(output) : QStringList{};
+    if (error.isEmpty() && labels.isEmpty()) {
+        error = "worker 未返回有效的模型类别。";
+    }
+    if (!error.isEmpty()) {
+        appendLog("模型类别读取失败：" + error);
+        loadedLabels_.clear();
+        loadedModelPath_.clear();
+        populateClassCombo({});
+        startButton_->setEnabled(workerThread_ == nullptr);
+        if (startAfterSuccess) {
+            QMessageBox::warning(this, "模型读取失败", error + "\n检测未启动。");
+        }
+        return;
+    }
+
+    loadedLabels_ = labels;
+    loadedModelPath_ = modelPath;
     populateClassCombo(loadedLabels_);
-    if (!loadedLabels_.isEmpty()) {
-        appendLog("已读取模型类别：" + loadedLabels_.join(", "));
+    appendLog("已读取模型类别：" + loadedLabels_.join(", "));
+    startButton_->setEnabled(workerThread_ == nullptr);
+    if (startAfterSuccess) {
+        QTimer::singleShot(0, this, &MainWindow::startDetection);
     }
 }
 
@@ -1079,7 +1992,12 @@ void MainWindow::runEnvironmentDiagnose() {
         appendLog("环境自检失败：worker 进程启动失败。");
         return;
     }
-    process.waitForFinished(30000);
+    if (!process.waitForFinished(30000)) {
+        process.kill();
+        process.waitForFinished(3000);
+        appendLog("环境自检失败：worker 进程 30 秒内未完成。");
+        return;
+    }
     const QByteArray output = process.readAllStandardOutput();
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(output.trimmed(), &parseError);
@@ -1117,30 +2035,89 @@ void MainWindow::runEnvironmentDiagnose() {
 }
 
 void MainWindow::detectionFinished(const QString& summary) {
+    dashboardStatusText_ = dashboardJamActive_ ? "堵包" : "已完成";
+    refreshRegionTable();
     appendLog(summary);
 }
 
 void MainWindow::detectionFailed(const QString& error) {
+    dashboardStatusText_ = "失败";
+    setDashboardAlarmActive(false);
+    refreshRegionTable();
     appendLog(error);
     QMessageBox::critical(this, "检测失败", error);
 }
 
 void MainWindow::cleanupWorker() {
-    if (worker_ != nullptr) {
-        worker_->deleteLater();
-        worker_ = nullptr;
-    }
+    worker_ = nullptr;
     if (workerThread_ != nullptr) {
         workerThread_->deleteLater();
         workerThread_ = nullptr;
     }
     startButton_->setEnabled(true);
     stopButton_->setEnabled(false);
+    setConfigurationEditingEnabled(true);
+}
+
+void MainWindow::setConfigurationEditingEnabled(bool enabled) {
+    if (pathPanel_ != nullptr) {
+        pathPanel_->setEnabled(enabled);
+    }
+    if (paramPanel_ != nullptr) {
+        paramPanel_->setEnabled(enabled);
+    }
+    if (roiPanel_ != nullptr) {
+        roiPanel_->setEnabled(enabled);
+    }
+    if (previewLabel_ != nullptr) {
+        previewLabel_->setRoiEditingEnabled(enabled);
+    }
+}
+
+void MainWindow::setDashboardAlarmActive(bool active) {
+    dashboardJamActive_ = active;
+    if (active) {
+        dashboardFlashVisible_ = true;
+        if (!flashTimer_->isActive()) {
+            flashTimer_->start();
+        }
+    } else {
+        flashTimer_->stop();
+        dashboardFlashVisible_ = false;
+    }
+    previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
+    updateAlertStyle();
+}
+
+void MainWindow::toggleAlarmFlash() {
+    dashboardFlashVisible_ = !dashboardFlashVisible_;
+    previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
+    updateAlertStyle();
+    refreshRegionTable();
+}
+
+void MainWindow::updateAlertStyle() {
+    if (dashboardRoot_ == nullptr) {
+        return;
+    }
+    if (!dashboardFlashVisible_) {
+        dashboardRoot_->setStyleSheet({});
+        return;
+    }
+    dashboardRoot_->setStyleSheet(
+        "QWidget#dashboardRoot,QWidget#dashboardRoot QWidget{background:#4a0f12;}"
+        "QWidget#dashboardRoot QGroupBox,QWidget#dashboardRoot QTableWidget,"
+        "QWidget#dashboardRoot QPlainTextEdit{border:2px solid #ff4d4f;}"
+    );
 }
 
 void MainWindow::loadVideoPreviewFrame() {
     const QString source = sourceEdit_->text().trimmed();
     if (source.isEmpty() || (!canBeRuntimeSource(source) && !QFileInfo::exists(source))) {
+        return;
+    }
+    if (canBeRuntimeSource(source)) {
+        appendLog("实时视频流将在开始检测后显示，避免连接异常阻塞界面。");
         return;
     }
     cv::VideoCapture cap = openCapture(source);

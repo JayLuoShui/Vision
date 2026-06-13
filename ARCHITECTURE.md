@@ -17,17 +17,19 @@
 - `scripts/extract_crossbelt_annotation_frames.py`：从真实交叉带视频抽帧，供人工标注。
 - `apps/cvds_qt_app.py`：Qt GUI 主程序，负责训练可视化、图片/视频检测展示和 PLC 事件输出。
 - `apps/cvds_cpp_detector/CMakeLists.txt`：C++/Qt PT 视频流量监测工具的构建配置。
-- `apps/cvds_cpp_detector/src/MainWindow.cpp`：C++ 检测界面，负责视觉模型选择、路径记忆、本地/海康视频源、多边形 ROI 绘制、右键或回车完成、撤回点、工业风界面、启动检测、显示流量统计和堵包信号。
+- `apps/cvds_cpp_detector/src/MainWindow.cpp`：C++ 看板界面，负责视频源、多 ROI 编辑、主统计区域、KPI、区域状态表、闪烁告警和 worker 状态解析。
+- `apps/cvds_cpp_detector/src/RegionConfig.cpp`：严格读取、校验和原子保存 `regions.json`，维护区域配置和运行状态结构。
 - `apps/cvds_cpp_detector/src/RuntimePaths.cpp`：统一解析安装目录、worker、weights、configs 和用户 AppData 输出目录。
 - `apps/cvds_cpp_detector/scripts/worker_entry.py`：打包成 `cvds_detector_worker.exe` 的入口，提供 `detect`、`inspect-model` 和 `diagnose` 三个命令。
-- `apps/cvds_cpp_detector/scripts/pt_video_flow_monitor.py`：直接加载 Ultralytics `.pt` 权重，对视频做检测、ByteTrack 跟踪、ROI 流量统计和堵包判定。
+- `apps/cvds_cpp_detector/scripts/pt_video_flow_monitor.py`：加载 Ultralytics `.pt` 权重，对视频做 ByteTrack 跟踪、多 ROI 独立计数、分区堵包、画面告警和多区域输出。
 - `apps/cvds_cpp_detector/scripts/inspect_model_metadata.py`：读取 PT 权重中的类别名，供界面类别下拉框使用。
 - `apps/cvds_cpp_detector/configs/bytetrack.yaml`：随安装包发布的 ByteTrack 默认配置。
-- `packaging/build_release.ps1`：一键生成发布目录和安装包。
-- `packaging/make_installer.iss`：Inno Setup 安装器脚本。
-- `packaging/requirements-worker.txt`：Python worker 打包依赖。
-- `apps/cvds_annotation_tool.py`：Qt AI 辅助标注工具，负责批量图片预标注、视频抽帧、手工修正和 YOLO 输出。
-- `apps/cvds_annotation_tool_v2.py`：标注工具 2.0，负责检测框/分割多边形标注、YOLO 数据集读取、快捷键操作和 VSCode 风格界面。
+- `apps/cvds_cpp_detector/configs/regions.example.json`：主线、左分流、右分流的多 ROI 示例配置。
+- `apps/cvds_cpp_detector/packaging/build_release.ps1`：一键生成发布目录和安装包。
+- `apps/cvds_cpp_detector/packaging/make_installer.iss`：Inno Setup 安装器脚本。
+- `apps/cvds_cpp_detector/packaging/requirements-worker.txt`：Python worker 打包依赖。
+- `archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool.py`：历史 Qt AI 辅助标注工具。
+- `archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool_v2.py`：历史标注工具 2.0。
 - `apps/cvds_annotation_tool_legacy/`：标注工具历史单文件版和早期 SAM 集成说明，保留用于追溯，不作为当前发布入口。
 - `apps/cvds_annotation_tool_v2_3.py`：标注工具 v2.3 兼容入口，只负责调用 `cvds_annotation_tool.main`。
 - `apps/cvds_annotation_tool_v2_3/cvds_annotation_tool/legacy_v2_3.py`：v2.3 桌面主界面，保留 v2.2 标注、缺陷、Undo/Redo、SAM 和 AI 批量能力，并接入 v2.3 路径、诊断、安全保存、质检和导出。
@@ -36,9 +38,9 @@
 - `apps/cvds_annotation_tool_v2_3/cvds_annotation_tool/services/dataset_quality.py`：扫描输出数据集并生成质量报告和类别分布 CSV。
 - `apps/cvds_annotation_tool_v2_3/cvds_annotation_tool/services/dataset_export.py`：按 train/val 导出标准 YOLO 数据集，可生成 zip。
 - `apps/cvds_annotation_tool_v2_3/cvds_annotation_tool/services/diagnostics.py`：输出 PySide6、Ultralytics、Torch、CUDA、OpenCV、Numpy、YAML 和权重状态。
-- `packaging/cvds_annotation_tool/build_release.ps1`：标注工具 v2.3 发布脚本；默认生成基础版，加 `-IncludeAI` 时生成 `CVDS_Annotation_Tool_v2.3_AI`。
-- `packaging/cvds_annotation_tool/cvds_annotation_tool.spec`：标注工具 v2.3 PyInstaller 配置，通过环境变量切换基础版和 AI 版包名、依赖收集策略。
-- `packaging/cvds_annotation_tool/requirements-ai.txt`：AI 版依赖声明，包含 Torch、TorchVision 和 Ultralytics。
+- `apps/cvds_annotation_tool_v2_3/packaging/build_release.ps1`：标注工具 v2.3 发布脚本；默认生成基础版，加 `-IncludeAI` 时生成 `CVDS_Annotation_Tool_v2.3_AI`。
+- `apps/cvds_annotation_tool_v2_3/packaging/cvds_annotation_tool.spec`：标注工具 v2.3 PyInstaller 配置，通过环境变量切换基础版和 AI 版包名、依赖收集策略。
+- `apps/cvds_annotation_tool_v2_3/packaging/requirements-ai.txt`：AI 版依赖声明，包含 Torch、TorchVision 和 Ultralytics。
 - `apps/DatasetAssistant/CMakeLists.txt`：数据集制作助手 V1.0 构建配置，编译核心库、Qt GUI、CTest 测试和发布安装目标。
 - `apps/DatasetAssistant/src/app/MainWindow.cpp`：数据集制作助手主窗口，组织工程、图片批处理、标注转换、数据集划分、模型推理、任务队列和诊断页面。
 - `apps/DatasetAssistant/src/app/main.cpp`：数据集制作助手 CLI 入口，支持版本、诊断、图片批处理和数据集划分命令。
@@ -53,7 +55,7 @@
 - `DWSVisionCountService/app/roi_editor.py`：保证窗口缩放前后仍使用准确的原图 ROI 坐标。
 - `DWSVisionCountService/app/windows_settings.py`：保存前严格校验端口、模型、推理参数和 ROI。
 - `DWSVisionCountService/scripts/build_windows_release.ps1`：生成带统一图标、签名和 TCP 烟测的 Windows 安装包。
-- `tests/test_annotation_tool_v2.py`：标注工具 2.0 的 YOLO 标签读写和路径规则测试。
+- `archive/legacy_tests/cvds_annotation_tool/`：历史标注工具的标签读写和路径规则测试。
 - `tests/test_cpp_detector_structure.py`：C++ 检测部署版的文件结构、界面功能和推理关键逻辑测试。
 - `tests/test_augment_yolomask_background.py`：分割背景增强的像素保护、标签复制和负样本背景裁剪测试。
 - `tests/test_train_yolomask_yolo26seg.py`：YOLOMask 训练参数选择和本地源码优先导入测试。
@@ -64,14 +66,12 @@
 - `weights/cvds_yolo26n_package_crossbelt_fast_best.pt`：交叉带增强候选权重，未作为默认正式权重。
 - `yolo26s-seg.pt`：YOLOMask 分割训练使用的 COCO 预训练权重。
 - `dist/CVDS_Qt_Platform/CVDS_Qt_Platform.exe`：Windows 可直接启动的 GUI 程序。
-- `dist/CVDS_Annotation_Tool/CVDS_Annotation_Tool.exe`：Windows 可直接启动的 AI 辅助标注工具。
-- `dist/CVDS_Annotation_Tool_v2/CVDS_Annotation_Tool_v2.exe`：Windows 可直接启动的标注工具 2.0。
 - `dist/CVDS_Annotation_Tool_v2.3/CVDS_Annotation_Tool_v2.3.exe`：标注工具 v2.3 基础发布包，不内置 Torch，基础手工标注可用。
 - `dist/CVDS_Annotation_Tool_v2.3_AI/CVDS_Annotation_Tool_v2.3_AI.exe`：标注工具 v2.3 AI 发布包，内置 CUDA Torch、TorchVision、Ultralytics 和 OpenCV。
-- `apps/dws_batch_model_validator/dist/DWSBatchModelValidator/DWSBatchModelValidator.exe`：DWS 批量模型检测验证工具，双击打开 GUI，也支持 `--diagnose`、`--version` 和 `--cli`。
+- `dist/dws_batch_model_validator/dist/DWSBatchModelValidator/DWSBatchModelValidator.exe`：DWS 批量模型检测验证工具，双击打开 GUI，也支持 `--diagnose`、`--version` 和 `--cli`。
 - `CVDS_Qt_Platform.spec`：PyInstaller 打包配置。
-- `CVDS_Annotation_Tool.spec`：标注工具 PyInstaller 打包配置。
-- `CVDS_Annotation_Tool_v2.spec`：标注工具 2.0 PyInstaller 打包配置。
+- `archive/legacy_packaging/CVDS_Annotation_Tool.spec`：历史标注工具 PyInstaller 配置。
+- `archive/legacy_packaging/CVDS_Annotation_Tool_v2.spec`：历史标注工具 2.0 PyInstaller 配置。
 
 ## 数据目录
 
@@ -154,19 +154,20 @@
 
 `apps/cvds_cpp_detector`
 通过安装目录 `runtime/cvds_detector_worker.exe inspect-model` 读取 PT 权重里的类别信息
-Qt 界面只保留 PT 视频检测、ROI 绘制和流量监测
-视频源选中后用 OpenCV 读取首帧，用户在预览画面上逐点绘制多边形流量 ROI 或检测区域，右键或回车完成，支持 Esc/Ctrl+Z 撤回点
-路径、模型、ROI 和海康相机配置通过 `QSettings` 记忆；默认模型来自安装目录 `weights`，默认输出来自用户 AppData
+Qt 界面只保留 PT 视频检测、多 ROI 管理和实时运行看板
+视频源选中后用 OpenCV 读取首帧；用户选择当前区域后逐点绘制，右键或回车完成，支持 Esc/Ctrl+Z 撤回点；检测区域继续单独保留
+模型、视频源和海康相机配置通过 `QSettings` 记忆；多 ROI 配置严格保存到用户 AppData 的 `configs/regions.json`
 海康相机接入使用 RTSP 地址 `rtsp://user:password@ip:554/Streaming/Channels/channel`
 界面使用工业深色钢灰配色，运行/停止按钮颜色分开，类别和执行设备下拉栏显示下拉图标，数字输入框显示正/倒三角调节键，方便现场鼠标操作
-检测时启动 `runtime/cvds_detector_worker.exe detect`，由打包后的 Ultralytics `.pt` 权重和 ByteTrack 完成检测、跟踪、ROI 进入计数
-Python worker 通过 JSON 行把实际设备、预览图路径、处理帧数、流量数、ROI 内目标数和堵包信号回传给 C++ 界面
+检测前把配置同步到输出目录 `regions.json`，再用 `--regions` 启动 worker；旧命令行 `--roi` 仍转换成 `default` 区域
+Python worker 通过 JSON 行回传全局状态和 `regions[]`；每个区域独立维护累计数、区域内数、停滞秒数和堵包次数
 环境自检通过 `runtime/cvds_detector_worker.exe diagnose` 输出 Python/Torch/CUDA/NVIDIA 驱动/Ultralytics/OpenCV 状态
 推理设备使用自动策略：CUDA 可用时优先 GPU，CUDA 不可用时自动切到 CPU。
-当 ROI 内有包裹但流量数连续指定秒数不更新时，输出 `jam_signals.jsonl`，堵包发生为 `IO_JAM_ON`，解除为 `IO_JAM_OFF`
-输出带框视频、流量事件 CSV、堵包信号 JSONL、统计 JSON 和预览图片。
+全局累计只读取 `total_count_region`，不把 T 型口各区域相加
+任一区域堵包时全局状态为 `JAM`，Qt 看板和 worker 画面同步红色闪烁；事件包含区域 ID、名称、`IO_JAM_ON` / `IO_JAM_OFF`
+输出带框视频、多区域事件 CSV、堵包信号 JSONL、多区域统计 JSON、运行配置和预览图片。
 
-`apps/cvds_annotation_tool.py`
+`archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool.py`
 读取图片文件夹或视频文件夹
 可用 YOLO 模型批量生成预标注
 视频先按帧间隔抽图再写入输出目录
@@ -177,7 +178,7 @@ Python worker 通过 JSON 行把实际设备、预览图路径、处理帧数、
 支持复制上一张标注、跳到空标注、删除当前空帧和批量删除空标签帧
 输出 `images/train`、`labels/train` 和 `data.yaml`。
 
-`apps/cvds_annotation_tool_v2.py`
+`archive/legacy_apps/cvds_annotation_tool/cvds_annotation_tool_v2.py`
 读取普通图片文件夹或已有 YOLO 数据集目录
 从 `data.yaml` 恢复类别，从 `images/train` 和 `labels/train` 读取同名图片标签
 使用统一 `Annotation` 数据模型同时处理检测框和分割多边形
@@ -185,7 +186,7 @@ Python worker 通过 JSON 行把实际设备、预览图路径、处理帧数、
 删除当前帧后显式选中相邻帧，避免列表信号抖动导致回到第一帧
 Esc 用于撤回当前多边形点、取消未完成检测框或恢复拖拽中的框调整
 启动时不直接导入 torch、OpenCV、Numpy，设备状态用 `nvidia-smi` 轻量检测并缓存，AI 标注或读图时才加载重依赖
-通过 `CVDS_Annotation_Tool_v2.spec` 打包为独立 Windows exe。
+历史版本通过 `archive/legacy_packaging/CVDS_Annotation_Tool_v2.spec` 打包为独立 Windows exe。
 
 `apps/cvds_annotation_tool_legacy/`
 保留根目录迁出的 `cvds_annotation_tool_v2.py`、`cvds_annotation_tool_v2_2.py` 和 `sam_integration.py`
@@ -219,10 +220,10 @@ PySide6 桌面 GUI，负责视频导入、预览播放、矩形 ROI 绘制、片
 `apps/cvds_jam_video_synthesizer_app.py`
 PyInstaller 使用的 GUI 启动入口。
 
-`packaging/cvds_jam_video_synthesizer/build_release.ps1`
+`apps/cvds_jam_video_synthesizer/packaging/build_release.ps1`
 清理本工具构建输出、创建 `.venv`、安装依赖、运行测试、调用 PyInstaller，并复制文档、版本文件和可选 `ffmpeg.exe`。
 
-`packaging/cvds_jam_video_synthesizer/make_installer.iss`
+`apps/cvds_jam_video_synthesizer/packaging/make_installer.iss`
 Inno Setup 安装脚本，安装到 `{autopf}/CVDS/CVDS Jam Video Synthesizer`，创建桌面和开始菜单快捷方式，支持卸载。
 
 ## 关键设计决定

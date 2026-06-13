@@ -20,6 +20,8 @@ add_executable(
     src/main.cpp
     src/MainWindow.cpp
     src/MainWindow.h
+    src/RegionConfig.cpp
+    src/RegionConfig.h
     src/RuntimePaths.cpp
     src/RuntimePaths.h
 )
@@ -50,14 +52,23 @@ add_custom_command(
             "${CMAKE_CURRENT_SOURCE_DIR}/configs/bytetrack.yaml"
             "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/bytetrack.yaml"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/configs/regions.example.json"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/regions.example.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${PROJECT_ROOT}/VERSION.txt"
             "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/VERSION.txt"
     COMMENT "复制 CVDS 运行资源"
 )
 
 install(TARGETS CVDS_Cpp_Detector RUNTIME DESTINATION .)
-install(DIRECTORY scripts DESTINATION . FILES_MATCHING PATTERN "*.py")
-install(DIRECTORY configs DESTINATION . FILES_MATCHING PATTERN "*.yaml")
+install(
+    DIRECTORY scripts
+    DESTINATION .
+    FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "__pycache__" EXCLUDE
+)
+install(DIRECTORY configs DESTINATION . FILES_MATCHING PATTERN "*.yaml" PATTERN "*.json")
 install(DIRECTORY "${PROJECT_ROOT}/weights" DESTINATION . FILES_MATCHING PATTERN "*.pt")
-install(DIRECTORY "${PROJECT_ROOT}/docs" DESTINATION . FILES_MATCHING PATTERN "*.md")
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs" DESTINATION . FILES_MATCHING PATTERN "*.md")
 install(FILES "${PROJECT_ROOT}/VERSION.txt" DESTINATION .)

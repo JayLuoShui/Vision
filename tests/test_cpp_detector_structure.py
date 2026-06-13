@@ -16,9 +16,12 @@ def test_cpp_detector_files_exist():
         APP_DIR / "src" / "main.cpp",
         APP_DIR / "src" / "MainWindow.h",
         APP_DIR / "src" / "MainWindow.cpp",
+        APP_DIR / "src" / "RegionConfig.h",
+        APP_DIR / "src" / "RegionConfig.cpp",
         APP_DIR / "src" / "RuntimePaths.h",
         APP_DIR / "src" / "RuntimePaths.cpp",
         APP_DIR / "configs" / "bytetrack.yaml",
+        APP_DIR / "configs" / "regions.example.json",
         APP_DIR / "scripts" / "worker_entry.py",
         APP_DIR / "scripts" / "inspect_model_metadata.py",
         APP_DIR / "scripts" / "pt_video_flow_monitor.py",
@@ -56,7 +59,8 @@ def test_cpp_detection_runs_pt_python_worker_and_streams_metrics():
     assert "process.start(config_.workerPath, args)" in main_window
     assert '"--weights"' in main_window
     assert '"--source"' in main_window
-    assert '"--roi"' in main_window
+    assert '"--regions"' in main_window
+    assert "regions.json" in main_window
     assert '"--preview-path"' in main_window
     assert '"--tracker"' in main_window
     assert "flow_count" in main_window
@@ -82,6 +86,9 @@ def test_cpp_runtime_paths_use_install_dir_and_appdata():
         "defaultWeightsDir",
         "defaultOutputDir",
         "writableAppDataDir",
+        "configDir",
+        "defaultRegionsConfigPath",
+        "regionsExamplePath",
         "trackerConfigPath",
     ]:
         assert symbol in header
@@ -120,6 +127,26 @@ def test_cpp_start_detection_validates_packaged_runtime_resources():
     assert "tracker yaml" in main_window.lower()
     assert "输出目录不可写" in main_window
     assert "error.left(2000)" not in main_window
+
+
+def test_cpp_model_metadata_loading_is_async_and_blocks_detection_on_failure():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "beginModelMetadataRefresh" in header
+    assert "finishModelMetadataRefresh" in header
+    assert "modelInspectProcess_" in header
+    assert "startDetectionAfterModelInspect_" in header
+    assert "QTimer::singleShot(30000" in main_window
+    assert "waitForStarted(5000)" not in main_window.split("void MainWindow::refreshModelMetadata()")[1].split(
+        "void MainWindow::runEnvironmentDiagnose()"
+    )[0]
+    assert "waitForFinished(30000)" not in main_window.split("void MainWindow::refreshModelMetadata()")[1].split(
+        "void MainWindow::runEnvironmentDiagnose()"
+    )[0]
+    start_body = main_window.split("void MainWindow::startDetection()")[1].split("void MainWindow::stopDetection()")[0]
+    assert "beginModelMetadataRefresh(true)" in start_body
+    assert "loadedModelPath_" in start_body
 
 
 def test_python_worker_entry_supports_required_subcommands():
@@ -163,7 +190,7 @@ def test_python_worker_falls_back_to_cpu_when_requested_gpu_is_unavailable():
 
 
 def test_release_worker_requirements_use_cuda_torch_wheels():
-    requirements = read_text(ROOT / "packaging" / "requirements-worker.txt")
+    requirements = read_text(APP_DIR / "packaging" / "requirements-worker.txt")
 
     assert "https://download.pytorch.org/whl/cu128" in requirements
     assert "torch==2.11.0+cu128" in requirements
@@ -172,34 +199,45 @@ def test_release_worker_requirements_use_cuda_torch_wheels():
 
 def test_release_packaging_files_exist_and_define_installer():
     expected = [
-        ROOT / "packaging" / "build_release.ps1",
-        ROOT / "packaging" / "make_installer.iss",
-        ROOT / "packaging" / "requirements-worker.txt",
-        ROOT / "packaging" / "README_RELEASE.md",
-        ROOT / "README_RELEASE.md",
+        APP_DIR / "packaging" / "build_release.ps1",
+        APP_DIR / "packaging" / "make_installer.iss",
+        APP_DIR / "packaging" / "requirements-worker.txt",
+        APP_DIR / "packaging" / "README_RELEASE.md",
+        APP_DIR / "README_RELEASE.md",
         ROOT / "VERSION.txt",
-        ROOT / "docs" / "用户使用说明.md",
-        ROOT / "docs" / "部署说明.md",
-        ROOT / "docs" / "故障排查.md",
+        APP_DIR / "docs" / "部署说明.md",
     ]
     missing = [str(path) for path in expected if not path.exists()]
 
     assert missing == []
 
-    build_script = read_text(ROOT / "packaging" / "build_release.ps1")
-    installer = read_text(ROOT / "packaging" / "make_installer.iss")
-    requirements = read_text(ROOT / "packaging" / "requirements-worker.txt")
+    build_script = read_text(APP_DIR / "packaging" / "build_release.ps1")
+    installer = read_text(APP_DIR / "packaging" / "make_installer.iss")
+    requirements = read_text(APP_DIR / "packaging" / "requirements-worker.txt")
 
     assert "windeployqt" in build_script
     assert "PyInstaller" in build_script
     assert "cvds_detector_worker.exe diagnose" in build_script
-    assert "--collect-all nvidia" in build_script
+    assert '"--collect-all"\n    "ultralytics"' in build_script
+    assert '"--collect-all"\n    "cv2"' in build_script
+    for oversized_package in ["torch", "torchvision", "nvidia"]:
+        assert f'"--collect-all"\n    "{oversized_package}"' not in build_script
     assert "CVDS_Package_Flow_Detector" in build_script
+    assert '"configs\\regions.example.json"' in build_script
     assert "{autopf}\\CVDS\\CVDS包裹流量检测工具" in installer
     assert "cvds_detector_worker.exe" in installer
     assert "ultralytics" in requirements
     assert "torch" in requirements
     assert "opencv-python" in requirements
+    assert "pillow" in requirements.lower()
+
+
+def test_cmake_installs_detector_specific_docs():
+    cmake = read_text(APP_DIR / "CMakeLists.txt")
+
+    assert 'install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs"' in cmake
+    assert '"${PROJECT_ROOT}/docs"' not in cmake
+    assert 'PATTERN "__pycache__" EXCLUDE' in cmake
 
 
 def test_release_files_do_not_contain_developer_absolute_paths():
@@ -208,9 +246,9 @@ def test_release_files_do_not_contain_developer_absolute_paths():
         APP_DIR / "src" / "MainWindow.h",
         APP_DIR / "src" / "RuntimePaths.cpp",
         APP_DIR / "CMakeLists.txt",
-        ROOT / "README_RELEASE.md",
-        ROOT / "packaging" / "README_RELEASE.md",
-        ROOT / "docs" / "部署说明.md",
+        APP_DIR / "README_RELEASE.md",
+        APP_DIR / "packaging" / "README_RELEASE.md",
+        APP_DIR / "docs" / "部署说明.md",
     ]
     forbidden = [
         "C:/Users/lenovo",
@@ -324,6 +362,8 @@ def test_cpp_jam_controls_and_signal_handling_exist():
     assert '"--jam-seconds"' in main_window
     assert '"--jam-signal-path"' in main_window
     assert 'type == "jam"' in main_window
+    assert 'object.value("event_type").toString()' in main_window
+    assert 'type == "jam_clear"' in main_window
     assert "堵包" in main_window
     assert "jam_signals.jsonl" in main_window
 
@@ -369,6 +409,9 @@ def test_cmake_no_longer_links_onnx_runtime_for_detection():
     assert "ONNXRUNTIME_ROOT" not in cmake
     assert "onnxruntime" not in cmake.lower()
     assert "Detector.cpp" not in cmake
+    assert "RegionConfig.cpp" in cmake
+    assert "RegionConfig.h" in cmake
+    assert "regions.example.json" in cmake
     assert "pt_video_flow_monitor.py" in cmake
     assert "Qt6::Widgets" in cmake
     assert "OpenCV" in cmake
@@ -395,7 +438,7 @@ def test_cpp_startup_defers_heavy_model_and_video_loading():
 
     assert "refreshModelMetadata();" not in constructor_body
     assert "loadVideoPreviewFrame();" not in constructor_body
-    assert "refreshModelMetadata();" in start_detection_body
+    assert "beginModelMetadataRefresh(true)" in start_detection_body
     assert "延迟加载模型类别和视频预览" in constructor_body
 
 
@@ -419,6 +462,204 @@ def test_cpp_left_sidebar_scrollbar_has_smoother_motion():
     assert "verticalScrollBar()->setSingleStep(28)" in main_window
     assert "verticalScrollBar()->setPageStep(160)" in main_window
     assert "QScrollBar::handle:vertical" in main_window
+
+
+def test_cpp_region_config_supports_strict_json_and_runtime_state():
+    header = read_text(APP_DIR / "src" / "RegionConfig.h")
+    source = read_text(APP_DIR / "src" / "RegionConfig.cpp")
+
+    assert "struct RegionConfig" in header
+    assert "struct RegionRuntimeState" in header
+    assert "struct RegionConfigDocument" in header
+    assert "QJsonObject" in header
+    assert "QJsonParseError" in source
+    assert "loadRegionConfigDocument" in header
+    assert "saveRegionConfigDocument" in header
+    assert "regionConfigDocumentToJson" in header
+    assert "regionConfigDocumentFromJson" in header
+    assert "regionRuntimeStateToJson" in header
+    assert "regionRuntimeStateFromJson" in header
+    assert "totalCountRegionId" in header
+    assert "throw std::runtime_error" in source
+    assert "区域配置缺少 regions" in source
+    assert "仅支持 version=1" in source
+    assert "主统计区域不存在" in source
+    assert "区域 polygon 至少需要 3 个点" in source
+    assert "区域 id 重复" in source
+    assert "std::floor(number)" in source
+    assert "主统计区域必须开启计数" in source
+    assert "QSaveFile" in source
+
+
+def test_cpp_multi_roi_editor_supports_add_rename_delete_save_load():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "addRegion" in header
+    assert "renameCurrentRegion" in header
+    assert "deleteCurrentRegion" in header
+    assert "saveRegionConfig" in header
+    assert "loadRegionConfig" in header
+    assert "applyRegionSelection" in header
+    assert "regionNameEdit_" in header
+    assert "regionCombo_" in header
+    assert "totalCountRegionCombo_" in header
+    assert "新增区域" in main_window
+    assert "重命名区域" in main_window
+    assert "删除区域" in main_window
+    assert "保存区域配置" in main_window
+    assert "加载区域配置" in main_window
+    assert "主统计区域" in main_window
+    assert "主统计区域必须参与累计" in main_window
+    assert "totalCountRegionId_ == currentRegionId_ && !checked" in main_window
+    assert "RuntimePaths::regionsExamplePath()" in main_window
+    assert "QFileDialog::getOpenFileName(" in main_window
+    assert '"加载区域配置"' in main_window
+
+
+def test_cpp_preview_label_supports_multiple_flow_regions_and_active_region_highlight():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "setFlowRegions" in header
+    assert "setActiveRegionId" in header
+    assert "flowRegions_" in header
+    assert "activeRegionId_" in header
+    assert "flowRegionChanged" in header
+    assert "flowRegionChanged(const QString& regionId, const QVector<QPoint>& polygon, bool closed)" in header
+    assert "regions_[index].polygon = polygon;" in main_window
+    assert "当前区域" in main_window
+    assert "drawPolygon(painter, region.polygon" in main_window
+    assert '"区域 "' not in header
+
+
+def test_cpp_invalid_saved_regions_are_reported_without_default_replacement():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    constructor = main_window.split("MainWindow::MainWindow(QWidget* parent)")[1].split("MainWindow::~MainWindow()")[0]
+    invalid_config_handler = constructor.split('appendLog("加载区域配置失败："')[1].split("} else {")[0]
+
+    assert "QMessageBox::critical" in invalid_config_handler
+    assert "ensureDefaultRegion();" not in invalid_config_handler
+
+
+def test_cpp_dashboard_has_kpi_region_table_and_flash_timer():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "QTableWidget" in header
+    assert "QTimer" in header
+    assert "updateDashboard" in header
+    assert "setDashboardAlarmActive" in header
+    assert "flashTimer_" in header
+    assert "kpiTotalCountValueLabel_" in header
+    assert "kpiStatusValueLabel_" in header
+    assert "kpiInsideCountValueLabel_" in header
+    assert "kpiJamCountValueLabel_" in header
+    assert "dashboardRoot_" in header
+    assert "updateAlertStyle" in header
+    assert "区域状态" in main_window
+    assert "累计包裹" in main_window
+    assert "当前状态" in main_window
+    assert "堵包秒数" in main_window
+    assert "QTableWidget" in main_window
+    assert "new QTableWidget(0, 6" in main_window
+    assert "setInterval(500)" in main_window
+    assert "dashboardRoot_->setStyleSheet" in main_window
+    assert "dashboardStatusForStates" in main_window
+    assert 'object.value("regions").toArray()' in main_window
+    assert 'object.value("global_status").toString()' in main_window
+    assert 'object.value("total_count").toInt()' in main_window
+    assert "state.id == totalCountRegionId_" in main_window
+
+
+def test_cpp_window_shutdown_waits_for_detection_thread():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    destructor = main_window.split("MainWindow::~MainWindow()")[1].split("QWidget* MainWindow::buildPathPanel()")[0]
+
+    assert "stopDetection();" in destructor
+    assert "workerThread_->quit();" in destructor
+    assert "workerThread_->wait();" in destructor
+
+
+def test_cpp_does_not_persist_camera_password_or_authenticated_rtsp_url():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    load_settings = main_window.split("void MainWindow::loadSettings()")[1].split("void MainWindow::saveSettings()")[0]
+    save_settings = main_window.split("void MainWindow::saveSettings() const")[1].split("void MainWindow::populateClassCombo")[0]
+
+    assert 'settings.remove("hikvisionPassword")' in load_settings
+    assert 'settings.value("hikvisionPassword"' not in load_settings
+    assert 'settings.setValue("hikvisionPassword"' not in save_settings
+    assert "sourcePathForSettings" in save_settings
+    assert "QUrl::RemoveUserInfo" in main_window
+
+
+def test_cpp_worker_helper_processes_have_timeouts_and_worker_is_deleted_with_thread():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    metadata = main_window.split("void MainWindow::refreshModelMetadata()")[1].split("void MainWindow::runEnvironmentDiagnose()")[0]
+    diagnose = main_window.split("void MainWindow::runEnvironmentDiagnose()")[1].split("void MainWindow::detectionFinished")[0]
+    cleanup = main_window.split("void MainWindow::cleanupWorker()")[1].split("void MainWindow::setDashboardAlarmActive")[0]
+
+    assert "loadedModelPath_" in header
+    assert "loadedModelPath_ == modelPath" in metadata
+    assert "QTimer::singleShot(30000" in metadata
+    assert "process->kill();" in metadata
+    assert "waitForFinished(30000)" not in metadata
+    assert "waitForFinished(30000)" in diagnose
+    assert "process.kill();" in diagnose
+    assert "QThread::finished, worker_, &QObject::deleteLater" in main_window
+    assert "worker_->deleteLater();" not in cleanup
+
+
+def test_release_script_supports_isolated_2_0_directory_and_onedir_worker():
+    build_script = read_text(APP_DIR / "packaging" / "build_release.ps1")
+
+    assert '[string]$DistName = "CVDS_Package_Flow_Detector"' in build_script
+    assert '[switch]$SkipInstaller' in build_script
+    assert 'Join-Path $RootDir "dist\\$DistName"' in build_script
+    assert "--onedir" in build_script
+    assert "--onefile" not in build_script
+    assert "Invoke-Checked" in build_script
+    assert "Set-Content -Encoding UTF8" in build_script
+
+
+def test_cpp_window_title_displays_release_version():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert 'setWindowTitle("CVDS包裹流量检测工具 " + RuntimePaths::versionText())' in main_window
+
+
+def test_cpp_locks_configuration_while_detection_is_running_and_resets_loaded_dashboard():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    restore = main_window.split("void MainWindow::restoreRegionConfigDocument")[1].split("void MainWindow::populateClassCombo")[0]
+
+    assert "setConfigurationEditingEnabled" in header
+    assert "pathPanel_" in header
+    assert "paramPanel_" in header
+    assert "roiPanel_" in header
+    assert "setConfigurationEditingEnabled(false);" in main_window
+    assert "setConfigurationEditingEnabled(true);" in main_window
+    assert "setDashboardAlarmActive(false);" in restore
+    assert "regionRuntimeStates_.clear();" in restore
+    assert 'dashboardStatusText_ = "待机";' in restore
+
+
+def test_cpp_deleting_primary_region_selects_another_counting_region():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    delete_region = main_window.split("void MainWindow::deleteCurrentRegion()")[1].split("void MainWindow::saveRegionConfig()")[0]
+
+    assert "nextTotalCountRegionId" in delete_region
+    assert "countEnabled" in delete_region
+    assert "没有可作为主统计区域的计数区域" in delete_region
+
+
+def test_cpp_region_json_rejects_integers_outside_qt_int_range():
+    source = read_text(APP_DIR / "src" / "RegionConfig.cpp")
+
+    assert "#include <limits>" in source
+    assert "std::numeric_limits<int>::min()" in source
+    assert "std::numeric_limits<int>::max()" in source
 
 
 if __name__ == "__main__":
@@ -449,4 +690,10 @@ if __name__ == "__main__":
     test_cpp_startup_defers_heavy_model_and_video_loading()
     test_cpp_left_sidebar_wheel_does_not_change_parameter_controls()
     test_cpp_left_sidebar_scrollbar_has_smoother_motion()
-    print("27 passed")
+    test_cpp_region_config_supports_strict_json_and_runtime_state()
+    test_cpp_multi_roi_editor_supports_add_rename_delete_save_load()
+    test_cpp_preview_label_supports_multiple_flow_regions_and_active_region_highlight()
+    test_cpp_invalid_saved_regions_are_reported_without_default_replacement()
+    test_cpp_dashboard_has_kpi_region_table_and_flash_timer()
+    test_cpp_window_shutdown_waits_for_detection_thread()
+    print("33 passed")
