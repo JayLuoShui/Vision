@@ -6,13 +6,29 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
-
+from urllib.parse import urlsplit, urlunsplit
 
 GPU_UNAVAILABLE_MESSAGE = "检测到 NVIDIA 显卡/驱动，但当前运行包内 PyTorch 未启用 CUDA，请使用 CUDA 版运行包或改用 CPU。"
+PT_DEVICE_CHOICES = ("auto", "cpu", "0")
+OPENVINO_DEVICE_MAP = {
+    "auto": "AUTO",
+    "intel:cpu": "CPU",
+    "intel:gpu": "GPU",
+    "intel:npu": "NPU",
+}
 
 
 def emit(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, ensure_ascii=False), flush=True)
+
+
+def metadata_tools():
+    script_dir = Path(__file__).resolve().parent
+    if str(script_dir) not in sys.path:
+        sys.path.insert(0, str(script_dir))
+    import inspect_model_metadata
+
+    return inspect_model_metadata
 
 
 def import_status(module_name: str) -> tuple[bool, str]:
@@ -94,6 +110,18 @@ def collect_runtime_diagnostics() -> dict[str, Any]:
     if not numpy_available:
         errors.append(f"numpy: {numpy_error}")
 
+    onnx_available, onnx_error = import_status("onnx")
+    if not onnx_available:
+        errors.append(f"onnx: {onnx_error}")
+
+    onnxruntime_available, onnxruntime_error = import_status("onnxruntime")
+    if not onnxruntime_available:
+        errors.append(f"onnxruntime: {onnxruntime_error}")
+
+    openvino_available, openvino_error = import_status("openvino")
+    if not openvino_available:
+        errors.append(f"openvino: {openvino_error}")
+
     cuda_issue = ""
     if not cuda_available:
         if nvidia["available"] and torch_available:
@@ -115,6 +143,9 @@ def collect_runtime_diagnostics() -> dict[str, Any]:
         "opencv_available": opencv_available,
         "pillow_available": pillow_available,
         "numpy_available": numpy_available,
+        "onnx_available": onnx_available,
+        "onnxruntime_available": onnxruntime_available,
+        "openvino_available": openvino_available,
         "nvidia_driver_available": bool(nvidia["available"]),
         "nvidia_gpu_name": nvidia["gpu_name"],
         "nvidia_driver_version": nvidia["driver_version"],
@@ -135,6 +166,9 @@ def diagnose() -> int:
         and diagnostics["opencv_available"]
         and diagnostics["pillow_available"]
         and diagnostics["numpy_available"]
+        and diagnostics["onnx_available"]
+        and diagnostics["onnxruntime_available"]
+        and diagnostics["openvino_available"]
     )
     return 0 if required_ok else 1
 
@@ -154,20 +188,40 @@ def gpu_unavailable_message() -> str:
     return issue or GPU_UNAVAILABLE_MESSAGE
 
 
-def normalize_detect_device(value: str) -> str:
-    device = (value or "auto").strip().lower()
-    if device in {"auto", ""}:
-        return "0" if torch_cuda_available() else "cpu"
-    if device in {"cpu", "-1"}:
-        return "cpu"
-    if not torch_cuda_available():
-        return "cpu"
-    return value.strip()
+def available_openvino_devices() -> set[str]:
+    import openvino as ov
+
+    core = ov.Core()
+    return {str(device).strip().upper() for device in getattr(core, "available_devices", []) if str(device).strip()}
 
 
-def ensure_detect_inputs(args: argparse.Namespace) -> None:
-    if not Path(args.weights).exists():
-        raise FileNotFoundError(f"找不到模型：{args.weights}")
+def normalize_detect_device(value: str, artifact: Any) -> str:
+    requested = (value or "auto").strip().lower()
+    if artifact.backend in {"pt", "onnx"}:
+        if requested not in PT_DEVICE_CHOICES:
+            raise ValueError(f"{artifact.backend} 仅支持设备：auto、cpu、0")
+        if requested == "auto":
+            return "0" if torch_cuda_available() else "cpu"
+        if requested == "cpu":
+            return "cpu"
+        if not torch_cuda_available():
+            raise RuntimeError(gpu_unavailable_message())
+        return "0"
+
+    if requested not in OPENVINO_DEVICE_MAP:
+        raise ValueError("OpenVINO 仅支持设备：auto、intel:cpu、intel:gpu、intel:npu")
+    available = available_openvino_devices()
+    if not available:
+        raise RuntimeError("未检测到可用的 OpenVINO 设备")
+    normalized = OPENVINO_DEVICE_MAP[requested]
+    if normalized != "AUTO" and normalized not in available:
+        found = ", ".join(sorted(device.lower() for device in available))
+        raise RuntimeError(f"OpenVINO 设备不可用：{requested}。当前可用：{found}")
+    return requested
+
+
+def ensure_detect_inputs(args: argparse.Namespace) -> Any:
+    artifact = metadata_tools().resolve_model_artifact(args.model)
     if args.tracker and not Path(args.tracker).exists():
         raise FileNotFoundError(f"找不到 tracker 配置：{args.tracker}")
     if args.regions:
@@ -180,26 +234,25 @@ def ensure_detect_inputs(args: argparse.Namespace) -> None:
     probe = output_dir / ".cvds_worker_write_test.tmp"
     probe.write_text("ok", encoding="utf-8")
     probe.unlink(missing_ok=True)
+    return artifact
 
 
 def detect(args: argparse.Namespace) -> int:
     try:
-        ensure_detect_inputs(args)
-        requested_device = args.device
-        args.device = normalize_detect_device(args.device)
+        artifact = ensure_detect_inputs(args)
+        args.device = normalize_detect_device(args.device, artifact)
     except Exception as exc:
         emit({"type": "error", "message": str(exc)})
         return 2
 
-    if str(requested_device).strip().lower() not in {"", "auto", "cpu", "-1"} and args.device == "cpu":
-        emit({"type": "status", "message": gpu_unavailable_message() + " 已自动切换 CPU。", "device": "cpu"})
-
     argv = [
         "pt_video_flow_monitor.py",
-        "--weights",
-        args.weights,
+        "--model",
+        args.model,
         "--source",
         args.source,
+        "--rtsp-transport",
+        args.rtsp_transport,
         "--output-dir",
         args.output_dir,
         "--preview-path",
@@ -245,7 +298,7 @@ def detect(args: argparse.Namespace) -> int:
 
 
 def inspect_model(args: argparse.Namespace) -> int:
-    import inspect_model_metadata
+    inspect_model_metadata = metadata_tools()
 
     sys.argv = ["inspect_model_metadata.py", "--model", args.model]
     try:
@@ -257,13 +310,102 @@ def inspect_model(args: argparse.Namespace) -> int:
         return 1
 
 
+def sanitize_source_for_log(source: str) -> str:
+    parts = urlsplit(source)
+    if not parts.scheme or "@" not in parts.netloc:
+        return source
+    hostname = parts.hostname or ""
+    port = f":{parts.port}" if parts.port else ""
+    username = parts.username or ""
+    netloc = f"{username}@{hostname}{port}" if username else f"{hostname}{port}"
+    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
+
+
+def open_probe_capture(source: str, rtsp_transport: str):
+    import cv2
+
+    normalized = source.strip().lower()
+    if normalized.isdigit():
+        return cv2.VideoCapture(int(source))
+    if normalized.startswith("rtsp://"):
+        import os
+
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = f"rtsp_transport;{rtsp_transport}"
+        backend = getattr(cv2, "CAP_FFMPEG", None)
+        params: list[int] = []
+        if hasattr(cv2, "CAP_PROP_OPEN_TIMEOUT_MSEC"):
+            params.extend([int(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC), 5000])
+        if hasattr(cv2, "CAP_PROP_READ_TIMEOUT_MSEC"):
+            params.extend([int(cv2.CAP_PROP_READ_TIMEOUT_MSEC), 5000])
+        if backend is not None:
+            if params:
+                return cv2.VideoCapture(source, backend, params)
+            return cv2.VideoCapture(source, backend)
+    return cv2.VideoCapture(source)
+
+
+def probe_source(args: argparse.Namespace) -> int:
+    source = sanitize_source_for_log(args.source)
+    capture = None
+    try:
+        capture = open_probe_capture(args.source, args.rtsp_transport)
+        if not capture.isOpened():
+            emit(
+                {
+                    "type": "probe",
+                    "ok": False,
+                    "source": source,
+                    "transport": args.rtsp_transport,
+                    "message": "无法打开视频源",
+                }
+            )
+            return 1
+        ok, _frame = capture.read()
+        if not ok:
+            emit(
+                {
+                    "type": "probe",
+                    "ok": False,
+                    "source": source,
+                    "transport": args.rtsp_transport,
+                    "message": "视频流读取失败",
+                }
+            )
+            return 1
+        emit(
+            {
+                "type": "probe",
+                "ok": True,
+                "source": source,
+                "transport": args.rtsp_transport,
+                "message": "连接成功",
+            }
+        )
+        return 0
+    except Exception as exc:
+        emit(
+            {
+                "type": "probe",
+                "ok": False,
+                "source": source,
+                "transport": args.rtsp_transport,
+                "message": str(exc),
+            }
+        )
+        return 1
+    finally:
+        if capture is not None:
+            capture.release()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="CVDS 检测 worker")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     detect_parser = subparsers.add_parser("detect", help="执行视频检测")
-    detect_parser.add_argument("--weights", required=True)
+    detect_parser.add_argument("--model", required=True)
     detect_parser.add_argument("--source", required=True)
+    detect_parser.add_argument("--rtsp-transport", choices=["tcp", "udp"], default="tcp")
     detect_parser.add_argument("--output-dir", required=True)
     detect_parser.add_argument("--preview-path", required=True)
     detect_parser.add_argument("--roi", default=None)
@@ -284,6 +426,11 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_parser = subparsers.add_parser("inspect-model", help="读取模型类别")
     inspect_parser.add_argument("--model", required=True)
     inspect_parser.set_defaults(func=inspect_model)
+
+    probe_parser = subparsers.add_parser("probe-source", help="测试视频源连接")
+    probe_parser.add_argument("--source", required=True)
+    probe_parser.add_argument("--rtsp-transport", choices=["tcp", "udp"], default="tcp")
+    probe_parser.set_defaults(func=probe_source)
 
     diagnose_parser = subparsers.add_parser("diagnose", help="检查 worker 运行环境")
     diagnose_parser.set_defaults(func=lambda _args: diagnose())

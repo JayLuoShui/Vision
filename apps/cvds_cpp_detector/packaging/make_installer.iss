@@ -20,13 +20,14 @@
 
 [Setup]
 AppId={{0A8F0EF8-4C4B-4B19-9AA0-1F0E5A100000}
-AppName=CVDS包裹流量检测工具
+AppName=CVDS在线包裹流量监测
 AppVersion={#AppVersion}
 AppPublisher=CVDS
-DefaultDirName={autopf}\CVDS\CVDS包裹流量检测工具
+DefaultDirName={autopf}\CVDS\CVDS在线包裹流量监测
 DefaultGroupName=CVDS
 OutputDir={#OutputDir}
 OutputBaseFilename={#OutputBaseName}
+SetupIconFile=..\assets\cogy_app.ico
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64
@@ -46,11 +47,11 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\CVDS包裹流量检测工具"; Filename: "{app}\CVDS_Cpp_Detector.exe"; WorkingDir: "{app}"
-Name: "{autodesktop}\CVDS包裹流量检测工具"; Filename: "{app}\CVDS_Cpp_Detector.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\CVDS在线包裹流量监测"; Filename: "{app}\CVDS_Cpp_Detector.exe"; WorkingDir: "{app}"
+Name: "{autodesktop}\CVDS在线包裹流量监测"; Filename: "{app}\CVDS_Cpp_Detector.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\CVDS_Cpp_Detector.exe"; Description: "启动 CVDS包裹流量检测工具"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\CVDS_Cpp_Detector.exe"; Description: "启动 CVDS在线包裹流量监测"; Flags: nowait postinstall skipifsilent
 
 [Code]
 function IsVCRuntimeInstalled(): Boolean;

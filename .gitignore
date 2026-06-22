@@ -34,5 +34,5 @@ weights/
 audit/
 artifacts/
 apps/dws_batch_model_validator/data/
-DWSVisionCountService/cache/
-DWSVisionCountService/debug/
+apps/DWSVisionCountService/cache/
+apps/DWSVisionCountService/debug/

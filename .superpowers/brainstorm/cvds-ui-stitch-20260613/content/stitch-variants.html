@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CVDS 2.0 UI 方案对比</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1118;
+      --panel: #111b25;
+      --raised: #172431;
+      --line: #263746;
+      --text: #f3f7fa;
+      --muted: #8fa5b8;
+      --blue: #2f88f5;
+      --blue-active: #4da3ff;
+      --green: #36c98f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% -20%, rgba(47, 136, 245, .14), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei UI", "Noto Sans SC", system-ui, sans-serif;
+    }
+    main { width: min(1580px, calc(100% - 48px)); margin: 0 auto; padding: 28px 0 36px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-logo {
+      width: 112px;
+      height: 54px;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 6px;
+      padding: 5px 8px;
+    }
+    h1 { font-size: 23px; margin: 0 0 5px; letter-spacing: .02em; }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #bcebd8;
+      border: 1px solid rgba(54, 201, 143, .3);
+      background: rgba(54, 201, 143, .08);
+      border-radius: 5px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: border-color .15s ease, transform .15s ease, background .15s ease;
+    }
+    .card:hover { border-color: #41617e; transform: translateY(-2px); }
+    .card.selected {
+      border-color: var(--blue-active);
+      box-shadow: 0 0 0 2px rgba(77, 163, 255, .2);
+      background: #132131;
+    }
+    .preview {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      object-position: top;
+      background: #0e151d;
+      border-bottom: 1px solid var(--line);
+    }
+    .card-body { padding: 17px 18px 19px; }
+    .title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    h2 { font-size: 18px; margin: 0; }
+    .tag {
+      color: #dcecff;
+      background: rgba(47, 136, 245, .2);
+      border: 1px solid rgba(77, 163, 255, .4);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 12px;
+    }
+    p { color: var(--muted); line-height: 1.65; margin: 0; font-size: 14px; }
+    .features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 13px;
+    }
+    .feature {
+      color: #bdccda;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+    #indicator-text {
+      margin-top: 18px;
+      padding: 13px 16px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(17, 27, 37, .82);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .selected-text { color: var(--blue-active); font-weight: 700; }
+    @media (max-width: 980px) {
+      .cards { grid-template-columns: 1fr; }
+      header { align-items: flex-start; }
+      .status { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <img class="brand-logo" src="/files/cogy-logo.jpg" alt="COGY 氪技">
+        <div>
+          <h1>CVDS C++ Detector 2.0</h1>
+          <div class="subtitle">Google Stitch 深色工业监控台方案</div>
+        </div>
+      </div>
+      <div class="status"><span class="dot"></span>Qt 原生布局，可直接实现</div>
+    </header>
+
+    <section class="cards">
+      <article class="card" data-choice="A-video-focused" onclick="toggleSelect(this)">
+        <img class="preview"
+             src="/files/stitch-video-focused.png"
+             alt="A 版监控画面优先">
+        <div class="card-body">
+          <div class="title-row">
+            <h2>A · 监控画面优先</h2>
+            <span class="tag">推荐</span>
+          </div>
+          <p>压缩 KPI 和区域表，把最大面积留给实时画面。设置栏保持窄而完整，日志默认隐藏，需要时从底部展开。</p>
+          <div class="features">
+            <span class="feature">视频最大</span>
+            <span class="feature">核心状态常驻</span>
+            <span class="feature">日志抽屉</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" data-choice="B-data-focused" onclick="toggleSelect(this)">
+        <img class="preview"
+             src="/files/stitch-data-focused.png"
+             alt="B 版数据层级优先">
+        <div class="card-body">
+          <div class="title-row"><h2>B · 数据层级优先</h2></div>
+          <p>强化大号 KPI 和区域状态表，信息阅读更快，但实时画面会略小，更适合值班人员频繁查看统计数据。</p>
+          <div class="features">
+            <span class="feature">KPI 更突出</span>
+            <span class="feature">区域表更完整</span>
+            <span class="feature">视频略缩小</span>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div id="indicator-text">点击一个方案，然后回到对话继续</div>
+  </main>
+</body>
+</html>

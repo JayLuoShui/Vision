@@ -32,7 +32,7 @@ QString defaultWeightsDir() {
 QString writableAppDataDir() {
     QString path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     if (path.trimmed().isEmpty()) {
-        path = QDir::home().filePath("AppData/Local/CVDS/CVDS包裹流量检测工具");
+        path = QDir::home().filePath("AppData/Local/CVDS/CVDS在线包裹流量监测");
     }
     QDir().mkpath(path);
     return QDir::cleanPath(path);

@@ -1,11 +1,11 @@
-# CVDS包裹流量检测工具发布说明
+# CVDS在线包裹流量监测发布说明
 
 ## 已移除的本机依赖
 
 - 不再默认调用开发机 Python。
 - 不再依赖用户安装 conda、Ultralytics、PyTorch、Qt 或 OpenCV。
 - 不再从当前工作目录找模型和输出目录。
-- 输出默认写入用户本机 `%LOCALAPPDATA%/CVDS/CVDS包裹流量检测工具/runs/`。
+- 输出默认写入用户本机 `%LOCALAPPDATA%/CVDS/CVDS在线包裹流量监测/runs/`。
 
 ## 发布包内容
 
@@ -32,8 +32,8 @@ powershell -ExecutionPolicy Bypass -File .\apps\cvds_cpp_detector\packaging\buil
 
 1. 在 Windows 10/11 64 位电脑安装生成的 Setup。
 2. 启动后点击“环境自检”。
-3. 选择 `weights` 里的 `.pt` 模型，或手动选择模型。
-4. 选择本地视频，新增并绘制多个流量 ROI，指定主统计区域。
-5. 设备选择“自动”，程序会优先使用 GPU；如果 CUDA 不可用，会自动切到 CPU。
+3. 在“推理参数”选择 PT、ONNX 模型文件或 OpenVINO 模型目录。
+4. 在“视频源”选择本地文件，或配置海康相机视频流。
+5. 设备选择“自动”，或按模型格式明确选择 NVIDIA、Intel GPU/NPU；不可用时会直接报错。
 6. 检查看板 KPI、区域状态表和堵包红色闪烁。
 7. 检查用户 AppData 的 `runs` 目录是否生成 `regions.json`、视频、CSV、汇总 JSON 和 `jam_signals.jsonl`。

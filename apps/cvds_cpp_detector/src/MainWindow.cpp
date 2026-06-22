@@ -35,12 +35,15 @@
 #include <QPolygon>
 #include <QProcess>
 #include <QPushButton>
+#include <QPixmap>
+#include <QResizeEvent>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QSizePolicy>
 #include <QSpinBox>
+#include <QSplitter>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTimer>
@@ -129,6 +132,52 @@ QString sourcePathForSettings(const QString& source) {
     return url.toString(QUrl::RemoveUserInfo | QUrl::FullyEncoded);
 }
 
+QString privatePath(const QLineEdit* edit) {
+    return edit == nullptr ? QString() : edit->property("fullPath").toString().trimmed();
+}
+
+QString privatePathLabel(const QString& path) {
+    const QString trimmed = path.trimmed();
+    if (trimmed.isEmpty()) {
+        return "未选择";
+    }
+
+    bool isCameraIndex = false;
+    const int cameraIndex = trimmed.toInt(&isCameraIndex);
+    if (isCameraIndex && cameraIndex >= 0) {
+        return "摄像头 " + QString::number(cameraIndex);
+    }
+
+    if (trimmed.contains("://")) {
+        const QUrl url(trimmed);
+        const QString host = url.host().isEmpty() ? "网络视频流" : url.host();
+        return url.scheme().toUpper() + " · " + host;
+    }
+
+    const QFileInfo info(trimmed);
+    const QString name = info.fileName();
+    return name.isEmpty() ? "已选择目录" : name;
+}
+
+void setPrivatePath(QLineEdit* edit, const QString& path, bool revealFull = false) {
+    if (edit == nullptr) {
+        return;
+    }
+    const QString trimmed = path.trimmed();
+    edit->setProperty("fullPath", trimmed);
+    edit->setText(revealFull ? trimmed : privatePathLabel(trimmed));
+    edit->setCursorPosition(0);
+    if (!revealFull || trimmed.isEmpty()) {
+        return;
+    }
+    QTimer::singleShot(5000, edit, [edit, trimmed]() {
+        if (privatePath(edit) == trimmed) {
+            edit->setText(privatePathLabel(trimmed));
+            edit->setCursorPosition(0);
+        }
+    });
+}
+
 cv::VideoCapture openCapture(const QString& source) {
     const QString trimmed = source.trimmed();
     bool isNumber = false;
@@ -141,11 +190,19 @@ cv::VideoCapture openCapture(const QString& source) {
 
 QString findDefaultModelPath() {
     const QDir weightsDir(RuntimePaths::defaultWeightsDir());
-    const QStringList names = weightsDir.entryList({"*.pt"}, QDir::Files, QDir::Name);
-    if (names.isEmpty()) {
-        return {};
+    const QStringList files = weightsDir.entryList({"*.pt", "*.onnx", "*.xml"}, QDir::Files, QDir::Name);
+    if (!files.isEmpty()) {
+        return weightsDir.filePath(files.first());
     }
-    return weightsDir.filePath(names.first());
+    const QStringList directories = weightsDir.entryList(
+        {"*_openvino_model"},
+        QDir::Dirs | QDir::NoDotAndDotDot,
+        QDir::Name
+    );
+    if (!directories.isEmpty()) {
+        return weightsDir.filePath(directories.first());
+    }
+    return {};
 }
 
 bool isOutputDirWritable(const QString& outputDir, QString* errorMessage = nullptr) {
@@ -241,7 +298,7 @@ QString dashboardStatusForStates(
 
 RoiPreviewLabel::RoiPreviewLabel(QWidget* parent)
     : QLabel(parent) {
-    setMinimumSize(720, 520);
+    setMinimumSize(160, 90);
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
     setText("请选择视频源，首帧会显示在这里。");
@@ -487,11 +544,11 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event);
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.fillRect(rect(), QColor("#101820"));
+    painter.fillRect(rect(), QColor("#080D13"));
 
     const QRect imageRect = imageRectInLabel();
     if (image_.isNull() || imageRect.isEmpty()) {
-        painter.setPen(QColor("#b8c4c2"));
+        painter.setPen(QColor("#8FA5B8"));
         painter.drawText(rect(), Qt::AlignCenter, text());
         return;
     }
@@ -504,28 +561,28 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
         const bool isCurrent = region.id == activeRegionId_;
         const bool jamActive = jamRegionIds_.contains(region.id);
         const QColor color = jamActive && alertFlashVisible_
-            ? QColor("#ff4d4f")
-            : (isCurrent ? QColor("#55b982") : QColor("#d49a20"));
+            ? QColor("#F25555")
+            : (isCurrent ? QColor("#2F88F5") : QColor("#FFB84D"));
         if (isCurrent) {
             drawPolygon(painter, flowRoi_, flowRoiClosed_, color, region.name + "（当前区域）");
         } else {
             drawPolygon(painter, region.polygon, region.polygonClosed, color, region.name);
         }
     }
-    drawPolygon(painter, detectRoi_, detectRoiClosed_, QColor("#4aa3b5"), "检测ROI");
+    drawPolygon(painter, detectRoi_, detectRoiClosed_, QColor("#36BFD3"), "检测ROI");
 
     const QVector<QPoint>& polygon = activePolygon();
     if (hasDraftCursor_ && !polygon.isEmpty() && !activeRoiClosed()) {
-        painter.setPen(QPen(QColor("#1f6f50"), 2, Qt::DashLine));
+        painter.setPen(QPen(QColor("#4DA3FF"), 2, Qt::DashLine));
         painter.drawLine(imageToLabelPoint(polygon.last()), imageToLabelPoint(draftCursor_));
-        painter.setBrush(QColor("#1f6f50"));
+        painter.setBrush(QColor("#4DA3FF"));
         painter.drawEllipse(imageToLabelPoint(draftCursor_), 4, 4);
     }
 
-    painter.setPen(QColor("#d8e0df"));
+    painter.setPen(QColor("#F3F7FA"));
     painter.drawText(imageRect.adjusted(12, 18, -12, -18), Qt::AlignLeft | Qt::AlignTop, "当前区域: " + activeRegionId_);
     if (alertFlashVisible_ && !jamRegionIds_.isEmpty()) {
-        painter.setPen(QPen(QColor("#ff4d4f"), 4));
+        painter.setPen(QPen(QColor("#F25555"), 4));
         painter.setBrush(Qt::NoBrush);
         painter.drawRect(rect().adjusted(2, 2, -2, -2));
     }
@@ -604,8 +661,8 @@ void DetectionWorker::run() {
         if (!QFileInfo::exists(config_.workerPath)) {
             throw std::runtime_error("缺少 worker exe");
         }
-        if (!QFileInfo::exists(config_.ptPath)) {
-            throw std::runtime_error("PT 权重不存在");
+        if (!QFileInfo::exists(config_.modelPath)) {
+            throw std::runtime_error("模型不存在");
         }
         if (!QFileInfo::exists(config_.trackerPath)) {
             throw std::runtime_error("缺少 tracker yaml");
@@ -614,11 +671,12 @@ void DetectionWorker::run() {
             throw std::runtime_error("缺少 regions.json");
         }
         QDir().mkpath(config_.outputDir);
-        const QString previewPath = QDir(config_.outputDir).filePath("cvds_pt_preview.jpg");
+        const QString previewPath = QDir(config_.outputDir).filePath("cvds_preview.jpg");
         QStringList args = {
             "detect",
-            "--weights", config_.ptPath,
+            "--model", config_.modelPath,
             "--source", config_.sourcePath,
+            "--rtsp-transport", config_.rtspTransport,
             "--output-dir", config_.outputDir,
             "--preview-path", previewPath,
             "--regions", config_.regionsPath,
@@ -637,18 +695,18 @@ void DetectionWorker::run() {
         }
 
         emit log("程序版本：" + RuntimePaths::versionText());
-        emit log("worker 路径：" + config_.workerPath);
-        emit log("模型路径：" + config_.ptPath);
-        emit log("输出目录：" + config_.outputDir);
-        emit log("区域配置：" + config_.regionsPath);
-        emit log("检测模式：通过独立 worker 使用 PT 权重进行视频检测。");
+        emit log("worker：" + QFileInfo(config_.workerPath).fileName());
+        emit log("模型：" + QFileInfo(config_.modelPath).fileName());
+        emit log("输出目录：已配置");
+        emit log("区域配置：" + QFileInfo(config_.regionsPath).fileName());
+        emit log("检测模式：通过统一 worker 执行 PT / ONNX / OpenVINO 推理。");
         emit log("请求推理设备：" + config_.device);
-        emit log("堵包信号文件：" + config_.jamSignalPath);
+        emit log("堵包信号文件：" + QFileInfo(config_.jamSignalPath).fileName());
         QProcess process;
         process.setProcessChannelMode(QProcess::MergedChannels);
         process.start(config_.workerPath, args);
         if (!process.waitForStarted(5000)) {
-            throw std::runtime_error("PT 检测进程启动失败");
+            throw std::runtime_error("检测进程启动失败");
         }
 
         QByteArray buffer;
@@ -724,7 +782,7 @@ void DetectionWorker::run() {
         }
 
         if (process.exitCode() != 0) {
-            emit failed(errorMessage.isEmpty() ? "PT 检测进程异常退出，请查看日志。" : errorMessage);
+            emit failed(errorMessage.isEmpty() ? "检测进程异常退出，请查看日志。" : errorMessage);
             return;
         }
         emit done(doneSummary.isEmpty() ? "视频检测完成。" : doneSummary);
@@ -735,51 +793,216 @@ void DetectionWorker::run() {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
-    setWindowTitle("CVDS包裹流量检测工具 " + RuntimePaths::versionText());
-    resize(1480, 940);
-    setMinimumSize(1180, 760);
+    setWindowTitle("CVDS在线包裹流量监测 " + RuntimePaths::versionText());
+    resize(800, 420);
+    setMinimumSize(800, 420);
 
     auto* root = new QWidget(this);
     root->setObjectName("dashboardRoot");
     dashboardRoot_ = root;
-    auto* layout = new QHBoxLayout(root);
-    layout->setContentsMargins(12, 12, 12, 12);
-    layout->setSpacing(12);
+    auto* layout = new QVBoxLayout(root);
+    layout->setContentsMargins(6, 6, 6, 6);
+    layout->setSpacing(6);
 
-    auto* leftContent = new QWidget(root);
-    leftContent->setMinimumWidth(500);
-    auto* leftLayout = new QVBoxLayout(leftContent);
-    leftLayout->setContentsMargins(0, 0, 8, 0);
-    leftLayout->setSpacing(8);
+    auto* brandBar = new QFrame(root);
+    brandBar->setObjectName("brandBar");
+    brandBar->setFixedHeight(42);
+    auto* brandLayout = new QHBoxLayout(brandBar);
+    brandLayout->setContentsMargins(9, 4, 9, 4);
+    brandLayout->setSpacing(8);
+
+    auto* brandLogo = new QLabel(brandBar);
+    brandLogo->setObjectName("brandLogo");
+    brandLogo->setFixedSize(28, 28);
+    brandLogo->setAlignment(Qt::AlignCenter);
+    brandLogo->setPixmap(
+        QPixmap(":/branding/cogy_mark.png").scaled(
+            brandLogo->size(),
+            Qt::KeepAspectRatio,
+            Qt::SmoothTransformation
+        )
+    );
+
+    auto* productTextLayout = new QVBoxLayout();
+    productTextLayout->setContentsMargins(0, 0, 0, 0);
+    productTextLayout->setSpacing(0);
+    auto* productTitle = new QLabel("氪技 COGY · CVDS ONLINE PARCEL FLOW MONITOR", brandBar);
+    productTitle->setObjectName("brandTitle");
+    auto* productSubtitle = new QLabel("在线包裹流量监测", brandBar);
+    productSubtitle->setObjectName("brandSubtitle");
+    productTextLayout->addWidget(productTitle);
+    productTextLayout->addWidget(productSubtitle);
+
+    auto* versionLabel = new QLabel("V" + RuntimePaths::versionText(), brandBar);
+    versionLabel->setObjectName("versionBadge");
+    sourceStatusLabel_ = new QLabel("●  未选择视频源", brandBar);
+    sourceStatusLabel_->setObjectName("connectionPill");
+    channelStatusLabel_ = new QLabel("通道 --", brandBar);
+    channelStatusLabel_->setObjectName("channelStatus");
+    clockLabel_ = new QLabel(brandBar);
+    clockLabel_->setObjectName("runtimeClock");
+    systemStatusLabel_ = new QLabel("●  系统就绪", brandBar);
+    systemStatusLabel_->setObjectName("systemStatus");
+
+    brandLayout->addWidget(brandLogo);
+    brandLayout->addLayout(productTextLayout);
+    brandLayout->addStretch(1);
+    brandLayout->addWidget(sourceStatusLabel_);
+    brandLayout->addWidget(channelStatusLabel_);
+    brandLayout->addWidget(clockLabel_);
+    brandLayout->addWidget(versionLabel);
+    brandLayout->addWidget(systemStatusLabel_);
+    layout->addWidget(brandBar);
+
+    mainSplitter_ = new QSplitter(Qt::Horizontal, root);
+    auto* splitter = mainSplitter_;
+    splitter->setObjectName("mainSplitter");
+    splitter->setChildrenCollapsible(false);
+    splitter->setHandleWidth(5);
+
+    auto* leftShell = new QWidget(root);
+    settingsPanel_ = leftShell;
+    leftShell->setObjectName("settingsPanel");
+    leftShell->setMinimumWidth(210);
+    leftShell->setMaximumWidth(340);
+    auto* leftLayout = new QVBoxLayout(leftShell);
+    leftLayout->setContentsMargins(0, 0, 4, 0);
+    leftLayout->setSpacing(0);
+
+    auto* sidebarHeader = new QFrame(leftShell);
+    sidebarHeader->setObjectName("sidebarHeader");
+    sidebarHeader->setFixedHeight(48);
+    auto* sidebarHeaderLayout = new QVBoxLayout(sidebarHeader);
+    sidebarHeaderLayout->setContentsMargins(10, 7, 10, 5);
+    sidebarHeaderLayout->setSpacing(0);
+    auto* sidebarTitle = new QLabel("控制面板", sidebarHeader);
+    sidebarTitle->setObjectName("sidebarTitle");
+    auto* sidebarSubtitle = new QLabel("SYSTEM PARAMETERS", sidebarHeader);
+    sidebarSubtitle->setObjectName("sidebarSubtitle");
+    sidebarHeaderLayout->addWidget(sidebarTitle);
+    sidebarHeaderLayout->addWidget(sidebarSubtitle);
+    leftLayout->addWidget(sidebarHeader);
+
+    auto* sidebarNavigation = new QWidget(leftShell);
+    sidebarNavigation->setObjectName("sidebarNavigation");
+    auto* sidebarNavigationLayout = new QVBoxLayout(sidebarNavigation);
+    sidebarNavigationLayout->setContentsMargins(0, 0, 0, 0);
+    sidebarNavigationLayout->setSpacing(0);
+
     pathPanel_ = buildPathPanel();
     paramPanel_ = buildParamPanel();
     roiPanel_ = buildRoiPanel();
-    leftLayout->addWidget(pathPanel_);
-    leftLayout->addWidget(paramPanel_);
-    leftLayout->addWidget(roiPanel_);
-    leftLayout->addWidget(buildActionPanel());
-    leftLayout->addStretch(1);
+    controlPanel_ = buildControlPanel();
+    actionPanel_ = buildActionPanel();
+    pathPanel_->setVisible(false);
+    paramPanel_->setVisible(false);
+    roiPanel_->setVisible(false);
+    controlPanel_->setVisible(false);
 
-    auto* leftScroll = new QScrollArea(root);
-    leftScroll->setWidgetResizable(true);
-    leftScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    leftScroll->setFrameShape(QFrame::NoFrame);
-    leftScroll->setMinimumWidth(520);
-    leftScroll->setMaximumWidth(680);
-    leftScroll->verticalScrollBar()->setSingleStep(28);
-    leftScroll->verticalScrollBar()->setPageStep(160);
-    leftScroll->setWidget(leftContent);
+    auto* videoSourceButton = buildSidebarNavigationButton("▣  视频源", pathPanel_, sidebarNavigation);
+    auto* inferenceButton = buildSidebarNavigationButton("◉  推理参数", paramPanel_, sidebarNavigation);
+    auto* roiButton = buildSidebarNavigationButton("⌗  ROI 区域", roiPanel_, sidebarNavigation);
+    auto* controlButton = buildSidebarNavigationButton("▥  检测控制", controlPanel_, sidebarNavigation);
+    videoSourceButton->setChecked(true);
+    pathPanel_->setVisible(true);
+    sidebarNavigationLayout->addWidget(videoSourceButton);
+    sidebarNavigationLayout->addWidget(inferenceButton);
+    sidebarNavigationLayout->addWidget(roiButton);
+    sidebarNavigationLayout->addWidget(controlButton);
+    leftLayout->addWidget(sidebarNavigation);
+
+    auto* settingsContent = new QWidget(leftShell);
+    settingsContent->setObjectName("settingsContent");
+    auto* settingsContentLayout = new QVBoxLayout(settingsContent);
+    settingsContentLayout->setContentsMargins(6, 5, 6, 5);
+    settingsContentLayout->setSpacing(6);
+    settingsContentLayout->addWidget(pathPanel_);
+    settingsContentLayout->addWidget(paramPanel_);
+    settingsContentLayout->addWidget(roiPanel_);
+    settingsContentLayout->addWidget(controlPanel_);
+    settingsContentLayout->addStretch(1);
+
+    auto* settingsScroll = new QScrollArea(leftShell);
+    settingsScroll->setObjectName("settingsScroll");
+    settingsScroll->setWidgetResizable(true);
+    settingsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    settingsScroll->setFrameShape(QFrame::NoFrame);
+    settingsScroll->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    settingsScroll->verticalScrollBar()->setSingleStep(28);
+    settingsScroll->verticalScrollBar()->setPageStep(160);
+    settingsScroll->setWidget(settingsContent);
+    leftLayout->addWidget(settingsScroll, 1);
+    leftLayout->addWidget(actionPanel_);
 
     auto* right = new QWidget(root);
+    right->setObjectName("monitorWorkspace");
+    right->setMinimumWidth(0);
+    right->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
     auto* rightLayout = new QVBoxLayout(right);
     rightLayout->setContentsMargins(0, 0, 0, 0);
-    rightLayout->setSpacing(10);
+    rightLayout->setSpacing(4);
+    rightLayout->setSizeConstraint(QLayout::SetNoConstraint);
     rightLayout->addWidget(buildDashboardPanel());
 
-    previewLabel_ = new RoiPreviewLabel(right);
-    previewLabel_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto* monitorPanel = new QFrame(right);
+    monitorPanel->setObjectName("monitorPanel");
+    auto* monitorLayout = new QVBoxLayout(monitorPanel);
+    monitorLayout->setContentsMargins(1, 1, 1, 1);
+    monitorLayout->setSpacing(0);
+    auto* monitorHeader = new QFrame(monitorPanel);
+    monitorHeader->setObjectName("monitorHeader");
+    monitorHeader->setFixedHeight(28);
+    auto* monitorHeaderLayout = new QHBoxLayout(monitorHeader);
+    monitorHeaderLayout->setContentsMargins(10, 0, 10, 0);
+    auto* monitorTitle = new QLabel("实时监控画面", monitorHeader);
+    monitorTitle->setObjectName("sectionTitle");
+    auto* monitorHint = new QLabel("ROI 可视化 · 实时检测", monitorHeader);
+    monitorHint->setObjectName("sectionHint");
+    monitorHeaderLayout->addWidget(monitorTitle);
+    monitorHeaderLayout->addStretch(1);
+    monitorHeaderLayout->addWidget(monitorHint);
 
-    regionTable_ = new QTableWidget(0, 6, right);
+    previewLabel_ = new RoiPreviewLabel(monitorPanel);
+    previewLabel_->setObjectName("videoSurface");
+    previewLabel_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
+    monitorLayout->addWidget(monitorHeader);
+    monitorLayout->addWidget(previewLabel_, 1);
+
+    auto* regionPanel = new QFrame(right);
+    regionPanel->setObjectName("regionPanel");
+    regionPanel->setMinimumHeight(28);
+    regionPanel->setMaximumHeight(28);
+    regionPanel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    auto* regionPanelLayout = new QVBoxLayout(regionPanel);
+    regionPanelLayout->setContentsMargins(0, 0, 0, 0);
+    regionPanelLayout->setSpacing(0);
+    auto* regionHeader = new QFrame(regionPanel);
+    regionHeader->setObjectName("regionHeader");
+    regionHeader->setFixedHeight(28);
+    auto* regionHeaderLayout = new QHBoxLayout(regionHeader);
+    regionHeaderLayout->setContentsMargins(10, 0, 6, 0);
+    auto* regionTitle = new QLabel("区域统计详情", regionHeader);
+    regionTitle->setObjectName("sectionTitle");
+    regionHeaderLayout->addWidget(regionTitle);
+    regionHeaderLayout->addStretch(1);
+
+    regionDetailsToggleButton_ = new QPushButton("展开区域统计", regionHeader);
+    regionDetailsToggleButton_->setObjectName("regionDetailsToggleButton");
+    regionDetailsToggleButton_->setCheckable(true);
+    regionDetailsToggleButton_->setMaximumWidth(130);
+    regionHeaderLayout->addWidget(regionDetailsToggleButton_);
+
+    logToggleButton_ = new QPushButton("展开运行日志", regionHeader);
+    logToggleButton_->setObjectName("logToggleButton");
+    logToggleButton_->setCheckable(true);
+    logToggleButton_->setMaximumWidth(130);
+    regionHeaderLayout->addWidget(logToggleButton_);
+
+    regionDetailsContent_ = new QWidget(regionPanel);
+    auto* regionDetailsLayout = new QVBoxLayout(regionDetailsContent_);
+    regionDetailsLayout->setContentsMargins(0, 0, 0, 0);
+    regionDetailsLayout->setSpacing(0);
+    regionTable_ = new QTableWidget(0, 6, regionDetailsContent_);
     regionTable_->setHorizontalHeaderLabels({"区域状态", "累计包裹", "区域内", "当前状态", "堵包秒数", "堵包次数"});
     regionTable_->verticalHeader()->setVisible(false);
     regionTable_->horizontalHeader()->setStretchLastSection(true);
@@ -787,59 +1010,131 @@ MainWindow::MainWindow(QWidget* parent)
     regionTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);
     regionTable_->setSelectionMode(QAbstractItemView::NoSelection);
     regionTable_->setFocusPolicy(Qt::NoFocus);
-    regionTable_->setMinimumHeight(210);
+    regionTable_->setMinimumHeight(132);
+    regionTable_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding);
+    regionTable_->verticalHeader()->setDefaultSectionSize(24);
+    regionEmptyLabel_ = new QLabel("尚未配置监测区域，请在 ROI 区域绘制并保存。", regionDetailsContent_);
+    regionEmptyLabel_->setObjectName("emptyState");
+    regionEmptyLabel_->setAlignment(Qt::AlignCenter);
+    regionDetailsLayout->addWidget(regionEmptyLabel_);
+    regionDetailsLayout->addWidget(regionTable_);
+    regionDetailsContent_->setVisible(false);
+    regionPanelLayout->addWidget(regionHeader);
+    regionPanelLayout->addWidget(regionDetailsContent_);
 
     logEdit_ = new QPlainTextEdit(right);
     logEdit_->setReadOnly(true);
-    logEdit_->setMaximumHeight(180);
+    logEdit_->setMinimumHeight(80);
+    logEdit_->setMaximumHeight(120);
+    logEdit_->setVisible(false);
+    connect(logToggleButton_, &QPushButton::toggled, this, [this](bool checked) {
+        logEdit_->setVisible(checked);
+        logToggleButton_->setText(checked ? "收起运行日志" : "展开运行日志");
+    });
+    connect(regionDetailsToggleButton_, &QPushButton::toggled, this, [this, regionPanel](bool checked) {
+        regionDetailsContent_->setVisible(checked);
+        regionDetailsToggleButton_->setText(checked ? "收起区域统计" : "展开区域统计");
+        regionPanel->setMinimumHeight(checked ? 170 : 28);
+        regionPanel->setMaximumHeight(checked ? 220 : 28);
+    });
 
-    rightLayout->addWidget(previewLabel_, 1);
-    rightLayout->addWidget(regionTable_);
+    rightLayout->addWidget(monitorPanel, 1);
+    rightLayout->addWidget(regionPanel);
     rightLayout->addWidget(logEdit_);
 
-    layout->addWidget(leftScroll);
-    layout->addWidget(right, 1);
+    splitter->addWidget(leftShell);
+    splitter->addWidget(right);
+    splitter->setStretchFactor(0, 0);
+    splitter->setStretchFactor(1, 1);
+    splitter->setSizes({240, 1040});
+    connect(splitter, &QSplitter::splitterMoved, this, [this](int position, int) {
+        QFont font = settingsPanel_->font();
+        font.setPixelSize(qBound(11, position / 26, 14));
+        settingsPanel_->setFont(font);
+    });
+    QTimer::singleShot(0, this, [this]() {
+        resizeSidebarToStitchRatio();
+    });
+    layout->addWidget(splitter, 1);
     setCentralWidget(root);
 
     setStyleSheet(
-        "QWidget{background:#101820;color:#d8e0df;font-family:'Microsoft YaHei UI';font-size:12px;}"
-        "QScrollArea{background:#101820;border:none;}"
-        "QScrollBar:vertical{background:#0b1114;width:10px;margin:0;border:none;}"
-        "QScrollBar::handle:vertical{background:#52676c;min-height:42px;border-radius:4px;}"
-        "QScrollBar::handle:vertical:hover{background:#d49a20;}"
+        "QWidget{background:#0B1118;color:#F3F7FA;font-family:'Microsoft YaHei UI';}"
+        "QFrame#brandBar{background:#111B25;border:1px solid #263746;border-radius:3px;}"
+        "QLabel#brandLogo{background:transparent;}"
+        "QLabel#brandTitle{background:transparent;color:#F3F7FA;font-size:13px;font-weight:700;letter-spacing:1px;}"
+        "QLabel#brandSubtitle{background:transparent;color:#8FA5B8;font-size:9px;}"
+        "QLabel#versionBadge{background:#172431;border:1px solid #263746;border-radius:3px;padding:3px 7px;color:#8FA5B8;font-size:9px;}"
+        "QLabel#connectionPill{background:#10251F;border:1px solid #245B47;border-radius:3px;padding:3px 8px;color:#36C98F;font-size:9px;}"
+        "QLabel#channelStatus,QLabel#runtimeClock{background:#172431;border:1px solid #263746;border-radius:3px;padding:3px 7px;color:#B8C8D4;font-size:9px;}"
+        "QLabel#systemStatus{background:#10251F;border:1px solid #245B47;border-radius:3px;padding:3px 8px;color:#36C98F;font-size:10px;font-weight:600;}"
+        "QWidget#settingsPanel{background:#151C24;border:1px solid #263746;}"
+        "QFrame#sidebarHeader{background:#111820;border-bottom:1px solid #263746;}"
+        "QLabel#sidebarTitle{background:transparent;color:#F3F7FA;font-size:12px;font-weight:700;}"
+        "QLabel#sidebarSubtitle{background:transparent;color:#708395;font-size:8px;letter-spacing:1px;}"
+        "QWidget#sidebarNavigation{background:#151C24;border-bottom:1px solid #263746;}"
+        "QPushButton#sidebarNavigationButton{background:#151C24;border:none;border-left:3px solid transparent;border-radius:0;padding:8px 10px;text-align:left;color:#C8D4DE;font-weight:500;}"
+        "QPushButton#sidebarNavigationButton:hover{background:#1A2530;color:#F3F7FA;}"
+        "QPushButton#sidebarNavigationButton:checked{background:#202B36;border-left:3px solid #2F88F5;color:#F3F7FA;}"
+        "QWidget#settingsContent{background:#151C24;}"
+        "QWidget#monitorWorkspace{background:#0B1118;}"
+        "QFrame#monitorPanel,QFrame#regionPanel{background:#080D13;border:1px solid #263746;border-radius:3px;}"
+        "QFrame#monitorHeader{background:#111B25;border-bottom:1px solid #263746;}"
+        "QFrame#regionHeader{background:#111B25;border-bottom:1px solid #263746;}"
+        "QLabel#sectionTitle{background:transparent;color:#F3F7FA;font-weight:600;}"
+        "QLabel#sectionHint{background:transparent;color:#8FA5B8;font-size:9px;}"
+        "QLabel#emptyState{background:#0B1118;color:#708395;padding:5px;border-bottom:1px solid #263746;}"
+        "QLabel#videoSurface{background:#080D13;border:none;}"
+        "QSplitter::handle{background:#172431;}"
+        "QSplitter::handle:hover{background:#2F88F5;}"
+        "QScrollArea{background:#0B1118;border:none;}"
+        "QScrollBar:vertical{background:#0B1118;width:9px;margin:0;border:none;}"
+        "QScrollBar::handle:vertical{background:#3A4D5E;min-height:42px;border-radius:4px;}"
+        "QScrollBar::handle:vertical:hover{background:#4DA3FF;}"
         "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical{height:0;background:none;border:none;}"
         "QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical{background:none;}"
-        "QGroupBox{border:1px solid #415357;border-radius:4px;margin-top:12px;padding:10px;color:#d49a20;background:#1f2a2e;}"
-        "QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 6px;background:#1f2a2e;color:#d49a20;}"
-        "QLabel{color:#c8d2d0;}"
-        "QLabel#dashboardValue{font-size:24px;font-weight:700;color:#edf2f1;}"
-        "QLineEdit,QPlainTextEdit,QComboBox,QTableWidget{background:#0b1114;border:1px solid #485b60;border-radius:2px;padding:6px;color:#edf2f1;selection-background-color:#d49a20;gridline-color:#334347;}"
-        "QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus{border:1px solid #d49a20;}"
-        "QSpinBox,QDoubleSpinBox{background:#0b1114;border:1px solid #485b60;border-radius:2px;padding:5px 30px 5px 6px;color:#edf2f1;selection-background-color:#d49a20;}"
-        "QSpinBox:focus,QDoubleSpinBox:focus{border:1px solid #d49a20;}"
-        "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:top right;width:24px;background:#26363a;border-left:1px solid #52676c;border-bottom:1px solid #52676c;}"
-        "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:bottom right;width:24px;background:#26363a;border-left:1px solid #52676c;border-top:1px solid #52676c;}"
-        "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#34484d;}"
-        "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #d49a20;}"
-        "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d49a20;}"
-        "QComboBox::drop-down{background:#26363a;border-left:1px solid #52676c;width:26px;}"
-        "QComboBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #d49a20;}"
-        "QPushButton{background:#26363a;border:1px solid #5c7075;border-radius:2px;padding:8px;color:#edf2f1;}"
-        "QPushButton:hover{background:#34484d;border-color:#d49a20;}"
-        "QPushButton:checked{background:#1f6f50;border-color:#55b982;color:white;}"
-        "QPushButton#primaryButton{background:#1f6f50;border-color:#55b982;color:white;font-weight:600;}"
-        "QPushButton#primaryButton:hover{background:#26845f;}"
-        "QPushButton#dangerButton{background:#8f1d1d;border-color:#c54a4a;color:white;font-weight:600;}"
-        "QPushButton#dangerButton:hover{background:#a62727;}"
-        "QPushButton:disabled{background:#252d30;border-color:#3b474a;color:#7f8f8c;}"
+        "QGroupBox{border:1px solid #263746;border-radius:5px;margin-top:12px;padding:8px;color:#8FA5B8;background:#111B25;font-weight:600;}"
+        "QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 6px;background:#111B25;color:#8FA5B8;}"
+        "QLabel{color:#D7E2EA;}"
+        "QWidget#dashboardStrip{background:#0B1118;}"
+        "QLabel#dashboardTitle{background:transparent;font-size:9px;color:#8FA5B8;}"
+        "QLabel#dashboardValue{background:transparent;font-size:18px;font-weight:700;color:#F3F7FA;}"
+        "QFrame#dashboardCard{background:#111B25;border:1px solid #263746;border-left:2px solid #2F88F5;border-radius:3px;}"
+        "QLineEdit,QPlainTextEdit,QComboBox,QTableWidget{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:6px;color:#F3F7FA;selection-background-color:#2F88F5;gridline-color:#263746;}"
+        "QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus{border:1px solid #4DA3FF;}"
+        "QHeaderView::section{background:#172431;color:#8FA5B8;border:none;border-right:1px solid #263746;border-bottom:1px solid #263746;padding:6px;font-weight:600;}"
+        "QSpinBox,QDoubleSpinBox{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:5px 30px 5px 6px;color:#F3F7FA;selection-background-color:#2F88F5;}"
+        "QSpinBox:focus,QDoubleSpinBox:focus{border:1px solid #4DA3FF;}"
+        "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:top right;width:24px;background:#172431;border-left:1px solid #263746;border-bottom:1px solid #263746;}"
+        "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:bottom right;width:24px;background:#172431;border-left:1px solid #263746;border-top:1px solid #263746;}"
+        "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#21364A;}"
+        "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #4DA3FF;}"
+        "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #4DA3FF;}"
+        "QComboBox::drop-down{background:#172431;border-left:1px solid #263746;width:26px;}"
+        "QComboBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #4DA3FF;}"
+        "QPushButton{background:#172431;border:1px solid #31485B;border-radius:4px;padding:7px;color:#DCE7EE;}"
+        "QPushButton:hover{background:#21364A;border-color:#4DA3FF;color:#F3F7FA;}"
+        "QPushButton:checked{background:#173B63;border-color:#4DA3FF;color:#F3F7FA;}"
+        "QPushButton#primaryButton{background:#2F88F5;border-color:#4DA3FF;color:white;font-weight:700;}"
+        "QPushButton#primaryButton:hover{background:#4DA3FF;}"
+        "QPushButton#dangerButton{background:#4A2024;border-color:#8D343C;color:#FFDDE0;font-weight:600;}"
+        "QPushButton#dangerButton:hover{background:#67282F;border-color:#F25555;}"
+        "QPushButton#logToggleButton{padding:3px 8px;color:#4DA3FF;background:transparent;border:none;font-size:9px;}"
+        "QPushButton#logToggleButton:hover{background:#172431;border:none;color:#F3F7FA;}"
+        "QWidget#actionDock{background:#151C24;border-top:1px solid #263746;}"
+        "QPushButton:disabled{background:#121B23;border-color:#26323D;color:#536574;}"
         "QCheckBox{spacing:8px;}"
-        "QCheckBox::indicator{width:16px;height:16px;border:1px solid #5c7075;background:#0b1114;}"
-        "QCheckBox::indicator:checked{background:#1f6f50;border:1px solid #55b982;}"
+        "QCheckBox::indicator{width:16px;height:16px;border:1px solid #3A5367;background:#0B1118;border-radius:3px;}"
+        "QCheckBox::indicator:checked{background:#2F88F5;border:1px solid #4DA3FF;}"
     );
 
     flashTimer_ = new QTimer(this);
     flashTimer_->setInterval(500);
     connect(flashTimer_, &QTimer::timeout, this, &MainWindow::toggleAlarmFlash);
+    clockTimer_ = new QTimer(this);
+    clockTimer_->setInterval(1000);
+    connect(clockTimer_, &QTimer::timeout, this, &MainWindow::refreshRuntimeOverview);
+    clockTimer_->start();
 
     connect(previewLabel_, &RoiPreviewLabel::flowRegionChanged, this, [this](
         const QString& regionId,
@@ -861,14 +1156,14 @@ MainWindow::MainWindow(QWidget* parent)
         }
     });
 
-    appendLog("已启动 PT 视频流量监测工具，版本：" + RuntimePaths::versionText());
-    appendLog("worker 路径：" + RuntimePaths::workerExePath() + "（cvds_detector_worker.exe）");
+    appendLog("已启动 CVDS 在线包裹流量监测，版本：" + RuntimePaths::versionText());
+    appendLog("worker 已就绪：cvds_detector_worker.exe");
     populateClassCombo({});
     loadSettings();
     if (QFileInfo::exists(RuntimePaths::defaultRegionsConfigPath())) {
         try {
             restoreRegionConfigDocument(loadRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath()));
-            appendLog("已加载区域配置：" + RuntimePaths::defaultRegionsConfigPath());
+            appendLog("已加载区域配置：regions.json");
         } catch (const std::exception& ex) {
             appendLog("加载区域配置失败：" + QString::fromUtf8(ex.what()));
             QMessageBox::critical(this, "区域配置错误", QString::fromUtf8(ex.what()));
@@ -881,6 +1176,7 @@ MainWindow::MainWindow(QWidget* parent)
         refreshRegionTable();
     }
     previewLabel_->setDetectRoiFromText(detectRoiEdit_->text().trimmed());
+    refreshRuntimeOverview();
     appendLog("启动完成：已延迟加载模型类别和视频预览，选择模型或开始检测时再读取。");
 }
 
@@ -892,66 +1188,171 @@ MainWindow::~MainWindow() {
         modelInspectProcess_->kill();
         modelInspectProcess_->waitForFinished(3000);
     }
+    if (streamProbeProcess_ != nullptr && streamProbeProcess_->state() != QProcess::NotRunning) {
+        streamProbeProcess_->disconnect(this);
+        streamProbeProcess_->kill();
+        streamProbeProcess_->waitForFinished(3000);
+    }
     if (workerThread_ != nullptr) {
         workerThread_->quit();
         workerThread_->wait();
     }
 }
 
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    QTimer::singleShot(0, this, [this]() {
+        resizeSidebarToStitchRatio();
+    });
+}
+
+void MainWindow::resizeSidebarToStitchRatio() {
+    if (mainSplitter_ == nullptr || settingsPanel_ == nullptr || mainSplitter_->width() <= 0) {
+        return;
+    }
+    const int leftWidth = qBound(210, mainSplitter_->width() * 24 / 100, 340);
+    mainSplitter_->setSizes({leftWidth, std::max(1, mainSplitter_->width() - leftWidth)});
+    QFont font = settingsPanel_->font();
+    font.setPixelSize(qBound(11, leftWidth / 26, 14));
+    settingsPanel_->setFont(font);
+}
+
+void MainWindow::refreshRuntimeOverview() {
+    if (clockLabel_ != nullptr) {
+        clockLabel_->setText(QDateTime::currentDateTime().toString("yyyy-MM-dd  HH:mm:ss"));
+    }
+    if (sourceStatusLabel_ == nullptr || channelStatusLabel_ == nullptr) {
+        return;
+    }
+
+    const bool streamMode = sourceModeCombo_ != nullptr
+        && sourceModeCombo_->currentData().toString() == "stream";
+    if (streamMode) {
+        const QString host = hikIpEdit_ == nullptr ? QString() : hikIpEdit_->text().trimmed();
+        sourceStatusLabel_->setText(host.isEmpty() ? "●  视频流未配置" : "●  " + host + " · 在线监测");
+        const int channel = hikChannelSpin_ == nullptr ? 0 : hikChannelSpin_->value();
+        const QString streamName = hikStreamCombo_ == nullptr ? QString() : hikStreamCombo_->currentText();
+        channelStatusLabel_->setText(channel > 0 ? QString("通道 %1 · %2").arg(channel).arg(streamName) : "通道 --");
+        return;
+    }
+
+    const QString source = privatePath(sourceEdit_);
+    sourceStatusLabel_->setText(source.isEmpty() ? "●  未选择视频源" : "●  " + QFileInfo(source).fileName());
+    channelStatusLabel_->setText("本地文件");
+}
+
 QWidget* MainWindow::buildPathPanel() {
-    auto* box = new QGroupBox("路径");
-    auto* layout = new QGridLayout(box);
-    ptEdit_ = new QLineEdit(findDefaultModelPath(), box);
+    auto* box = new QGroupBox("视频源");
+    auto* rootLayout = new QVBoxLayout(box);
+    auto* layout = new QGridLayout();
+    layout->setColumnStretch(1, 1);
     sourceEdit_ = new QLineEdit(box);
-    outputEdit_ = new QLineEdit(RuntimePaths::defaultOutputDir(), box);
+    sourceEdit_->setReadOnly(true);
+    setPrivatePath(sourceEdit_, {});
+    sourceModeCombo_ = new ScrollSafeComboBox(box);
+    sourceModeCombo_->addItem("本地文件", "file");
+    sourceModeCombo_->addItem("视频流", "stream");
+    layout->addWidget(new QLabel("来源类型", box), 0, 0);
+    layout->addWidget(sourceModeCombo_, 0, 1, 1, 2);
+
+    auto* sourceLabel = new QLabel("本地文件", box);
+    auto* sourceButton = new QPushButton("选择", box);
+    sourceButton->setMaximumWidth(54);
+    connect(sourceButton, &QPushButton::clicked, this, &MainWindow::browseSource);
+    layout->addWidget(sourceLabel, 1, 0);
+    layout->addWidget(sourceEdit_, 1, 1);
+    layout->addWidget(sourceButton, 1, 2);
+    rootLayout->addLayout(layout);
+
+    streamSettingsWidget_ = new QWidget(box);
+    auto* streamLayout = new QGridLayout(streamSettingsWidget_);
+    streamLayout->setContentsMargins(0, 4, 0, 0);
+    streamLayout->setColumnStretch(1, 1);
     hikIpEdit_ = new QLineEdit(box);
     hikUserEdit_ = new QLineEdit("admin", box);
     hikPasswordEdit_ = new QLineEdit(box);
     hikChannelSpin_ = new ScrollSafeSpinBox(box);
+    hikRtspPortSpin_ = new ScrollSafeSpinBox(box);
+    hikStreamCombo_ = new ScrollSafeComboBox(box);
+    hikTransportCombo_ = new ScrollSafeComboBox(box);
     hikPasswordEdit_->setEchoMode(QLineEdit::Password);
     hikIpEdit_->setPlaceholderText("192.168.1.64");
     hikPasswordEdit_->setPlaceholderText("海康相机密码");
     hikChannelSpin_->setRange(1, 999);
-    hikChannelSpin_->setValue(101);
+    hikChannelSpin_->setValue(1);
+    hikRtspPortSpin_->setRange(1, 65535);
+    hikRtspPortSpin_->setValue(554);
+    hikStreamCombo_->addItem("主码流", 1);
+    hikStreamCombo_->addItem("子码流", 2);
+    hikTransportCombo_->addItem("TCP", "tcp");
+    hikTransportCombo_->addItem("UDP", "udp");
 
-    auto addRow = [&](int row, const QString& label, QLineEdit* edit, auto slot) {
-        auto* button = new QPushButton(row == 1 ? "本地" : "选择", box);
-        connect(button, &QPushButton::clicked, this, slot);
-        layout->addWidget(new QLabel(label, box), row, 0);
-        layout->addWidget(edit, row, 1);
-        layout->addWidget(button, row, 2);
-    };
-
-    addRow(0, "视觉模型", ptEdit_, &MainWindow::browsePt);
-    addRow(1, "视频源", sourceEdit_, &MainWindow::browseSource);
-    addRow(2, "输出目录", outputEdit_, &MainWindow::browseOutput);
-    layout->addWidget(new QLabel("海康相机", box), 3, 0);
-    layout->addWidget(hikIpEdit_, 3, 1);
-    auto* hikButton = new QPushButton("接入", box);
-    connect(hikButton, &QPushButton::clicked, this, &MainWindow::applyHikvisionStream);
-    layout->addWidget(hikButton, 3, 2);
-    layout->addWidget(new QLabel("海康账号", box), 4, 0);
+    streamLayout->addWidget(new QLabel("海康设备", box), 0, 0);
+    streamLayout->addWidget(hikIpEdit_, 0, 1);
+    streamLayout->addWidget(hikRtspPortSpin_, 0, 2);
+    streamLayout->addWidget(new QLabel("登录账号", box), 1, 0);
     auto* hikAuthLayout = new QHBoxLayout();
     hikAuthLayout->addWidget(hikUserEdit_);
     hikAuthLayout->addWidget(hikPasswordEdit_);
-    layout->addLayout(hikAuthLayout, 4, 1, 1, 2);
-    layout->addWidget(new QLabel("海康通道", box), 5, 0);
-    layout->addWidget(hikChannelSpin_, 5, 1, 1, 2);
+    streamLayout->addLayout(hikAuthLayout, 1, 1, 1, 2);
+    streamLayout->addWidget(new QLabel("通道/码流", box), 2, 0);
+    auto* channelLayout = new QHBoxLayout();
+    channelLayout->addWidget(hikChannelSpin_);
+    channelLayout->addWidget(hikStreamCombo_);
+    streamLayout->addLayout(channelLayout, 2, 1, 1, 2);
+    streamLayout->addWidget(new QLabel("传输协议", box), 3, 0);
+    streamLayout->addWidget(hikTransportCombo_, 3, 1, 1, 2);
+    auto* streamButtons = new QHBoxLayout();
+    auto* hikButton = new QPushButton("应用视频流", box);
+    auto* testButton = new QPushButton("测试连接", box);
+    connect(hikButton, &QPushButton::clicked, this, &MainWindow::applyHikvisionStream);
+    connect(testButton, &QPushButton::clicked, this, &MainWindow::testVideoStream);
+    streamButtons->addWidget(hikButton);
+    streamButtons->addWidget(testButton);
+    streamLayout->addLayout(streamButtons, 4, 0, 1, 3);
+    rootLayout->addWidget(streamSettingsWidget_);
 
-    connect(ptEdit_, &QLineEdit::editingFinished, this, &MainWindow::refreshModelMetadata);
-    connect(sourceEdit_, &QLineEdit::editingFinished, this, &MainWindow::loadVideoPreviewFrame);
+    connect(
+        sourceModeCombo_,
+        qOverload<int>(&QComboBox::currentIndexChanged),
+        this,
+        [this, sourceLabel, sourceButton](int) {
+        const bool streamMode = sourceModeCombo_->currentData().toString() == "stream";
+        sourceLabel->setVisible(!streamMode);
+        sourceEdit_->setVisible(!streamMode);
+        sourceButton->setVisible(!streamMode);
+        streamSettingsWidget_->setVisible(streamMode);
+        refreshRuntimeOverview();
+        }
+    );
+    streamSettingsWidget_->setVisible(false);
+
     return box;
 }
 
 QWidget* MainWindow::buildParamPanel() {
     auto* box = new QGroupBox("推理参数");
     auto* form = new QFormLayout(box);
+    modelEdit_ = new QLineEdit(box);
+    modelEdit_->setReadOnly(true);
+    setPrivatePath(modelEdit_, findDefaultModelPath());
+    auto* modelButtons = new QWidget(box);
+    auto* modelButtonLayout = new QHBoxLayout(modelButtons);
+    modelButtonLayout->setContentsMargins(0, 0, 0, 0);
+    auto* modelFileButton = new QPushButton("模型文件", modelButtons);
+    auto* openVinoButton = new QPushButton("OpenVINO目录", modelButtons);
+    connect(modelFileButton, &QPushButton::clicked, this, &MainWindow::browseModel);
+    connect(openVinoButton, &QPushButton::clicked, this, &MainWindow::browseOpenVinoDirectory);
+    modelButtonLayout->addWidget(modelFileButton);
+    modelButtonLayout->addWidget(openVinoButton);
     classCombo_ = new ScrollSafeComboBox(box);
     classCombo_->addItem("全部类别", -1);
     deviceCombo_ = new ScrollSafeComboBox(box);
     deviceCombo_->addItem("自动", "auto");
     deviceCombo_->addItem("CPU", "cpu");
-    deviceCombo_->addItem("GPU", "0");
+    deviceCombo_->addItem("NVIDIA GPU", "0");
+    deviceCombo_->addItem("Intel GPU", "intel:gpu");
+    deviceCombo_->addItem("Intel NPU", "intel:npu");
     inputSizeSpin_ = new ScrollSafeSpinBox(box);
     inputSizeSpin_->setRange(160, 1536);
     inputSizeSpin_->setSingleStep(32);
@@ -969,6 +1370,8 @@ QWidget* MainWindow::buildParamPanel() {
     iouSpin_->setSingleStep(0.05);
     iouSpin_->setValue(0.45);
 
+    form->addRow("视觉模型", modelEdit_);
+    form->addRow("选择方式", modelButtons);
     form->addRow("类别", classCombo_);
     form->addRow("执行设备", deviceCombo_);
     form->addRow("输入尺寸", inputSizeSpin_);
@@ -1019,7 +1422,7 @@ QWidget* MainWindow::buildRoiPanel() {
     regionButtons->addWidget(renameButton);
     regionButtons->addWidget(deleteButton);
 
-    auto* drawButtons = new QHBoxLayout();
+    auto* drawButtons = new QGridLayout();
     drawFlowRoiButton_ = new QPushButton("绘制流量ROI", box);
     drawDetectRoiButton_ = new QPushButton("绘制检测区域", box);
     auto* undoButton = new QPushButton("撤回ROI点", box);
@@ -1027,10 +1430,10 @@ QWidget* MainWindow::buildRoiPanel() {
     drawFlowRoiButton_->setCheckable(true);
     drawDetectRoiButton_->setCheckable(true);
     drawFlowRoiButton_->setChecked(true);
-    drawButtons->addWidget(drawFlowRoiButton_);
-    drawButtons->addWidget(drawDetectRoiButton_);
-    drawButtons->addWidget(undoButton);
-    drawButtons->addWidget(clearButton);
+    drawButtons->addWidget(drawFlowRoiButton_, 0, 0);
+    drawButtons->addWidget(drawDetectRoiButton_, 0, 1);
+    drawButtons->addWidget(undoButton, 1, 0);
+    drawButtons->addWidget(clearButton, 1, 1);
 
     auto* configButtons = new QHBoxLayout();
     auto* saveButton = new QPushButton("保存区域配置", box);
@@ -1125,43 +1528,110 @@ QWidget* MainWindow::buildRoiPanel() {
 }
 
 QWidget* MainWindow::buildActionPanel() {
-    auto* box = new QGroupBox("操作");
+    auto* box = new QWidget();
+    box->setObjectName("actionDock");
     auto* layout = new QVBoxLayout(box);
+    layout->setContentsMargins(6, 6, 6, 6);
+    layout->setSpacing(4);
     startButton_ = new QPushButton("开始检测", box);
     stopButton_ = new QPushButton("停止检测", box);
-    diagnoseButton_ = new QPushButton("环境自检", box);
     startButton_->setObjectName("primaryButton");
     stopButton_->setObjectName("dangerButton");
     stopButton_->setEnabled(false);
     connect(startButton_, &QPushButton::clicked, this, &MainWindow::startDetection);
     connect(stopButton_, &QPushButton::clicked, this, &MainWindow::stopDetection);
-    connect(diagnoseButton_, &QPushButton::clicked, this, &MainWindow::runEnvironmentDiagnose);
-    layout->addWidget(diagnoseButton_);
     layout->addWidget(startButton_);
     layout->addWidget(stopButton_);
     return box;
 }
 
+QWidget* MainWindow::buildControlPanel() {
+    auto* box = new QGroupBox("检测控制");
+    auto* layout = new QFormLayout(box);
+    outputEdit_ = new QLineEdit(box);
+    outputEdit_->setReadOnly(true);
+    setPrivatePath(outputEdit_, RuntimePaths::defaultOutputDir());
+    auto* outputButton = new QPushButton("选择输出目录", box);
+    connect(outputButton, &QPushButton::clicked, this, &MainWindow::browseOutput);
+    diagnoseButton_ = new QPushButton("环境自检", box);
+    connect(diagnoseButton_, &QPushButton::clicked, this, &MainWindow::runEnvironmentDiagnose);
+    layout->addRow("输出目录", outputEdit_);
+    layout->addRow(QString(), outputButton);
+    layout->addRow(QString(), diagnoseButton_);
+    return box;
+}
+
+QPushButton* MainWindow::buildSidebarNavigationButton(
+    const QString& text,
+    QWidget* panel,
+    QWidget* parent
+) {
+    auto* button = new QPushButton(text, parent);
+    button->setObjectName("sidebarNavigationButton");
+    button->setCheckable(true);
+    button->setAutoExclusive(false);
+    sidebarButtons_.push_back(button);
+    connect(button, &QPushButton::clicked, this, [this, panel, button]() {
+        setSidebarPanelVisible(panel, button);
+    });
+    return button;
+}
+
+void MainWindow::setSidebarPanelVisible(QWidget* panel, QPushButton* button) {
+    const bool shouldShow = panel != nullptr && !panel->isVisible();
+    for (QPushButton* navigationButton : sidebarButtons_) {
+        navigationButton->setChecked(navigationButton == button);
+    }
+    for (QWidget* settingsPanel : {pathPanel_, paramPanel_, roiPanel_, controlPanel_}) {
+        if (settingsPanel != nullptr) {
+            settingsPanel->setVisible(shouldShow && settingsPanel == panel);
+        }
+    }
+    if (panel == nullptr && startButton_ != nullptr) {
+        startButton_->setFocus(Qt::OtherFocusReason);
+    }
+}
+
 QWidget* MainWindow::buildDashboardPanel() {
-    auto* box = new QGroupBox("看板");
-    auto* layout = new QGridLayout(box);
+    auto* box = new QWidget();
+    box->setObjectName("dashboardStrip");
+    box->setFixedHeight(56);
+    box->setMinimumWidth(0);
+    box->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    auto* layout = new QHBoxLayout(box);
+    layout->setSizeConstraint(QLayout::SetNoConstraint);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(4);
 
     auto buildCard = [box](const QString& title, QLabel** valueLabel) {
         auto* card = new QFrame(box);
-        auto* cardLayout = new QVBoxLayout(card);
-        cardLayout->setContentsMargins(10, 10, 10, 10);
+        card->setObjectName("dashboardCard");
+        card->setMinimumWidth(0);
+        card->setFixedHeight(56);
+        card->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+        auto* cardLayout = new QHBoxLayout(card);
+        cardLayout->setSizeConstraint(QLayout::SetNoConstraint);
+        cardLayout->setContentsMargins(9, 3, 9, 3);
+        cardLayout->setSpacing(5);
         auto* titleLabel = new QLabel(title, card);
+        titleLabel->setObjectName("dashboardTitle");
+        titleLabel->setMinimumWidth(0);
+        titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
         *valueLabel = new QLabel("0", card);
         (*valueLabel)->setObjectName("dashboardValue");
+        (*valueLabel)->setMinimumWidth(0);
+        (*valueLabel)->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        (*valueLabel)->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         cardLayout->addWidget(titleLabel);
+        cardLayout->addStretch(1);
         cardLayout->addWidget(*valueLabel);
         return card;
     };
 
-    layout->addWidget(buildCard("累计包裹", &kpiTotalCountValueLabel_), 0, 0);
-    layout->addWidget(buildCard("当前状态", &kpiStatusValueLabel_), 0, 1);
-    layout->addWidget(buildCard("区域内包裹", &kpiInsideCountValueLabel_), 1, 0);
-    layout->addWidget(buildCard("堵包次数", &kpiJamCountValueLabel_), 1, 1);
+    layout->addWidget(buildCard("累计包裹", &kpiTotalCountValueLabel_), 1);
+    layout->addWidget(buildCard("当前状态", &kpiStatusValueLabel_), 1);
+    layout->addWidget(buildCard("区域内包裹", &kpiInsideCountValueLabel_), 1);
+    layout->addWidget(buildCard("堵包次数", &kpiJamCountValueLabel_), 1);
     return box;
 }
 
@@ -1169,26 +1639,38 @@ QString MainWindow::buildHikvisionRtsp() const {
     QUrl url;
     url.setScheme("rtsp");
     url.setHost(hikIpEdit_->text().trimmed());
-    url.setPort(554);
+    url.setPort(hikRtspPortSpin_->value());
     url.setUserName(hikUserEdit_->text().trimmed());
     url.setPassword(hikPasswordEdit_->text());
-    url.setPath("/Streaming/Channels/" + QString::number(hikChannelSpin_->value()));
+    const int streamId = hikChannelSpin_->value() * 100 + hikStreamCombo_->currentData().toInt();
+    url.setPath("/Streaming/Channels/" + QString::number(streamId));
     return url.toString(QUrl::FullyEncoded);
 }
 
 void MainWindow::loadSettings() {
     QSettings settings;
-    const QString savedModel = settings.value("lastModelPath", ptEdit_->text()).toString();
-    ptEdit_->setText(QFileInfo::exists(savedModel) ? savedModel : findDefaultModelPath());
-    sourceEdit_->setText(sourcePathForSettings(settings.value("lastSourcePath", sourceEdit_->text()).toString()));
-    const QString savedOutput = settings.value("lastOutputDir", outputEdit_->text()).toString().trimmed();
-    outputEdit_->setText(savedOutput.isEmpty() ? RuntimePaths::defaultOutputDir() : savedOutput);
+    const QString savedModel = settings.value("lastModelPath", privatePath(modelEdit_)).toString();
+    setPrivatePath(modelEdit_, QFileInfo::exists(savedModel) ? savedModel : findDefaultModelPath());
+    setPrivatePath(
+        sourceEdit_,
+        sourcePathForSettings(settings.value("lastSourcePath", privatePath(sourceEdit_)).toString())
+    );
+    const QString savedOutput = settings.value("lastOutputDir", privatePath(outputEdit_)).toString().trimmed();
+    setPrivatePath(outputEdit_, savedOutput.isEmpty() ? RuntimePaths::defaultOutputDir() : savedOutput);
     detectRoiEdit_->setText(settings.value("lastDetectRoi", detectRoiEdit_->text()).toString());
     hikIpEdit_->setText(settings.value("hikvisionIp", hikIpEdit_->text()).toString());
     hikUserEdit_->setText(settings.value("hikvisionUser", hikUserEdit_->text()).toString());
     settings.remove("hikvisionPassword");
     hikPasswordEdit_->clear();
     hikChannelSpin_->setValue(settings.value("hikvisionChannel", hikChannelSpin_->value()).toInt());
+    hikRtspPortSpin_->setValue(settings.value("hikvisionRtspPort", hikRtspPortSpin_->value()).toInt());
+    const int streamIndex = hikStreamCombo_->findData(settings.value("hikvisionStream", 1).toInt());
+    hikStreamCombo_->setCurrentIndex(streamIndex >= 0 ? streamIndex : 0);
+    const int transportIndex = hikTransportCombo_->findData(settings.value("hikvisionTransport", "tcp").toString());
+    hikTransportCombo_->setCurrentIndex(transportIndex >= 0 ? transportIndex : 0);
+    const int sourceModeIndex = sourceModeCombo_->findData(settings.value("sourceMode", "file").toString());
+    sourceModeCombo_->setCurrentIndex(sourceModeIndex >= 0 ? sourceModeIndex : 0);
+    streamSettingsWidget_->setVisible(sourceModeCombo_->currentData().toString() == "stream");
     inputSizeSpin_->setValue(settings.value("inputSize", inputSizeSpin_->value()).toInt());
     videoFpsSpin_->setValue(settings.value("previewFps", videoFpsSpin_->value()).toInt());
     confidenceSpin_->setValue(settings.value("confidence", confidenceSpin_->value()).toDouble());
@@ -1200,14 +1682,18 @@ void MainWindow::loadSettings() {
 
 void MainWindow::saveSettings() const {
     QSettings settings;
-    settings.setValue("lastModelPath", ptEdit_->text().trimmed());
-    settings.setValue("lastSourcePath", sourcePathForSettings(sourceEdit_->text()));
-    settings.setValue("lastOutputDir", outputEdit_->text().trimmed());
+    settings.setValue("lastModelPath", privatePath(modelEdit_));
+    settings.setValue("lastSourcePath", sourcePathForSettings(privatePath(sourceEdit_)));
+    settings.setValue("lastOutputDir", privatePath(outputEdit_));
     settings.setValue("lastDetectRoi", detectRoiEdit_->text().trimmed());
     settings.setValue("hikvisionIp", hikIpEdit_->text().trimmed());
     settings.setValue("hikvisionUser", hikUserEdit_->text().trimmed());
     settings.remove("hikvisionPassword");
     settings.setValue("hikvisionChannel", hikChannelSpin_->value());
+    settings.setValue("hikvisionRtspPort", hikRtspPortSpin_->value());
+    settings.setValue("hikvisionStream", hikStreamCombo_->currentData().toInt());
+    settings.setValue("hikvisionTransport", hikTransportCombo_->currentData().toString());
+    settings.setValue("sourceMode", sourceModeCombo_->currentData().toString());
     settings.setValue("inputSize", inputSizeSpin_->value());
     settings.setValue("previewFps", videoFpsSpin_->value());
     settings.setValue("confidence", confidenceSpin_->value());
@@ -1328,6 +1814,16 @@ void MainWindow::refreshRegionTable() {
         return;
     }
     regionTable_->setRowCount(regions_.size());
+    bool hasConfiguredRegion = false;
+    for (const RegionConfig& region : regions_) {
+        if (region.polygonClosed && region.polygon.size() >= 3) {
+            hasConfiguredRegion = true;
+            break;
+        }
+    }
+    if (regionEmptyLabel_ != nullptr) {
+        regionEmptyLabel_->setVisible(!hasConfiguredRegion);
+    }
     QStringList jamIds;
     int insideSum = 0;
     int jamSum = 0;
@@ -1367,7 +1863,7 @@ void MainWindow::refreshRegionTable() {
             QString::number(state.flowCount),
             QString::number(state.insideCount),
             statusText,
-            QString::number(state.staleSeconds, 'f', 1),
+            QString::number(state.jamActive ? state.staleSeconds : 0.0, 'f', 1),
             QString::number(state.jamCount),
         };
 
@@ -1379,11 +1875,11 @@ void MainWindow::refreshRegionTable() {
             }
             item->setText(values[column]);
             if (state.jamActive && dashboardFlashVisible_) {
-                item->setBackground(QColor("#8f1d1d"));
+                item->setBackground(QColor("#4A2024"));
             } else if (region.id == currentRegionId_) {
-                item->setBackground(QColor("#1f2a2e"));
+                item->setBackground(QColor("#172431"));
             } else {
-                item->setBackground(QColor("#0b1114"));
+                item->setBackground(QColor("#0B1118"));
             }
         }
     }
@@ -1395,9 +1891,27 @@ void MainWindow::refreshRegionTable() {
     kpiInsideCountValueLabel_->setText(QString::number(dashboardInsideCount_));
     kpiJamCountValueLabel_->setText(QString::number(dashboardJamCount_));
     if (dashboardJamActive_ && dashboardFlashVisible_) {
-        kpiStatusValueLabel_->setStyleSheet("color:#ff4d4f;font-size:24px;font-weight:700;");
+        kpiStatusValueLabel_->setStyleSheet("color:#F25555;font-size:18px;font-weight:700;");
     } else {
-        kpiStatusValueLabel_->setStyleSheet("color:#55b982;font-size:24px;font-weight:700;");
+        kpiStatusValueLabel_->setStyleSheet("color:#36C98F;font-size:18px;font-weight:700;");
+    }
+    if (systemStatusLabel_ != nullptr) {
+        if (dashboardJamActive_) {
+            systemStatusLabel_->setText("●  堵包告警");
+            systemStatusLabel_->setStyleSheet(
+                "background:#35191C;border:1px solid #8D343C;border-radius:3px;"
+                "padding:3px 8px;color:#F25555;font-size:10px;font-weight:600;"
+            );
+        } else if (workerThread_ != nullptr) {
+            systemStatusLabel_->setText("●  正在监测");
+            systemStatusLabel_->setStyleSheet(
+                "background:#10251F;border:1px solid #245B47;border-radius:3px;"
+                "padding:3px 8px;color:#36C98F;font-size:10px;font-weight:600;"
+            );
+        } else {
+            systemStatusLabel_->setText("●  系统就绪");
+            systemStatusLabel_->setStyleSheet({});
+        }
     }
 }
 
@@ -1439,10 +1953,28 @@ void MainWindow::updateDetectRoiFromEditor() {
     }
 }
 
-void MainWindow::browsePt() {
-    const QString path = QFileDialog::getOpenFileName(this, "选择视觉模型", ptEdit_->text(), "视觉模型 (*.pt)");
+void MainWindow::browseModel() {
+    const QString path = QFileDialog::getOpenFileName(
+        this,
+        "选择视觉模型",
+        privatePath(modelEdit_),
+        "视觉模型 (*.pt *.onnx *.xml)"
+    );
     if (!path.isEmpty()) {
-        ptEdit_->setText(path);
+        setPrivatePath(modelEdit_, path, true);
+        refreshModelMetadata();
+        saveSettings();
+    }
+}
+
+void MainWindow::browseOpenVinoDirectory() {
+    const QString path = QFileDialog::getExistingDirectory(
+        this,
+        "选择 OpenVINO 模型目录",
+        privatePath(modelEdit_)
+    );
+    if (!path.isEmpty()) {
+        setPrivatePath(modelEdit_, path, true);
         refreshModelMetadata();
         saveSettings();
     }
@@ -1452,12 +1984,14 @@ void MainWindow::browseSource() {
     const QString path = QFileDialog::getOpenFileName(
         this,
         "选择视频源",
-        sourceEdit_->text(),
+        privatePath(sourceEdit_),
         "Video (*.mp4 *.avi *.mkv *.mov);;All files (*.*)"
     );
     if (!path.isEmpty()) {
-        sourceEdit_->setText(path);
+        sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("file"));
+        setPrivatePath(sourceEdit_, path, true);
         loadVideoPreviewFrame();
+        refreshRuntimeOverview();
         saveSettings();
     }
 }
@@ -1467,15 +2001,71 @@ void MainWindow::applyHikvisionStream() {
         QMessageBox::warning(this, "缺少海康地址", "请先填写海康相机 IP 地址。");
         return;
     }
-    sourceEdit_->setText(buildHikvisionRtsp());
+    sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("stream"));
+    setPrivatePath(sourceEdit_, buildHikvisionRtsp());
+    refreshRuntimeOverview();
     saveSettings();
-    loadVideoPreviewFrame();
+    appendLog("已应用海康视频流配置。");
+}
+
+void MainWindow::testVideoStream() {
+    if (hikIpEdit_->text().trimmed().isEmpty()) {
+        QMessageBox::warning(this, "缺少海康地址", "请先填写海康设备 IP 地址。");
+        return;
+    }
+    if (streamProbeProcess_ != nullptr && streamProbeProcess_->state() != QProcess::NotRunning) {
+        QMessageBox::information(this, "正在测试", "视频流连接测试正在进行。");
+        return;
+    }
+
+    applyHikvisionStream();
+    auto* process = new QProcess(this);
+    streamProbeProcess_ = process;
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    connect(process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this, [this, process](
+        int exitCode,
+        QProcess::ExitStatus
+    ) {
+        const QByteArray output = process->readAllStandardOutput().trimmed();
+        streamProbeProcess_ = nullptr;
+        process->deleteLater();
+        if (exitCode == 0) {
+            appendLog("视频流连接测试通过。");
+            QMessageBox::information(this, "连接成功", "海康视频流可以正常读取。");
+        } else {
+            QString message = "海康视频流连接失败。";
+            const QList<QByteArray> lines = output.split('\n');
+            if (!lines.isEmpty()) {
+                const QJsonDocument document = QJsonDocument::fromJson(lines.last().trimmed());
+                if (document.isObject()) {
+                    message = document.object().value("message").toString(message);
+                }
+            }
+            appendLog(message);
+            QMessageBox::warning(this, "连接失败", message);
+        }
+    });
+    process->start(
+        RuntimePaths::workerExePath(),
+        {
+            "probe-source",
+            "--source", buildHikvisionRtsp(),
+            "--rtsp-transport", hikTransportCombo_->currentData().toString()
+        }
+    );
+    if (!process->waitForStarted(3000)) {
+        streamProbeProcess_ = nullptr;
+        process->deleteLater();
+        QMessageBox::critical(this, "连接测试失败", "无法启动视频流测试进程。");
+        return;
+    }
+    appendLog("正在测试海康视频流连接。");
 }
 
 void MainWindow::browseOutput() {
-    const QString path = QFileDialog::getExistingDirectory(this, "选择输出目录", outputEdit_->text());
+    const QString path = QFileDialog::getExistingDirectory(this, "选择输出目录", privatePath(outputEdit_));
     if (!path.isEmpty()) {
-        outputEdit_->setText(path);
+        setPrivatePath(outputEdit_, path, true);
         saveSettings();
     }
 }
@@ -1547,7 +2137,7 @@ void MainWindow::saveRegionConfig() {
         updateDetectRoiFromEditor();
         const RegionConfigDocument document = buildRegionConfigDocument();
         saveRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath(), document);
-        appendLog("已保存区域配置：" + RuntimePaths::defaultRegionsConfigPath());
+        appendLog("已保存区域配置：regions.json");
     } catch (const std::exception& ex) {
         QMessageBox::critical(this, "保存失败", QString::fromUtf8(ex.what()));
     }
@@ -1568,17 +2158,18 @@ void MainWindow::loadRegionConfig() {
     }
     try {
         restoreRegionConfigDocument(loadRegionConfigDocument(path));
-        appendLog("已加载区域配置：" + path);
+        appendLog("已加载区域配置：" + QFileInfo(path).fileName());
     } catch (const std::exception& ex) {
         QMessageBox::critical(this, "加载失败", QString::fromUtf8(ex.what()));
     }
 }
 
 DetectJobConfig MainWindow::currentDetectConfig() const {
-    const QString outputDir = outputEdit_->text().trimmed();
+    const QString outputDir = privatePath(outputEdit_);
     return {
-        ptEdit_->text().trimmed(),
-        sourceEdit_->text().trimmed(),
+        privatePath(modelEdit_),
+        privatePath(sourceEdit_),
+        hikTransportCombo_->currentData().toString(),
         outputDir,
         RuntimePaths::workerExePath(),
         RuntimePaths::trackerConfigPath(),
@@ -1605,15 +2196,15 @@ void MainWindow::startDetection() {
         QMessageBox::critical(this, "缺少 worker exe", "未找到安装目录 runtime 下的 worker exe。");
         return;
     }
-    if (!QFileInfo::exists(ptEdit_->text().trimmed())) {
-        QMessageBox::warning(this, "缺少 PT", "请先选择 PT 权重。");
+    if (!QFileInfo::exists(privatePath(modelEdit_))) {
+        QMessageBox::warning(this, "缺少模型", "请先在推理参数中选择 PT、ONNX 或 OpenVINO 模型。");
         return;
     }
-    if (sourceEdit_->text().trimmed().isEmpty()) {
+    if (privatePath(sourceEdit_).isEmpty()) {
         QMessageBox::warning(this, "缺少视频源", "请先选择或填写视频源。");
         return;
     }
-    if (!canBeRuntimeSource(sourceEdit_->text()) && !QFileInfo::exists(sourceEdit_->text().trimmed())) {
+    if (!canBeRuntimeSource(privatePath(sourceEdit_)) && !QFileInfo::exists(privatePath(sourceEdit_))) {
         QMessageBox::warning(this, "视频源不存在", "当前视频源不是本地文件、摄像头编号或网络流。");
         return;
     }
@@ -1622,11 +2213,11 @@ void MainWindow::startDetection() {
         return;
     }
     QString outputError;
-    if (!isOutputDirWritable(outputEdit_->text().trimmed(), &outputError)) {
+    if (!isOutputDirWritable(privatePath(outputEdit_), &outputError)) {
         QMessageBox::warning(this, "输出目录不可写", outputError);
         return;
     }
-    const QString modelPath = ptEdit_->text().trimmed();
+    const QString modelPath = privatePath(modelEdit_);
     if (loadedModelPath_ != modelPath || loadedLabels_.isEmpty()) {
         beginModelMetadataRefresh(true);
         return;
@@ -1636,7 +2227,7 @@ void MainWindow::startDetection() {
         updateDetectRoiFromEditor();
         const RegionConfigDocument document = buildRegionConfigDocument();
         saveRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath(), document);
-        const QString runRegionPath = QDir(outputEdit_->text().trimmed()).filePath("regions.json");
+        const QString runRegionPath = QDir(privatePath(outputEdit_)).filePath("regions.json");
         saveRegionConfigDocument(runRegionPath, document);
     } catch (const std::exception& ex) {
         QMessageBox::critical(this, "区域配置错误", QString::fromUtf8(ex.what()));
@@ -1654,6 +2245,7 @@ void MainWindow::startDetection() {
     refreshRegionTable();
 
     workerThread_ = new QThread(this);
+    refreshRegionTable();
     worker_ = new DetectionWorker(currentDetectConfig());
     worker_->moveToThread(workerThread_);
     connect(workerThread_, &QThread::started, worker_, &DetectionWorker::run);
@@ -1848,7 +2440,7 @@ void MainWindow::refreshModelMetadata() {
 }
 
 void MainWindow::beginModelMetadataRefresh(bool startDetectionAfterSuccess) {
-    const QString modelPath = ptEdit_->text().trimmed();
+    const QString modelPath = privatePath(modelEdit_);
     if (!QFileInfo::exists(RuntimePaths::workerExePath()) || !QFileInfo::exists(modelPath)) {
         if (modelInspectProcess_ != nullptr) {
             modelInspectProcess_->disconnect(this);
@@ -1980,7 +2572,7 @@ void MainWindow::finishModelMetadataRefresh(QProcess* process, const QString& fa
 
 void MainWindow::runEnvironmentDiagnose() {
     if (!QFileInfo::exists(RuntimePaths::workerExePath())) {
-        appendLog("环境自检失败：缺少 worker exe：" + RuntimePaths::workerExePath());
+        appendLog("环境自检失败：缺少 cvds_detector_worker.exe。");
         QMessageBox::critical(this, "环境自检失败", "未找到安装目录 runtime 下的 worker exe。");
         return;
     }
@@ -2015,6 +2607,8 @@ void MainWindow::runEnvironmentDiagnose() {
     appendLog("环境自检：Torch CUDA 版本 " + QString(object.value("torch_cuda_version").toString().isEmpty() ? "未启用" : object.value("torch_cuda_version").toString()));
     appendLog("环境自检：Ultralytics " + QString(object.value("ultralytics_available").toBool() ? "可用" : "不可用"));
     appendLog("环境自检：OpenCV " + QString(object.value("opencv_available").toBool() ? "可用" : "不可用"));
+    appendLog("环境自检：ONNX Runtime " + QString(object.value("onnxruntime_available").toBool() ? "可用" : "不可用"));
+    appendLog("环境自检：OpenVINO " + QString(object.value("openvino_available").toBool() ? "可用" : "不可用"));
     const bool nvidiaAvailable = object.value("nvidia_driver_available").toBool();
     const QString nvidiaName = object.value("nvidia_gpu_name").toString();
     const QString nvidiaDriver = object.value("nvidia_driver_version").toString();
@@ -2057,6 +2651,8 @@ void MainWindow::cleanupWorker() {
     startButton_->setEnabled(true);
     stopButton_->setEnabled(false);
     setConfigurationEditingEnabled(true);
+    refreshRuntimeOverview();
+    refreshRegionTable();
 }
 
 void MainWindow::setConfigurationEditingEnabled(bool enabled) {
@@ -2068,6 +2664,9 @@ void MainWindow::setConfigurationEditingEnabled(bool enabled) {
     }
     if (roiPanel_ != nullptr) {
         roiPanel_->setEnabled(enabled);
+    }
+    if (controlPanel_ != nullptr) {
+        controlPanel_->setEnabled(enabled);
     }
     if (previewLabel_ != nullptr) {
         previewLabel_->setRoiEditingEnabled(enabled);
@@ -2105,14 +2704,14 @@ void MainWindow::updateAlertStyle() {
         return;
     }
     dashboardRoot_->setStyleSheet(
-        "QWidget#dashboardRoot,QWidget#dashboardRoot QWidget{background:#4a0f12;}"
-        "QWidget#dashboardRoot QGroupBox,QWidget#dashboardRoot QTableWidget,"
-        "QWidget#dashboardRoot QPlainTextEdit{border:2px solid #ff4d4f;}"
+        "QWidget#dashboardRoot QFrame#monitorPanel{border:2px solid #F25555;}"
+        "QWidget#dashboardRoot QFrame#dashboardCard{border:1px solid #8D343C;border-left:3px solid #F25555;}"
+        "QWidget#dashboardRoot QTableWidget{border:1px solid #8D343C;}"
     );
 }
 
 void MainWindow::loadVideoPreviewFrame() {
-    const QString source = sourceEdit_->text().trimmed();
+    const QString source = privatePath(sourceEdit_);
     if (source.isEmpty() || (!canBeRuntimeSource(source) && !QFileInfo::exists(source))) {
         return;
     }

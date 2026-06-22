@@ -4,7 +4,7 @@
     "AGENTS.md",
     "CONTEXT.md",
     "5.lessons.md",
-    "OPENCODE_TUNING.md"
+    ".opencode/docs/OPENCODE_TUNING.md"
   ],
   "default_agent": "codex-senior",
   "share": "disabled",

@@ -206,6 +206,10 @@ $PyInstallerArgs = @(
     "ultralytics"
     "--collect-all"
     "cv2"
+    "--collect-all"
+    "onnxruntime"
+    "--collect-all"
+    "openvino"
     "--distpath"
     (Join-Path $WorkerBuildDir "dist")
     "--workpath"
@@ -236,12 +240,18 @@ if (Test-Path (Join-Path $RootDir "LICENSE")) {
 # smoke test: cvds_detector_worker.exe diagnose
 $PackagedWorker = Join-Path $DistRoot "runtime\cvds_detector_worker.exe"
 Invoke-Checked "Packaged worker diagnose" $PackagedWorker @("diagnose")
-$DefaultModel = Get-ChildItem -Path (Join-Path $DistRoot "weights") -Filter "*.pt" -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($null -ne $DefaultModel) {
+$WeightsRoot = Join-Path $DistRoot "weights"
+$SmokeModels = @(
+    Get-ChildItem -Path $WeightsRoot -Filter "*.pt" -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    Get-ChildItem -Path $WeightsRoot -Filter "*.onnx" -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    Get-ChildItem -Path $WeightsRoot -Filter "*_openvino_model" -Directory -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+) | Where-Object { $null -ne $_ }
+foreach ($model in $SmokeModels) {
     Invoke-Checked "Packaged worker model inspection" $PackagedWorker @(
         "inspect-model",
         "--model",
-        $DefaultModel.FullName
+        $model.FullName
     )
 }
 

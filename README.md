@@ -11,7 +11,7 @@
 - 训练类别：单类 `parcel`。
 - 数据增强：低光、过曝、阴影、眩光、轻微模糊、噪声、水平翻转。
 - 分割背景增强：对 `parcel` mask 外背景做模糊、灰度、亮度对比度、噪声或负样本背景替换，mask 内像素不改，分割标签不改。
-- 检测模型：以 `yolo26n.pt` 为骨干框架微调。
+- 检测模型：以 `weights/pretrained/yolo26n.pt` 为骨干框架微调。
 - 跟踪计数：YOLO26 检测 + ByteTrack 跟踪 + 过线/ROI 几何计数。
 - GUI 程序：PySide6/Qt，可视化训练过程、观察训练进度、展示图片/视频检测结果。
 - C++ 视频流量监测：Qt6 Widgets + OpenCV 负责界面和 ROI 绘制，Ultralytics PT 权重负责视频检测和 ByteTrack 跟踪计数。
@@ -53,7 +53,7 @@ datasets/cvds_package_yolo26/labels/test
 重新打包：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\DWSVisionCountService\scripts\build_windows_release.ps1 -Version 1.1.0
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\apps\DWSVisionCountService\scripts\build_windows_release.ps1 -Version 1.1.0
 ```
 
 ## 测试方法
@@ -88,10 +88,10 @@ conda run -n yolo26 python .\scripts\track_count_packages.py --source D:\path\to
 conda run -n yolo26 python .\apps\cvds_qt_app.py
 ```
 
-PT 视频流量监测脚本：
+在线包裹流量监测 worker：
 
 ```powershell
-.\dist\CVDS_Package_Flow_Detector\runtime\cvds_detector_worker.exe detect --weights .\weights\cvds_yolo26n_package_best.pt --source .\sample.mp4 --output-dir "$env:LOCALAPPDATA\CVDS\CVDS包裹流量检测工具\runs" --preview-path "$env:LOCALAPPDATA\CVDS\CVDS包裹流量检测工具\runs\preview.jpg" --roi 0,0,639,0,639,359,0,359 --imgsz 960 --device auto --tracker .\dist\CVDS_Package_Flow_Detector\configs\bytetrack.yaml --jam-signal-path "$env:LOCALAPPDATA\CVDS\CVDS包裹流量检测工具\runs\jam_signals.jsonl"
+.\dist\CVDS_Package_Flow_Detector\runtime\cvds_detector_worker.exe detect --model .\weights\cvds_yolo26n_package_best.pt --source .\sample.mp4 --rtsp-transport tcp --output-dir "$env:LOCALAPPDATA\CVDS\CVDS在线包裹流量监测\runs" --preview-path "$env:LOCALAPPDATA\CVDS\CVDS在线包裹流量监测\runs\preview.jpg" --roi 0,0,639,0,639,359,0,359 --imgsz 960 --device auto --tracker .\dist\CVDS_Package_Flow_Detector\configs\bytetrack.yaml --jam-signal-path "$env:LOCALAPPDATA\CVDS\CVDS在线包裹流量监测\runs\jam_signals.jsonl"
 ```
 
 C++ 检测部署版一键构建：
@@ -145,6 +145,7 @@ iscc .\apps\cvds_jam_video_synthesizer\packaging\make_installer.iss
 代码检查：
 
 ```powershell
+.\.venv\Scripts\python.exe -m pytest -q
 conda run -n yolo26 python -m ruff check .\apps\cvds_qt_app.py .\scripts\training_monitor.py .\tests\test_training_monitor.py
 conda run -n yolo26 python .\tests\test_cpp_detector_structure.py
 .\.venv\Scripts\python.exe -m pytest .\tests\test_cvds_jam_video_synthesizer.py
@@ -219,21 +220,22 @@ exe 路径：dist/CVDS_Qt_Platform/CVDS_Qt_Platform.exe
 性能优化：监控页使用 Python 进程列表读取训练状态，不再反复弹出 PowerShell；主界面启动时延迟加载 YOLO/Torch/OpenCV
 ```
 
-当前 C++ PT 视频流量监测工具：
+当前 C++ 在线包裹流量监测软件：
 
 ```text
 源码：apps/cvds_cpp_detector
-安装包路径：dist_installer/CVDS_Package_Flow_Detector_Setup_<version>.exe
-默认权重：安装目录 weights 下的首个 .pt 文件
+安装包路径：dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe
+模型格式：PT、ONNX 模型文件，以及 OpenVINO 模型目录
 窗口功能：视觉模型选择、路径记忆、本地视频/海康相机视频流、多 ROI 新增/命名/删除/绘制/保存/加载、主统计区域、可选检测区域、实时 KPI、区域状态表、分区堵包和红色闪烁报警
-界面风格：工业深色钢灰配色，运行/停止按钮颜色区分明显，类别和执行设备下拉栏有下拉图标，数字输入框增大/减小按钮为正/倒三角形
+界面风格：按 Stitch A 复刻的深色监控台；左栏约占 24% 并按导航展开，四项 KPI 常驻，监控画面优先，日志默认隐藏
+路径显示：模型、视频源和输出目录默认只显示简短名称，选择后完整路径仅短暂显示
 已去除：模型训练、训练监控、PLC 接口
-推理链路：C++/Qt6 + OpenCV 界面；独立 Python worker exe 使用 Ultralytics PT + ByteTrack
-模型类别：根据 PT 权重内的类别信息自动读取到下拉框，不再写死 parcel
-默认设备：自动；有 CUDA 优先用 GPU，没有 CUDA 自动切到 CPU；环境自检会显示 NVIDIA 驱动、Torch 版本和 Torch CUDA 状态
+推理链路：C++/Qt6 + OpenCV 界面；独立 Python worker exe 统一运行 Ultralytics PT、ONNX、OpenVINO + ByteTrack
+模型类别：根据模型元数据自动读取到下拉框，不再写死 parcel
+设备：PT/ONNX 支持 CPU/NVIDIA；OpenVINO 支持自动、Intel GPU、Intel NPU；显式选择不可用设备时直接报错
 预览 FPS：60
 统计规则：各 ROI 独立计数；顶部累计数量只取 total_count_region，T 型口不重复相加
-输出文件：regions.json、pt_video_flow_monitor.mp4、flow_events.csv、jam_signals.jsonl、flow_summary.json、cvds_pt_preview.jpg
+输出文件：regions.json、cvds_online_parcel_flow_monitor.mp4、flow_events.csv、jam_signals.jsonl、flow_summary.json、cvds_preview.jpg
 堵包规则：每个 ROI 独立判断；任一区域堵包时全局状态为 JAM，输出带区域信息的 IO_JAM_ON；解除时输出 IO_JAM_OFF
 当前状态：已完成多 ROI worker、Qt 区域管理、看板、分区堵包、旧 --roi 兼容和示例配置入包
 ```
@@ -303,7 +305,7 @@ exe 路径：dist/CVDS_Qt_Platform/CVDS_Qt_Platform.exe
 
 ```text
 源码：D:\Demo\Vision\ultralytics，GitHub 远端为 https://github.com/ultralytics/ultralytics.git，已快进到 origin/main。
-预训练权重：D:\Demo\Vision\yolo26s-seg.pt。
+预训练权重：weights/pretrained/yolo26s-seg.pt。
 训练数据：datasets/cvds_20260512_yolomask_bg_aug_20260513/data.yaml。
 训练输出：runs/segment_train/yolo26s_seg_yolomask_bg_aug_960。
 浏览器监控：http://127.0.0.1:6006/。
@@ -363,6 +365,7 @@ PLC 事件格式：
 - 2026-05-22 搜索 Windows 发布方案：skills.sh 未找到比当前本地 `test-driven-development`、`lint-and-validate` 更直接的打包专用 skill；GitHub/PyInstaller 官方说明 PyInstaller 可把 Python 解释器和依赖打进独立程序，适合当前 worker exe 方案。地址：https://github.com/pyinstaller/pyinstaller
 - 2026-05-22 搜索 Qt 发布方案：Qt/PyInstaller 文档提示 Windows 发布时需要收集 Qt 插件和运行库，当前 C++ GUI 使用 `windeployqt` 完成 Qt 运行库收集。地址：https://doc.qt.io/qtforpython-6.5/deployment/deployment-pyinstaller.html
 - 2026-06-01 搜索开源数据集制作/标注软件：CVAT 强在协作、质量控制、20+ 格式和 API，但部署重；Label Studio 强在多类型数据、项目管理、模型预标注，但 Web/服务端成本高；LabelImg 轻量快捷但已归档；LabelMe 单机 Qt、多形状标注和 COCO/VOC 导出好，但偏通用；X-AnyLabeling AI 标注和多模型后端强，但功能重且 GPL。DatasetAssistant V1.0 只吸收格式兼容、质量检查、轻量单机、项目化和 AI 可选方向，不引入重服务端和复杂账号系统。
+- 2026-06-13 参考 GitHub 仓库文档约定：根目录保留仓库级 `README.md` 和必要入口文档，具体软件的变更记录、用户指南及工具配置说明归入对应应用或工具目录。地址：https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes
 
 ## 已完成功能
 
@@ -394,9 +397,9 @@ PLC 事件格式：
 - 完成标注工具 v2.3 基础版和 AI 版双发布包；基础版保留手工标注，AI 版内置 CUDA Torch、TorchVision 和 Ultralytics。
 - 完成 DWS 批量模型检测验证工具 Windows GUI 和 CLI 发布包，支持 CPU 推理、环境自检、实时进度、日志、可视化预览、取消任务和 PyInstaller 打包。
 - 完成人工标注数据整理，将有效标注样本移出并重新切分为训练、验证、测试集，同时完成训练集增强。
-- 完成 C++/Qt PT 视频流量监测工具，去除训练、训练监控和 ONNX 检测入口。
+- 完成 C++/Qt 在线包裹流量监测软件，去除训练和训练监控入口，统一支持 PT、ONNX、OpenVINO。
 - 完成 C++ 发布形态改造：GUI 调用 `runtime/cvds_detector_worker.exe`，不再默认依赖开发机 Python。
-- 完成 C++ 检测页 PT 推理链路优化：自动/CPU/GPU 三种模式、预览 FPS 默认 60。
+- 完成 C++ 检测页多格式推理链路：PT/ONNX 支持 CPU/NVIDIA，OpenVINO 支持 Intel GPU/NPU，预览 FPS 默认 60。
 - 完成 C++ 检测页多边形 ROI 绘制和流量监测：视频首帧逐点画 ROI，右键或回车完成，支持撤回点，可选检测区域，支持路径记忆和海康相机 RTSP 视频流，输出带框视频、事件 CSV、堵包信号 JSONL 和统计 JSON。
 - 完成 C++ 多 ROI 看板：区域新增/命名/删除/保存/加载、主统计区域、分区计数、分区堵包、KPI、区域状态表和红色闪烁告警；旧 `--roi` 命令继续兼容。
 - 完成 Windows 安装包脚本：`apps/cvds_cpp_detector/packaging/`、worker requirements 和发布文档。

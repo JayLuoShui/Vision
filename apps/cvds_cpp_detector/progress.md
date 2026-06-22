@@ -20,3 +20,29 @@
 - 发布脚本支持独立 `DistName`、onedir worker、命令失败检查和可选跳过安装包。
 - 正式生成 `dist/CVDS_Cpp_Detector2.0` 和 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`。
 - 92/92 测试通过；C++ Release、环境自检、模型读取、真实推理和 GUI 启动通过。
+
+## 2026-06-14
+
+- 按 Stitch A“监控画面优先”方案完成 1:1 比例复刻：左栏约占 24%，四项 KPI 常驻，监控区最大，区域表紧凑，日志默认隐藏。
+- 左栏设置改为点击导航后展开；底部只保留开始和停止，环境自检移入“检测控制”。
+- 模型、视频源和输出目录默认只显示简短名称；文件选择后完整路径仅短暂显示 5 秒。
+- 左栏宽度随窗口尺寸重算，字体随实际宽度在 11-14 像素间调整。
+- Review 修复了开始检测后顶部状态未立即切换为“正在监测”的问题。
+- 完整测试 247/247 通过，当前模块 Ruff 0 个问题，C++ Release 编译和 DPI 截图验收通过。
+- 正式主程序、worker 和安装包签名状态均为 Valid；安装包 SHA256 为 `AC9DF17B922D509F9826A0231A53CFDA03FF852CD4DCD7F979BD7CF7D49FD57D`。
+- 完成在线包裹流量监测升级：模型选择移入推理参数，统一支持 PT、ONNX、OpenVINO；视频源收敛为本地文件和海康视频流。
+- 海康视频流支持 IP、RTSP 端口、账号密码、通道、主/子码流、TCP/UDP、异步连接测试；切换来源时只显示当前相关设置。
+- 顶栏补齐来源、通道、时间、版本和系统状态；区域统计详情恢复可见表格、空状态和多区域运行数据。
+- 环境自检新增 ONNX、ONNX Runtime、OpenVINO；正式 worker 禁止 Ultralytics 在线自动安装，并从 ONNX/OpenVINO 元数据明确读取任务。
+- 262/262 测试通过，Ruff 0 个问题，Python 编译、PowerShell 语法、C++ Release 编译通过。
+- PT、ONNX、OpenVINO 各完成 1 帧真实推理；正式主程序、worker 和安装包签名状态均为 Valid。
+- 正式便携版为 `dist/CVDS_Cpp_Detector2.0`，安装包为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`，SHA256 为 `1DE351E4037A02EE6DDE9D673E9571C1828BDDBB35B9F05AAE5B2566D2A14773`。
+
+## 2026-06-15
+
+- 修复 Windows 本地视频、模型和输出目录被误显示为网络视频流的问题。
+- 修复未发生堵包时区域堵包秒数仍增长的问题。
+- 区域统计详情改为默认收起、按需展开。
+- 263/263 测试通过，代码检查、编译、正式 worker 自检和真实 OpenVINO 单帧推理通过。
+- 正式版本升级为 2.3.1；主程序、worker 和安装包签名均为 Valid。
+- 安装包为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.3.1.exe`，SHA256 为 `8D726C40555A10179157FE23EBC0A93EFAC7088704C7D5085E70349769FB7945`。

@@ -1,0 +1,76 @@
+# Default configuration for DWSVisionCountService
+camera:
+  raw_width: 4024
+  raw_height: 3036
+
+service:
+  name: DWSVisionCountService
+  version: "1.1.0"
+  host: "0.0.0.0"
+  http_port: 8080
+  tcp_port: 9100
+  request_timeout_ms: 3000
+  max_image_bytes: 20000000
+  default_image_encoding: encoded
+  decode_reduce_factor: 1
+
+model:
+  backend: ultralytics_openvino
+  model_path: ../../weights/yolo26s-seg-wds-1024-best_int8_openvino_model
+  device: CPU
+  imgsz: 1024
+  batch: 1
+  performance_hint: LATENCY
+  inference_num_threads: 4
+  confidence_threshold: 0.40
+  iou_threshold: 0.55
+  class_names:
+    "0": parcel
+  target_class_name: parcel
+
+preprocess:
+  mode: roi_polygon_letterbox
+  infer_imgsz: 1024
+  keep_ratio: true
+  normalize: true
+  mask_outside_polygon: true
+  mask_ignore_regions: true
+  tile_overlap_ratio: 0.10
+
+detect_roi_rect:
+  x1: 355
+  y1: 0
+  x2: 3540
+  y2: 2595
+
+belt_polygon:
+  - [826, 0]
+  - [3028, 0]
+  - [3430, 2487]
+  - [413, 2487]
+
+ignore_regions: []
+
+postprocess:
+  count_by: instance_mask
+  min_box_area_raw: 3000
+  min_mask_area_raw: 2500
+  duplicate_iou_threshold: 0.70
+  duplicate_mask_iou_threshold: 0.70
+  duplicate_mask_overlap_threshold: 0.10
+  require_center_in_belt_polygon: true
+  edge_ignore_enabled: false
+
+debug:
+  save_debug_image: false
+  save_failed_image: true
+  save_input_image: false
+  debug_dir: debug/images
+  failed_dir: cache/failed
+  max_keep_days: 14
+
+logging:
+  log_dir: logs
+  level: INFO
+  rotation: "00:00"
+  retention: 14 days

@@ -12,7 +12,7 @@ class YoloMaskTrainProfileTests(unittest.TestCase):
     def test_rtx_4050_six_gb_uses_yolo26s_seg_profile(self) -> None:
         profile = choose_training_profile(total_vram_mib=6141)
 
-        self.assertEqual(profile.model, "yolo26s-seg.pt")
+        self.assertEqual(profile.model, "weights/pretrained/yolo26s-seg.pt")
         self.assertEqual(profile.imgsz, 960)
         self.assertEqual(profile.batch, 2)
         self.assertEqual(profile.workers, 2)

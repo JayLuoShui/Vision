@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/branding">
+        <file alias="cogy_brand.png">../assets/cogy_brand.png</file>
+        <file alias="cogy_mark.png">../assets/cogy_mark.png</file>
+    </qresource>
+</RCC>

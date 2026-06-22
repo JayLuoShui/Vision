@@ -123,3 +123,67 @@
 - DWSVisionCountService reduce 解码结论：2026-06-05 已实现 JPEG `decode_reduce_factor` 配置，支持 1/2/4/8，并保留原图坐标还原；真实 318 张 DWS 图片用 `factor=2` 实测平均总耗时 80ms、解码 28ms、预处理 20ms、推理 30ms，但计数分布变为 0 包 16 张、1 包 287 张、2 包 15 张，和质量基线差异 9 张；由于用户要求保证检测质量，生产默认保持 `decode_reduce_factor=1`，`factor=2` 只作为可选实验配置，结果保存到 `DWSVisionCountService/cache/output/dws_real_test_results_reduce2.csv`。
 - DWSVisionCountService reduce4 + debug 实测结论：2026-06-05 按用户要求用 `decode_reduce_factor=4` 跑 `C:\Users\lenovo\Desktop\DWS` 全部 318 张图，并输出 debug 图；统计耗时使用 `processing_time_ms`，不包含 debug 图绘制/保存时间。318/318 返回 `code=0`，计数分布为 0 包 19 张、1 包 284 张、2 包 15 张；和质量基线差异 10 张。剔除 debug 图输出后的平均总耗时 64ms，P50 65ms，P95 74ms；平均解码 21ms，预处理 10ms，推理 30ms；debug 图 318 张输出到 `DWSVisionCountService/debug/reduce4_20260605_v2`，CSV 保存到 `DWSVisionCountService/cache/output/dws_real_test_results_reduce4_debug_v2.csv`。同时修复 debug 文件名秒级时间戳导致重复 task_id 覆盖的问题，改为微秒级文件名。
 - DWSVisionCountService 方案项落地结论：2026-06-05 已实现 NativeOpenVINOBackend、ROI 标定预览工具、2x2 tile 显式实验模式、mask overlap/partial overlap/连通分量去重，并在 health 暴露模型 metadata 中的 `task` 和 `int8`。默认配置保持 `ultralytics_openvino + decode_reduce_factor=1`。当前默认后端复测 318/318 成功，计数分布仍为 0 包 11 张、1 包 292 张、2 包 15 张，平均总耗时 179ms，P50 179ms，P95 199ms；CSV 为 `DWSVisionCountService/cache/output/dws_real_test_results_default_after_mask_overlap.csv`。原生 OpenVINO 后端 318/318 成功，平均总耗时 186ms，但与默认链路计数差异 4 张，不作为生产默认；CSV 为 `DWSVisionCountService/cache/output/dws_real_test_results_native_openvino_latest.csv`。2x2 tile + raw-mask 去重 318/318 成功，平均总耗时 647ms，但与默认链路计数差异 121 张，不作为生产默认；CSV 为 `DWSVisionCountService/cache/output/dws_real_test_results_tile2x2_maskdedup.csv`。ROI 预览图输出到 `DWSVisionCountService/debug/roi_calibration_preview.jpg`。
+
+当前正在做什么：2026-06-13 已完成 CVDS_Cpp_Detector2.0 监控界面紧凑化、正式构建和数字签名。
+
+上次停在哪个位置：正式版 `dist/CVDS_Cpp_Detector2.0/CVDS_Cpp_Detector.exe` 已重新打开，标题为 2.0.0；安装包已更新为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`。
+
+近期的关键决定和原因：
+- 左侧设置栏限制为 300-360 宽并可拖动，右侧监控区优先占用剩余空间；程序默认最大化。
+- 四项看板改为单行大号数值，区域表压缩；运行日志默认隐藏，通过“展开运行日志”按钮按需显示。
+- 监控控件取消大尺寸硬限制，避免看板在高 DPI 或较窄窗口被裁掉。
+- 完整测试 88/88 通过，代码检查 0 个问题；主程序、worker 和安装包签名均验证通过。
+- 安装包 SHA256：`21808B2F161C13DEADB70FA5B3BD55BA6B3C64BC4827D8A366FB83FF2BDCD2BB`。
+
+当前正在做什么：2026-06-13 已完成 DWS 视觉计数服务、预训练权重和项目 Markdown 文件的目录整理。
+
+上次停在哪个位置：服务源码已迁入 `apps/DWSVisionCountService`；根目录的三个 YOLO 预训练权重已迁入本地 `weights/pretrained`；DWS 用户指南移入服务 `docs`，标注工具变更记录移入对应应用，OpenCode 调教文档移入 `.opencode/docs`。根目录只保留仓库级说明和协作记录。
+
+近期的关键决定和原因：
+- DWS 配置中的相对模型路径统一以配置文件所在目录解析，启动入口和 Windows 发布脚本不再依赖当前工作目录或固定 `D:\Demo\Vision` 路径。
+- Windows 发布脚本默认使用仓库 `.venv` 和 `weights`，也允许通过参数或 `DWS_SERVICE_PYTHON`、`DWS_SERVICE_MODEL_PATH` 环境变量明确覆盖；缺失时直接失败。
+- 新增根目录 `pytest.ini`，默认只收集三个正式测试区，避免误执行历史归档、第三方 `ultralytics` 和网络延迟脚本。
+- 完整正式测试 243/243 通过，Ruff 0 个问题；PowerShell、OpenCode JSON 和真实模型路径校验通过。
+
+当前正在做什么：2026-06-13 正在使用 Google Stitch MCP 重新设计 CVDS_Cpp_Detector 2.0 界面。
+
+上次停在哪个位置：已完成 Stitch MCP 配置和官方方案生成，当前在可视化页面对比“监控画面优先”与“数据层级优先”两版深色工业监控台方案，等待用户确认最终版后再改 Qt 源码。
+
+近期的关键决定和原因：
+- 使用深石墨底色、COGY 蓝高亮、紧凑边框和小圆角，不使用渐变、玻璃或大阴影。
+- 软件顶部、窗口图标、EXE 和安装包将统一使用用户提供的 `COGY氪技.jpg`，不使用 Stitch 自动生成的替代图标。
+- 推荐“监控画面优先”方案：左侧配置保持窄而完整，视频区占最大面积，核心 KPI 常驻，运行日志默认隐藏并按需展开。
+
+当前正在做什么：2026-06-14 已完成 CVDS_Cpp_Detector2.0 的 Stitch A 界面复刻、正式发布和数字签名。
+
+上次停在哪个位置：正式便携版位于 `dist/CVDS_Cpp_Detector2.0`，安装包位于 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`；主程序、worker 和安装包签名状态均为 Valid。
+
+近期的关键决定和原因：
+- 左栏按 A 方案保持约 24%，设置按导航展开，四项 KPI、最大监控区和紧凑区域表常驻，日志默认隐藏。
+- 模型、视频源和输出目录默认脱敏显示，选择后完整路径只显示 5 秒；运行逻辑始终读取控件保存的真实路径。
+- 左栏字体随宽度在 11-14 像素间调整；开始检测后立即刷新顶部运行状态。
+- 完整测试 247/247 通过，当前模块 Ruff 0 个问题，Release 编译和 DPI 截图验收通过。
+- 安装包 SHA256：`AC9DF17B922D509F9826A0231A53CFDA03FF852CD4DCD7F979BD7CF7D49FD57D`。
+
+当前正在做什么：2026-06-14 已完成 CVDS在线包裹流量监测 2.0.0 的多格式推理、海康视频流、区域详情和 Stitch A 功能对齐升级。
+
+上次停在哪个位置：正式便携版位于 `D:\Demo\Vision\dist\CVDS_Cpp_Detector2.0`，安装包位于 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector2.0_Setup_2.0.0.exe`；主程序、worker 和安装包 Authenticode 状态均为 Valid。
+
+近期的关键决定和原因：
+- 模型选择归入推理参数，统一支持 PT、ONNX 和 OpenVINO；环境自检同步检查 ONNX Runtime 与 OpenVINO。
+- 视频源只保留本地文件和海康视频流；海康采用官方 RTSP 通道规则，支持主/子码流、TCP/UDP 和异步连接测试。
+- 显式设备不可用时直接失败；worker 禁止在线自动安装，ONNX/OpenVINO 从元数据明确读取任务。
+- 区域统计详情恢复为可见表格和空状态；切换视频来源时隐藏无关设置，监控画面继续保持最大。
+- 262/262 测试通过，Ruff 0 个问题；PT、ONNX、OpenVINO 各完成 1 帧真实推理。
+- 安装包 SHA256：`1DE351E4037A02EE6DDE9D673E9571C1828BDDBB35B9F05AAE5B2566D2A14773`。
+
+当前正在做什么：2026-06-15 已完成 CVDS在线包裹流量监测 2.3.1 的路径显示和堵包秒数修复。
+
+上次停在哪个位置：正式版已启动，便携目录为 `D:\Demo\Vision\dist\CVDS_Cpp_Detector2.0`，安装包为 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector2.0_Setup_2.3.1.exe`。
+
+近期的关键决定和原因：
+- Windows 本地路径只按文件路径处理；只有明确包含 `://` 的地址才按网络流显示，避免盘符被误识别为 URL 协议。
+- 区域详情中的堵包秒数只在 `jam_active=true` 时显示，未堵包固定为 0；内部无流量计时不再冒充堵包时长。
+- 区域统计详情默认收起，按需展开，继续优先保证监控画面面积。
+- 263/263 测试通过，Ruff、Python 编译、C++ 构建、正式 worker 自检和 1 帧 OpenVINO 推理通过。
+- 主程序、worker 和安装包签名状态均为 Valid；安装包 SHA256 为 `8D726C40555A10179157FE23EBC0A93EFAC7088704C7D5085E70349769FB7945`。

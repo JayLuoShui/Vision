@@ -32,7 +32,7 @@ class TrainingProfile:
 def choose_training_profile(total_vram_mib: int) -> TrainingProfile:
     if total_vram_mib >= 5500:
         return TrainingProfile(
-            model="yolo26s-seg.pt",
+            model="weights/pretrained/yolo26s-seg.pt",
             imgsz=960,
             batch=2,
             workers=2,

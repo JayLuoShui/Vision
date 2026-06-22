@@ -23,4 +23,4 @@
 - 不把 API Key 写入仓库。
 
 ## OpenCode 自我迭代
-- 当前规则不是一次性写死的配置；如果使用中发现啰嗦、乱改、不问高风险动作、不会搜索，就更新 `AGENTS.md`、`.opencode/agents/`、`.opencode/commands/` 或 `OPENCODE_TUNING.md`。
+- 当前规则不是一次性写死的配置；如果使用中发现啰嗦、乱改、不问高风险动作、不会搜索，就更新 `AGENTS.md`、`.opencode/agents/`、`.opencode/commands/` 或 `.opencode/docs/OPENCODE_TUNING.md`。

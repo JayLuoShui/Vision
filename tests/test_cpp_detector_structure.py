@@ -20,6 +20,11 @@ def test_cpp_detector_files_exist():
         APP_DIR / "src" / "RegionConfig.cpp",
         APP_DIR / "src" / "RuntimePaths.h",
         APP_DIR / "src" / "RuntimePaths.cpp",
+        APP_DIR / "src" / "resources.qrc",
+        APP_DIR / "src" / "app_icon.rc",
+        APP_DIR / "assets" / "cogy_brand.png",
+        APP_DIR / "assets" / "cogy_mark.png",
+        APP_DIR / "assets" / "cogy_app.ico",
         APP_DIR / "configs" / "bytetrack.yaml",
         APP_DIR / "configs" / "regions.example.json",
         APP_DIR / "scripts" / "worker_entry.py",
@@ -32,24 +37,35 @@ def test_cpp_detector_files_exist():
     assert missing == []
 
 
-def test_cpp_ui_is_pt_video_flow_monitor_without_onnx_detection():
+def test_cpp_ui_uses_unified_model_selector_inside_inference_panel():
     header = read_text(APP_DIR / "src" / "MainWindow.h")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
 
-    assert "视觉模型" in main_window
+    path_panel = main_window.split("QWidget* MainWindow::buildPathPanel()")[1].split(
+        "QWidget* MainWindow::buildParamPanel()"
+    )[0]
+    param_panel = main_window.split("QWidget* MainWindow::buildParamPanel()")[1].split(
+        "QWidget* MainWindow::buildRoiPanel()"
+    )[0]
+
     assert "视频源" in main_window
     assert "流量监测" in main_window
     assert "绘制流量ROI" in main_window
     assert "模型训练" not in main_window
     assert "训练监控" not in main_window
-    assert "ONNX模型" not in main_window
     assert "转换ONNX" not in main_window
     assert "ModelSourceMode" not in header
     assert "onnxEdit_" not in header
     assert "convertProcess_" not in header
+    assert "视觉模型" not in path_panel
+    assert "模型格式" not in path_panel
+    assert "视觉模型" in param_panel
+    assert 'form->addRow("选择方式", modelButtons)' in param_panel
+    assert "modelEdit_" in header
+    assert "ptEdit_" not in header
 
 
-def test_cpp_detection_runs_pt_python_worker_and_streams_metrics():
+def test_cpp_detection_runs_unified_python_worker_and_streams_metrics():
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
     header = read_text(APP_DIR / "src" / "MainWindow.h")
 
@@ -57,8 +73,10 @@ def test_cpp_detection_runs_pt_python_worker_and_streams_metrics():
     assert "workerExePath" in main_window
     assert "QProcess process" in main_window
     assert "process.start(config_.workerPath, args)" in main_window
-    assert '"--weights"' in main_window
+    assert '"--model"' in main_window
+    assert '"--weights"' not in main_window
     assert '"--source"' in main_window
+    assert '"--rtsp-transport"' in main_window
     assert '"--regions"' in main_window
     assert "regions.json" in main_window
     assert '"--preview-path"' in main_window
@@ -101,7 +119,7 @@ def test_cpp_runtime_paths_use_install_dir_and_appdata():
     assert "QDir::currentPath()" not in main_window
 
 
-def test_cpp_has_environment_diagnose_and_three_device_modes():
+def test_cpp_has_environment_diagnose_and_backend_aware_device_modes():
     header = read_text(APP_DIR / "src" / "MainWindow.h")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
 
@@ -114,7 +132,9 @@ def test_cpp_has_environment_diagnose_and_three_device_modes():
     assert 'currentData().toString()' in main_window
     assert 'addItem("自动", "auto")' in main_window
     assert 'addItem("CPU", "cpu")' in main_window
-    assert 'addItem("GPU", "0")' in main_window
+    assert 'addItem("NVIDIA GPU", "0")' in main_window
+    assert 'addItem("Intel GPU", "intel:gpu")' in main_window
+    assert 'addItem("Intel NPU", "intel:npu")' in main_window
 
 
 def test_cpp_start_detection_validates_packaged_runtime_resources():
@@ -159,6 +179,9 @@ def test_python_worker_entry_supports_required_subcommands():
     assert "inspect_model_metadata" in worker
     assert "torch_available" in worker
     assert "cuda_available" in worker
+    assert "onnx_available" in worker
+    assert "onnxruntime_available" in worker
+    assert "openvino_available" in worker
     assert "recommend_device" in worker
     assert "当前运行包内 PyTorch 未启用 CUDA" in worker
 
@@ -176,17 +199,18 @@ def test_python_worker_diagnose_distinguishes_nvidia_driver_from_torch_cuda():
     assert "nvidia_driver_available" in main_window
     assert "torch_cuda_version" in main_window
     assert "cuda_issue" in main_window
+    assert 'object.value("onnxruntime_available")' in main_window
+    assert 'object.value("openvino_available")' in main_window
 
 
-def test_python_worker_falls_back_to_cpu_when_requested_gpu_is_unavailable():
+def test_python_worker_rejects_unavailable_explicit_devices():
     worker = read_text(APP_DIR / "scripts" / "worker_entry.py")
     monitor = read_text(APP_DIR / "scripts" / "pt_video_flow_monitor.py")
 
-    assert "已自动切换 CPU" in worker
-    assert "raise RuntimeError(gpu_unavailable_message())" not in worker
-    assert "return \"cpu\"" in worker.split("def normalize_detect_device")[1]
-    assert "return \"cpu\"" in monitor.split("def validate_device")[1]
-    assert "当前运行环境未启用 CUDA，已自动切换 CPU 推理。" in monitor
+    assert "已自动切换 CPU" not in worker
+    assert "raise RuntimeError(gpu_unavailable_message())" in worker
+    assert "OpenVINO 设备不可用" in worker
+    assert "OpenVINO 设备不可用" in monitor
 
 
 def test_release_worker_requirements_use_cuda_torch_wheels():
@@ -195,6 +219,35 @@ def test_release_worker_requirements_use_cuda_torch_wheels():
     assert "https://download.pytorch.org/whl/cu128" in requirements
     assert "torch==2.11.0+cu128" in requirements
     assert "torchvision==0.26.0+cu128" in requirements
+
+
+def test_release_worker_packages_onnx_and_openvino_backends():
+    requirements = read_text(APP_DIR / "packaging" / "requirements-worker.txt")
+    build_script = read_text(APP_DIR / "packaging" / "build_release.ps1")
+    cmake = read_text(APP_DIR / "CMakeLists.txt")
+
+    assert "onnxruntime-gpu" in requirements
+    assert "openvino" in requirements
+    assert "lap>=0.5.12" in requirements
+    assert '"onnxruntime"' in build_script
+    assert '"openvino"' in build_script
+    assert '-Filter "*.onnx"' in build_script
+    assert '-Filter "*_openvino_model"' in build_script
+    assert 'PATTERN "*.onnx"' in cmake
+    assert 'PATTERN "*.xml"' in cmake
+    assert 'PATTERN "*.bin"' in cmake
+    assert 'PATTERN "*_openvino_model"' in cmake
+
+
+def test_release_branding_uses_online_parcel_flow_monitor_name():
+    installer = read_text(APP_DIR / "packaging" / "make_installer.iss")
+    readme = read_text(APP_DIR / "README.md")
+
+    assert "CVDS在线包裹流量监测" in installer
+    assert "CVDS包裹流量检测工具" not in installer
+    assert "PT、ONNX、OpenVINO" in readme
+    assert "本地文件" in readme
+    assert "视频流" in readme
 
 
 def test_release_packaging_files_exist_and_define_installer():
@@ -224,7 +277,7 @@ def test_release_packaging_files_exist_and_define_installer():
         assert f'"--collect-all"\n    "{oversized_package}"' not in build_script
     assert "CVDS_Package_Flow_Detector" in build_script
     assert '"configs\\regions.example.json"' in build_script
-    assert "{autopf}\\CVDS\\CVDS包裹流量检测工具" in installer
+    assert "{autopf}\\CVDS\\CVDS在线包裹流量监测" in installer
     assert "cvds_detector_worker.exe" in installer
     assert "ultralytics" in requirements
     assert "torch" in requirements
@@ -298,24 +351,166 @@ def test_cpp_roi_polygon_finishes_with_right_click_or_enter_only():
     assert "polygonToText(activePolygon(), activeRoiClosed())" in main_window
 
 
-def test_cpp_left_panel_uses_scroll_area_for_maximized_layout():
+def test_cpp_monitor_layout_prioritizes_preview_and_keeps_left_panel_compact():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    main = read_text(APP_DIR / "src" / "main.cpp")
 
     assert "#include <QScrollArea>" in main_window
+    assert "#include <QSplitter>" in main_window
+    assert "setMinimumSize(320, 180)" not in main_window
+    assert "setMinimumSize(160, 90)" in main_window
     assert "QScrollArea" in main_window
     assert "setWidgetResizable(true)" in main_window
-    assert "setMinimumWidth(520)" in main_window
-    assert "setMaximumWidth(680)" in main_window
+    assert "setMinimumSize(800, 420)" in main_window
+    assert "resize(800, 420)" in main_window
+    assert "resize(1480, 940)" not in main_window
+    assert "brandBar->setFixedHeight(42)" in main_window
+    assert "leftShell->setMinimumWidth(210)" in main_window
+    assert "leftShell->setMaximumWidth(340)" in main_window
+    assert "mainSplitter_->width() * 24 / 100" in main_window
+    assert "qBound(210, mainSplitter_->width() * 24 / 100, 340)" in main_window
+    assert "void MainWindow::resizeEvent(QResizeEvent* event)" in main_window
+    assert "resizeSidebarToStitchRatio();" in main_window
+    assert "mainSplitter_" in header
+    assert "settingsPanel_" in header
+    assert "qBound(11, leftWidth / 26, 14)" in main_window
+    assert "&QSplitter::splitterMoved" in main_window
+    assert "right->setMinimumWidth(0)" in main_window
+    assert "right->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding)" in main_window
+    assert "rightLayout->setSizeConstraint(QLayout::SetNoConstraint)" in main_window
+    assert "previewLabel_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding)" in main_window
+    assert "splitter->setStretchFactor(1, 1)" in main_window
+    assert "window.showMaximized()" in main
 
 
-def test_cpp_industrial_theme_and_spin_step_buttons_are_visible():
+def test_cpp_dashboard_is_responsive_and_region_details_are_collapsible():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
 
-    assert "#101820" in main_window
-    assert "#1f2a2e" in main_window
-    assert "#d49a20" in main_window
-    assert "#1f6f50" in main_window
-    assert "#8f1d1d" in main_window
+    dashboard = main_window.split("QWidget* MainWindow::buildDashboardPanel()")[1].split(
+        "QString MainWindow::buildHikvisionRtsp()"
+    )[0]
+    assert "logToggleButton_" in header
+    assert "regionDetailsToggleButton_" in header
+    assert "regionDetailsContent_" in header
+    assert 'new QPushButton("展开运行日志"' in main_window
+    assert 'new QPushButton("展开区域统计"' in main_window
+    assert "logEdit_->setVisible(false)" in main_window
+    assert "regionDetailsContent_->setVisible(false)" in main_window
+    assert "logToggleButton_->setCheckable(true)" in main_window
+    assert "regionDetailsToggleButton_->setCheckable(true)" in main_window
+    assert 'checked ? "收起运行日志" : "展开运行日志"' in main_window
+    assert 'checked ? "收起区域统计" : "展开区域统计"' in main_window
+    assert "regionPanel->setMinimumHeight(28)" in main_window
+    assert "regionPanel->setMaximumHeight(28)" in main_window
+    assert "regionTable_->setMinimumHeight(132)" in main_window
+    assert "regionTable_->setMaximumHeight(64)" not in main_window
+    assert "regionTable_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Expanding)" in main_window
+    assert "regionPanel->setFixedHeight(80)" not in main_window
+    assert "regionEmptyLabel_" in header
+    assert "尚未配置监测区域" in main_window
+    assert "card->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed)" in dashboard
+    assert "cardLayout->setSizeConstraint(QLayout::SetNoConstraint)" in dashboard
+    assert "titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred)" in dashboard
+    assert "new QHBoxLayout(box)" in dashboard
+    assert "layout->setSizeConstraint(QLayout::SetNoConstraint)" in dashboard
+    assert "font-size:18px" in main_window
+    assert "compactDashboard" not in dashboard
+    assert "availableGeometry().width()" not in dashboard
+    assert "card->setFixedWidth" not in dashboard
+    assert "box->setFixedHeight(56)" in dashboard
+    assert 'layout->addWidget(buildCard("累计包裹", &kpiTotalCountValueLabel_), 1)' in dashboard
+    assert 'layout->addWidget(buildCard("当前状态", &kpiStatusValueLabel_), 1)' in dashboard
+    assert 'layout->addWidget(buildCard("区域内包裹", &kpiInsideCountValueLabel_), 1)' in dashboard
+    assert 'layout->addWidget(buildCard("堵包次数", &kpiJamCountValueLabel_), 1)' in dashboard
+
+
+def test_cpp_start_detection_refreshes_status_after_worker_thread_is_created():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    start_detection = main_window.split("void MainWindow::startDetection()")[1].split(
+        "void MainWindow::stopDetection()"
+    )[0]
+
+    worker_created = start_detection.index("workerThread_ = new QThread(this);")
+    assert start_detection.find("refreshRegionTable();", worker_created) > worker_created
+
+
+def test_cpp_stitch_a_sidebar_uses_collapsible_navigation():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "buildSidebarNavigationButton" in header
+    assert "setSidebarPanelVisible" in header
+    assert '"视频源"' in main_window
+    assert '"推理参数"' in main_window
+    assert "ROI 区域" in main_window
+    assert "检测控制" in main_window
+    assert "buildControlPanel" in header
+    assert "controlPanel_" in header
+    action_panel = main_window.split("QWidget* MainWindow::buildActionPanel()")[1].split(
+        "QWidget* MainWindow::buildControlPanel()"
+    )[0]
+    control_panel = main_window.split("QWidget* MainWindow::buildControlPanel()")[1].split(
+        "QPushButton* MainWindow::buildSidebarNavigationButton"
+    )[0]
+    assert "diagnoseButton_" not in action_panel
+    assert "diagnoseButton_" in control_panel
+    assert 'setObjectName("sidebarNavigation")' in main_window
+    assert 'setObjectName("sidebarNavigationButton")' in main_window
+    assert "pathPanel_->setVisible(false)" in main_window
+    assert "videoSourceButton->setChecked(true);\n    pathPanel_->setVisible(true);" in main_window
+    assert "paramPanel_->setVisible(false)" in main_window
+    assert "roiPanel_->setVisible(false)" in main_window
+
+
+def test_cpp_path_fields_hide_full_paths_except_after_selection():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert 'setProperty("fullPath"' in main_window
+    assert 'property("fullPath")' in main_window
+    assert "privatePathLabel" in main_window
+    assert "setPrivatePath" in main_window
+    assert "QTimer::singleShot(5000" in main_window
+    assert "modelEdit_->setReadOnly(true)" in main_window
+    assert "sourceEdit_->setReadOnly(true)" in main_window
+    assert "outputEdit_->setReadOnly(true)" in main_window
+    assert "setPrivatePath(modelEdit_, path, true)" in main_window
+    assert "setPrivatePath(sourceEdit_, path, true)" in main_window
+    assert "setPrivatePath(outputEdit_, path, true)" in main_window
+    assert "modelEdit_->text().trimmed()" not in main_window
+    assert "sourceEdit_->text().trimmed()" not in main_window
+    assert "outputEdit_->text().trimmed()" not in main_window
+    private_label = main_window.split("QString privatePathLabel(const QString& path)")[1].split(
+        "void setPrivatePath"
+    )[0]
+    assert 'trimmed.contains("://")' in private_label
+    assert private_label.index('trimmed.contains("://")') < private_label.index("const QUrl url")
+
+
+def test_cpp_region_table_only_displays_seconds_during_active_jam():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    assert "state.jamActive ? state.staleSeconds : 0.0" in main_window
+
+
+def test_cpp_cogy_stitch_theme_and_spin_step_buttons_are_visible():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    for color in [
+        "#0B1118",
+        "#111B25",
+        "#172431",
+        "#263746",
+        "#2F88F5",
+        "#4DA3FF",
+        "#F3F7FA",
+        "#8FA5B8",
+        "#36C98F",
+        "#FFB84D",
+        "#F25555",
+    ]:
+        assert color in main_window
     assert "QSpinBox::up-button" in main_window
     assert "QDoubleSpinBox::up-button" in main_window
     assert "QSpinBox::down-button" in main_window
@@ -323,8 +518,34 @@ def test_cpp_industrial_theme_and_spin_step_buttons_are_visible():
     assert "QSpinBox::up-arrow" in main_window
     assert "QSpinBox::down-arrow" in main_window
     assert "QComboBox::down-arrow" in main_window
-    assert "border-bottom:7px solid #d49a20" in main_window
-    assert "border-top:7px solid #d49a20" in main_window
+    assert "border-bottom:7px solid #4DA3FF" in main_window
+    assert "border-top:7px solid #4DA3FF" in main_window
+
+
+def test_cpp_cogy_brand_bar_and_application_icons_are_embedded():
+    cmake = read_text(APP_DIR / "CMakeLists.txt")
+    main_cpp = read_text(APP_DIR / "src" / "main.cpp")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    resources = read_text(APP_DIR / "src" / "resources.qrc")
+    app_icon = read_text(APP_DIR / "src" / "app_icon.rc")
+    installer = read_text(APP_DIR / "packaging" / "make_installer.iss")
+
+    assert "src/resources.qrc" in cmake
+    assert "src/app_icon.rc" in cmake
+    assert 'prefix="/branding"' in resources
+    assert 'alias="cogy_brand.png"' in resources
+    assert 'alias="cogy_mark.png"' in resources
+    assert "cogy_app.ico" in app_icon
+    assert 'QIcon(":/branding/cogy_mark.png")' in main_cpp
+    assert 'setObjectName("brandBar")' in main_window
+    assert 'setObjectName("brandLogo")' in main_window
+    assert 'setObjectName("systemStatus")' in main_window
+    assert "CVDS ONLINE PARCEL FLOW MONITOR" in main_window
+    assert "在线包裹流量监测" in main_window
+    assert "CVDS C++ DETECTOR" not in main_window
+    assert "系统就绪" in main_window
+    assert "SetupIconFile" in installer
+    assert "cogy_app.ico" in installer
 
 
 def test_cpp_remembers_paths_and_supports_hikvision_stream():
@@ -338,19 +559,56 @@ def test_cpp_remembers_paths_and_supports_hikvision_stream():
     assert "lastSourcePath" in main_window
     assert "applyHikvisionStream" in header
     assert "buildHikvisionRtsp" in header
-    assert "海康相机" in main_window
+    assert "testVideoStream" in header
+    assert "本地文件" in main_window
+    assert "视频流" in main_window
+    assert "海康设备" in main_window
     assert "rtsp" in main_window
     assert "Streaming/Channels" in main_window
     assert "hikIpEdit_" in header
     assert "hikChannelSpin_" in header
+    assert "hikRtspPortSpin_" in header
+    assert "hikStreamCombo_" in header
+    assert "hikTransportCombo_" in header
+    assert "主码流" in main_window
+    assert "子码流" in main_window
+    assert 'addItem("TCP", "tcp")' in main_window
+    assert 'addItem("UDP", "udp")' in main_window
+    assert '"probe-source"' in main_window
+    assert "QUrl::FullyEncoded" in main_window
+    assert "sourceLabel->setVisible(!streamMode)" in main_window
+    assert "sourceButton->setVisible(!streamMode)" in main_window
 
 
-def test_cpp_application_name_is_package_flow_detector():
+def test_cpp_application_name_is_online_parcel_flow_monitor():
     main_cpp = read_text(APP_DIR / "src" / "main.cpp")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    runtime_paths = read_text(APP_DIR / "src" / "RuntimePaths.cpp")
 
-    assert "CVDS包裹流量检测工具" in main_cpp
-    assert "CVDS包裹流量检测工具" in main_window
+    assert "CVDS在线包裹流量监测" in main_cpp
+    assert "CVDS在线包裹流量监测" in main_window
+    assert "CVDS在线包裹流量监测" in runtime_paths
+    assert "CVDS包裹流量检测工具" not in main_cpp
+    assert "CVDS包裹流量检测工具" not in main_window
+    assert "CVDS包裹流量检测工具" not in runtime_paths
+
+
+def test_cpp_stitch_a_top_bar_shows_source_channel_clock_and_connection():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+
+    for symbol in [
+        "sourceStatusLabel_",
+        "channelStatusLabel_",
+        "clockLabel_",
+        "clockTimer_",
+        "refreshRuntimeOverview",
+    ]:
+        assert symbol in header
+        assert symbol in main_window
+    assert 'setObjectName("connectionPill")' in main_window
+    assert 'setObjectName("runtimeClock")' in main_window
+    assert '"通道 --"' in main_window
 
 
 def test_cpp_jam_controls_and_signal_handling_exist():
@@ -373,7 +631,11 @@ def test_pt_video_flow_monitor_uses_ultralytics_tracking_and_roi_counting():
 
     assert "from ultralytics import YOLO" in monitor
     assert "model.track" in monitor
-    assert "--weights" in monitor
+    assert "--model" in monitor
+    assert "--weights" not in monitor
+    assert "--rtsp-transport" in monitor
+    assert "CVDS PT 视频检测" not in monitor
+    assert 'output_dir / "cvds_online_parcel_flow_monitor.mp4"' in monitor
     assert "--source" in monitor
     assert "--roi" in monitor
     assert "--detect-roi" in monitor
@@ -626,7 +888,7 @@ def test_release_script_supports_isolated_2_0_directory_and_onedir_worker():
 def test_cpp_window_title_displays_release_version():
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
 
-    assert 'setWindowTitle("CVDS包裹流量检测工具 " + RuntimePaths::versionText())' in main_window
+    assert 'setWindowTitle("CVDS在线包裹流量监测 " + RuntimePaths::versionText())' in main_window
 
 
 def test_cpp_locks_configuration_while_detection_is_running_and_resets_loaded_dashboard():
@@ -660,40 +922,3 @@ def test_cpp_region_json_rejects_integers_outside_qt_int_range():
     assert "#include <limits>" in source
     assert "std::numeric_limits<int>::min()" in source
     assert "std::numeric_limits<int>::max()" in source
-
-
-if __name__ == "__main__":
-    test_cpp_detector_files_exist()
-    test_cpp_ui_is_pt_video_flow_monitor_without_onnx_detection()
-    test_cpp_detection_runs_pt_python_worker_and_streams_metrics()
-    test_cpp_runtime_paths_use_install_dir_and_appdata()
-    test_cpp_has_environment_diagnose_and_three_device_modes()
-    test_cpp_start_detection_validates_packaged_runtime_resources()
-    test_python_worker_entry_supports_required_subcommands()
-    test_python_worker_diagnose_distinguishes_nvidia_driver_from_torch_cuda()
-    test_python_worker_falls_back_to_cpu_when_requested_gpu_is_unavailable()
-    test_release_worker_requirements_use_cuda_torch_wheels()
-    test_release_packaging_files_exist_and_define_installer()
-    test_release_files_do_not_contain_developer_absolute_paths()
-    test_cpp_preview_label_supports_polygon_roi_and_undo()
-    test_cpp_roi_polygon_finishes_with_right_click_or_enter_only()
-    test_cpp_left_panel_uses_scroll_area_for_maximized_layout()
-    test_cpp_industrial_theme_and_spin_step_buttons_are_visible()
-    test_cpp_remembers_paths_and_supports_hikvision_stream()
-    test_cpp_application_name_is_package_flow_detector()
-    test_cpp_jam_controls_and_signal_handling_exist()
-    test_pt_video_flow_monitor_uses_ultralytics_tracking_and_roi_counting()
-    test_pt_video_flow_monitor_detects_jam_and_writes_signal()
-    test_pt_video_flow_monitor_does_not_count_unprocessed_max_frame()
-    test_cmake_no_longer_links_onnx_runtime_for_detection()
-    test_cpp_class_labels_are_loaded_from_pt_metadata()
-    test_cpp_startup_defers_heavy_model_and_video_loading()
-    test_cpp_left_sidebar_wheel_does_not_change_parameter_controls()
-    test_cpp_left_sidebar_scrollbar_has_smoother_motion()
-    test_cpp_region_config_supports_strict_json_and_runtime_state()
-    test_cpp_multi_roi_editor_supports_add_rename_delete_save_load()
-    test_cpp_preview_label_supports_multiple_flow_regions_and_active_region_highlight()
-    test_cpp_invalid_saved_regions_are_reported_without_default_replacement()
-    test_cpp_dashboard_has_kpi_region_table_and_flash_timer()
-    test_cpp_window_shutdown_waits_for_detection_thread()
-    print("33 passed")

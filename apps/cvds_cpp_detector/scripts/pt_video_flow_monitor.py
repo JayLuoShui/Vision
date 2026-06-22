@@ -14,10 +14,20 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
+
+os.environ["YOLO_AUTOINSTALL"] = "false"
+
 from ultralytics import YOLO
 
 
 WINDOWS_CJK_FONT = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts" / "msyh.ttc"
+PT_DEVICE_CHOICES = ("auto", "cpu", "0")
+OPENVINO_DEVICE_MAP = {
+    "auto": "AUTO",
+    "intel:cpu": "CPU",
+    "intel:gpu": "GPU",
+    "intel:npu": "NPU",
+}
 
 
 @dataclass
@@ -69,6 +79,15 @@ def emit(payload: dict[str, Any]) -> None:
     print(json.dumps(payload, ensure_ascii=False), flush=True)
 
 
+def metadata_tools():
+    script_dir = Path(__file__).resolve().parent
+    if str(script_dir) not in sys.path:
+        sys.path.insert(0, str(script_dir))
+    import inspect_model_metadata
+
+    return inspect_model_metadata
+
+
 def write_jsonl(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
@@ -83,9 +102,10 @@ def parse_point_list(text: str) -> list[tuple[int, int]]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="CVDS PT 视频检测、ROI 绘制、流量监测和堵包信号")
-    parser.add_argument("--weights", required=True, help="Ultralytics PT 权重")
+    parser = argparse.ArgumentParser(description="CVDS 在线包裹流量监测、ROI 统计和堵包信号")
+    parser.add_argument("--model", required=True, help="模型路径，支持 .pt、.onnx、OpenVINO 目录或 .xml")
     parser.add_argument("--source", required=True, help="视频文件、摄像头编号或 RTSP 地址")
+    parser.add_argument("--rtsp-transport", choices=["tcp", "udp"], default="tcp", help="RTSP 传输协议")
     parser.add_argument("--output-dir", required=True, help="输出目录")
     parser.add_argument("--preview-path", required=True, help="写给 C++ 界面读取的预览 JPG")
     parser.add_argument("--roi", default=None, help="旧版单 ROI 多边形：x1,y1,x2,y2,x3,y3...")
@@ -94,7 +114,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--conf", type=float, default=0.25, help="检测置信度")
     parser.add_argument("--iou", type=float, default=0.45, help="NMS IoU")
     parser.add_argument("--imgsz", type=int, default=960, help="推理输入尺寸")
-    parser.add_argument("--device", default="0", help="推理设备，例如 0 或 cpu")
+    parser.add_argument("--device", default="auto", help="推理设备")
     parser.add_argument("--class-id", type=int, default=-1, help="只检测指定类别；-1 表示全部类别")
     parser.add_argument("--tracker", default="bytetrack.yaml", help="Ultralytics 跟踪器配置")
     parser.add_argument("--preview-fps", type=int, default=30, help="界面预览帧率上限")
@@ -113,9 +133,28 @@ def write_image_utf8(path: Path, image: np.ndarray) -> None:
     path.write_bytes(data.tobytes())
 
 
-def source_to_capture(source: str) -> cv2.VideoCapture:
+def source_to_capture(
+    source: str,
+    rtsp_transport: str,
+    *,
+    open_timeout_ms: int = 8000,
+    read_timeout_ms: int = 8000,
+) -> cv2.VideoCapture:
     if source.isdigit():
         return cv2.VideoCapture(int(source))
+    normalized = source.strip().lower()
+    if normalized.startswith("rtsp://"):
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = f"rtsp_transport;{rtsp_transport}"
+        backend = getattr(cv2, "CAP_FFMPEG", None)
+        params: list[int] = []
+        if hasattr(cv2, "CAP_PROP_OPEN_TIMEOUT_MSEC"):
+            params.extend([int(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC), int(open_timeout_ms)])
+        if hasattr(cv2, "CAP_PROP_READ_TIMEOUT_MSEC"):
+            params.extend([int(cv2.CAP_PROP_READ_TIMEOUT_MSEC), int(read_timeout_ms)])
+        if backend is not None:
+            if params:
+                return cv2.VideoCapture(source, backend, params)
+            return cv2.VideoCapture(source, backend)
     return cv2.VideoCapture(source)
 
 
@@ -180,16 +219,46 @@ def draw_text(frame: np.ndarray, text: str, origin: tuple[int, int], color: tupl
     cv2.putText(frame, text, origin, cv2.FONT_HERSHEY_SIMPLEX, 0.72, color, 2, cv2.LINE_AA)
 
 
-def validate_device(device: str) -> str:
-    normalized = device.strip().lower()
-    if normalized in {"", "auto"}:
-        return "0" if torch.cuda.is_available() else "cpu"
-    if normalized in {"cpu", "-1"}:
-        return "cpu"
-    if not torch.cuda.is_available():
-        emit({"type": "status", "message": "当前运行环境未启用 CUDA，已自动切换 CPU 推理。", "device": "cpu"})
-        return "cpu"
-    return device.strip() or "0"
+def available_openvino_devices() -> set[str]:
+    import openvino as ov
+
+    core = ov.Core()
+    return {str(device).strip().upper() for device in getattr(core, "available_devices", []) if str(device).strip()}
+
+
+def validate_device(device: str, artifact: Any) -> str:
+    normalized = (device or "auto").strip().lower()
+    if artifact.backend in {"pt", "onnx"}:
+        if normalized not in PT_DEVICE_CHOICES:
+            raise ValueError(f"{artifact.backend} 仅支持设备：auto、cpu、0")
+        if normalized == "auto":
+            return "0" if torch.cuda.is_available() else "cpu"
+        if normalized == "cpu":
+            return "cpu"
+        if not torch.cuda.is_available():
+            raise RuntimeError("当前运行环境未启用 CUDA，不能使用设备 0")
+        return "0"
+
+    if normalized not in OPENVINO_DEVICE_MAP:
+        raise ValueError("OpenVINO 仅支持设备：auto、intel:cpu、intel:gpu、intel:npu")
+    available = available_openvino_devices()
+    if not available:
+        raise RuntimeError("未检测到可用的 OpenVINO 设备")
+    selected = OPENVINO_DEVICE_MAP[normalized]
+    if selected != "AUTO" and selected not in available:
+        found = ", ".join(sorted(device.lower() for device in available))
+        raise RuntimeError(f"OpenVINO 设备不可用：{normalized}。当前可用：{found}")
+    return "cpu" if normalized == "auto" else normalized
+
+
+def model_task_for_artifact(artifact: Any) -> str | None:
+    if artifact.backend == "onnx":
+        metadata = metadata_tools().inspect_onnx(artifact.load_path)
+        return str(metadata["task"]).strip()
+    if artifact.backend == "openvino" and artifact.metadata_path is not None:
+        metadata = metadata_tools().load_openvino_metadata(artifact.metadata_path)
+        return str(metadata["task"]).strip()
+    return None
 
 
 def validate_polygon_points(value: Any, label: str) -> list[tuple[int, int]]:
@@ -380,7 +449,7 @@ def build_region_payload(region: FlowRegion, state: RegionState) -> dict[str, An
         "jam_active": state.jam_active,
         "jam_count": state.jam_count,
         "status": region_status(state),
-        "stale_seconds": round(state.stale_seconds, 3),
+        "stale_seconds": round(state.stale_seconds if state.jam_active else 0.0, 3),
     }
 
 
@@ -433,9 +502,7 @@ def main() -> None:
         sys.stdout.reconfigure(encoding="utf-8")
     args = parse_args()
 
-    weights = Path(args.weights)
-    if not weights.exists():
-        raise FileNotFoundError(f"找不到 PT 权重：{weights}")
+    artifact = metadata_tools().resolve_model_artifact(args.model)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     preview_path = Path(args.preview_path)
@@ -444,14 +511,14 @@ def main() -> None:
     jam_signal_path.touch(exist_ok=True)
     region_config = resolve_region_config(args)
     detect_roi = parse_point_list(args.detect_roi) if args.detect_roi else None
-    device = validate_device(args.device)
+    device = validate_device(args.device, artifact)
 
-    cap = source_to_capture(args.source)
+    cap = source_to_capture(args.source, args.rtsp_transport)
     if not cap.isOpened():
         cap.release()
         raise RuntimeError(f"无法打开视频源：{args.source}")
 
-    output_video = output_dir / "pt_video_flow_monitor.mp4"
+    output_video = output_dir / "cvds_online_parcel_flow_monitor.mp4"
     events_csv = output_dir / "flow_events.csv"
     summary_json = output_dir / "flow_summary.json"
     trails: dict[int, deque[tuple[int, int]]] = defaultdict(lambda: deque(maxlen=args.trail))
@@ -469,11 +536,20 @@ def main() -> None:
         if not writer.isOpened():
             raise RuntimeError(f"无法写入结果视频：{output_video}")
 
-        emit({"type": "status", "message": "正在加载 PT 权重", "weights": str(weights), "device": device})
-        model = YOLO(str(weights))
+        emit(
+            {
+                "type": "status",
+                "message": "正在加载模型",
+                "model": str(artifact.request_path),
+                "backend": artifact.backend,
+                "device": device,
+            }
+        )
+        model_task = model_task_for_artifact(artifact)
+        model = YOLO(str(artifact.load_path), task=model_task) if model_task else YOLO(str(artifact.load_path))
         classes = None if args.class_id < 0 else [args.class_id]
         preview_every = max(1, int(round(fps / max(1, args.preview_fps))))
-        emit({"type": "status", "message": "开始 PT 视频检测与流量监测"})
+        emit({"type": "status", "message": "开始视频检测与流量监测", "backend": artifact.backend})
         while True:
             if args.max_frames > 0 and frame_idx >= args.max_frames:
                 break

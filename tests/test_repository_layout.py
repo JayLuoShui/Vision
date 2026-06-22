@@ -64,3 +64,50 @@ def test_latency_tools_read_vllm_api_key_from_environment() -> None:
 
     assert "VLLM_API_KEY" in contents
     assert '"Authorization": "Bearer ' not in contents
+
+
+def test_dws_service_and_pretrained_weights_use_grouped_locations() -> None:
+    required = [
+        "apps/DWSVisionCountService/app/main.py",
+        "apps/DWSVisionCountService/docs/WINDOWS_USER_GUIDE.md",
+    ]
+    obsolete = [
+        "DWSVisionCountService",
+        "yolo26n.pt",
+        "yolo26s.pt",
+        "yolo26s-seg.pt",
+    ]
+
+    assert not [path for path in required if not (ROOT / path).exists()]
+    assert not [path for path in obsolete if (ROOT / path).exists()]
+
+
+def test_scoped_markdown_files_are_not_kept_at_repository_root() -> None:
+    required = [
+        "apps/cvds_annotation_tool_v2_3/CHANGELOG.md",
+        ".opencode/docs/OPENCODE_TUNING.md",
+    ]
+    obsolete = [
+        "CHANGELOG.md",
+        "OPENCODE_TUNING.md",
+    ]
+
+    assert not [path for path in required if not (ROOT / path).exists()]
+    assert not [path for path in obsolete if (ROOT / path).exists()]
+
+
+def test_training_defaults_use_pretrained_weight_directory() -> None:
+    expected_references = {
+        "scripts/train_yolo26n_package.py": 'ROOT / "weights" / "pretrained" / "yolo26n.pt"',
+        "scripts/train_yolo26s_manual_annotation.py": 'ROOT / "weights" / "pretrained" / "yolo26s.pt"',
+        "scripts/train_yolomask_yolo26seg.py": "weights/pretrained/yolo26s-seg.pt",
+        "apps/cvds_qt_app.py": 'ROOT / "weights" / "pretrained" / "yolo26n.pt"',
+    }
+
+    missing = [
+        path
+        for path, expected in expected_references.items()
+        if expected not in (ROOT / path).read_text(encoding="utf-8")
+    ]
+
+    assert not missing

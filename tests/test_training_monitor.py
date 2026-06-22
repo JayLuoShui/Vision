@@ -67,7 +67,7 @@ class TrainingMonitorTests(unittest.TestCase):
                     "imgsz: 832",
                     "batch: 4",
                     "device: '0'",
-                    "model: D:\\Demo\\Vision\\yolo26s.pt",
+                    "model: D:\\Demo\\Vision\\weights\\pretrained\\yolo26s.pt",
                     "data: D:\\Demo\\Vision\\datasets\\demo\\data.yaml",
                 ]
             ),

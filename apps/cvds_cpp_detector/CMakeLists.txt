@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(CVDSCppDetector LANGUAGES CXX)
+project(CVDSCppDetector LANGUAGES CXX RC)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,8 @@ add_executable(
     src/main.cpp
     src/MainWindow.cpp
     src/MainWindow.h
+    src/resources.qrc
+    src/app_icon.rc
     src/RegionConfig.cpp
     src/RegionConfig.h
     src/RuntimePaths.cpp
@@ -69,6 +71,16 @@ install(
     PATTERN "__pycache__" EXCLUDE
 )
 install(DIRECTORY configs DESTINATION . FILES_MATCHING PATTERN "*.yaml" PATTERN "*.json")
-install(DIRECTORY "${PROJECT_ROOT}/weights" DESTINATION . FILES_MATCHING PATTERN "*.pt")
+install(
+    DIRECTORY "${PROJECT_ROOT}/weights"
+    DESTINATION .
+    FILES_MATCHING
+    PATTERN "*.pt"
+    PATTERN "*.onnx"
+    PATTERN "*.xml"
+    PATTERN "*.bin"
+    PATTERN "*.yaml"
+    PATTERN "*_openvino_model"
+)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/docs" DESTINATION . FILES_MATCHING PATTERN "*.md")
 install(FILES "${PROJECT_ROOT}/VERSION.txt" DESTINATION .)

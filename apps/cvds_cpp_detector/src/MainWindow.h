@@ -26,7 +26,9 @@ class QPaintEvent;
 class QPlainTextEdit;
 class QProcess;
 class QPushButton;
+class QResizeEvent;
 class QSpinBox;
+class QSplitter;
 class QTableWidget;
 class QTimer;
 class QWidget;
@@ -98,8 +100,9 @@ private:
 };
 
 struct DetectJobConfig {
-    QString ptPath;
+    QString modelPath;
     QString sourcePath;
+    QString rtspTransport = "tcp";
     QString outputDir;
     QString workerPath;
     QString trackerPath;
@@ -145,8 +148,12 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private slots:
-    void browsePt();
+    void browseModel();
+    void browseOpenVinoDirectory();
     void browseSource();
     void browseOutput();
     void startDetection();
@@ -161,6 +168,7 @@ private slots:
     void cleanupWorker();
     void loadVideoPreviewFrame();
     void applyHikvisionStream();
+    void testVideoStream();
     void addRegion();
     void renameCurrentRegion();
     void deleteCurrentRegion();
@@ -173,7 +181,12 @@ private:
     QWidget* buildParamPanel();
     QWidget* buildRoiPanel();
     QWidget* buildActionPanel();
+    QWidget* buildControlPanel();
     QWidget* buildDashboardPanel();
+    QPushButton* buildSidebarNavigationButton(const QString& text, QWidget* panel, QWidget* parent);
+    void setSidebarPanelVisible(QWidget* panel, QPushButton* button);
+    void resizeSidebarToStitchRatio();
+    void refreshRuntimeOverview();
     DetectJobConfig currentDetectConfig() const;
     QString buildHikvisionRtsp() const;
     void loadSettings();
@@ -197,7 +210,7 @@ private:
     void updateDetectRoiFromEditor();
     void setConfigurationEditingEnabled(bool enabled);
 
-    QLineEdit* ptEdit_ = nullptr;
+    QLineEdit* modelEdit_ = nullptr;
     QLineEdit* sourceEdit_ = nullptr;
     QLineEdit* outputEdit_ = nullptr;
     QLineEdit* hikIpEdit_ = nullptr;
@@ -210,11 +223,15 @@ private:
     QComboBox* totalCountRegionCombo_ = nullptr;
     QComboBox* classCombo_ = nullptr;
     QComboBox* deviceCombo_ = nullptr;
+    QComboBox* sourceModeCombo_ = nullptr;
+    QComboBox* hikStreamCombo_ = nullptr;
+    QComboBox* hikTransportCombo_ = nullptr;
     QCheckBox* countEnabledCheck_ = nullptr;
     QCheckBox* jamEnabledCheck_ = nullptr;
     QSpinBox* inputSizeSpin_ = nullptr;
     QSpinBox* videoFpsSpin_ = nullptr;
     QSpinBox* hikChannelSpin_ = nullptr;
+    QSpinBox* hikRtspPortSpin_ = nullptr;
     QSpinBox* jamSecondsSpin_ = nullptr;
     QDoubleSpinBox* confidenceSpin_ = nullptr;
     QDoubleSpinBox* iouSpin_ = nullptr;
@@ -223,23 +240,39 @@ private:
     QPushButton* startButton_ = nullptr;
     QPushButton* stopButton_ = nullptr;
     QPushButton* diagnoseButton_ = nullptr;
+    QPushButton* regionDetailsToggleButton_ = nullptr;
+    QPushButton* logToggleButton_ = nullptr;
     RoiPreviewLabel* previewLabel_ = nullptr;
     QLabel* kpiTotalCountValueLabel_ = nullptr;
     QLabel* kpiStatusValueLabel_ = nullptr;
     QLabel* kpiInsideCountValueLabel_ = nullptr;
     QLabel* kpiJamCountValueLabel_ = nullptr;
+    QLabel* systemStatusLabel_ = nullptr;
+    QLabel* sourceStatusLabel_ = nullptr;
+    QLabel* channelStatusLabel_ = nullptr;
+    QLabel* clockLabel_ = nullptr;
+    QLabel* regionEmptyLabel_ = nullptr;
     QTableWidget* regionTable_ = nullptr;
     QPlainTextEdit* logEdit_ = nullptr;
     QTimer* flashTimer_ = nullptr;
+    QTimer* clockTimer_ = nullptr;
     QWidget* dashboardRoot_ = nullptr;
+    QWidget* regionDetailsContent_ = nullptr;
+    QSplitter* mainSplitter_ = nullptr;
+    QWidget* settingsPanel_ = nullptr;
     QWidget* pathPanel_ = nullptr;
     QWidget* paramPanel_ = nullptr;
     QWidget* roiPanel_ = nullptr;
+    QWidget* controlPanel_ = nullptr;
+    QWidget* actionPanel_ = nullptr;
+    QWidget* streamSettingsWidget_ = nullptr;
+    QVector<QPushButton*> sidebarButtons_;
 
     QStringList loadedLabels_;
     QString loadedModelPath_;
     QString modelInspectPath_;
     QProcess* modelInspectProcess_ = nullptr;
+    QProcess* streamProbeProcess_ = nullptr;
     bool startDetectionAfterModelInspect_ = false;
     bool modelInspectTimedOut_ = false;
     QVector<RegionConfig> regions_;

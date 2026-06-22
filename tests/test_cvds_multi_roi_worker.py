@@ -58,17 +58,30 @@ class FakeYOLO:
 
 
 class FakeCapture:
-    def __init__(self, frames: list[np.ndarray], fps: float) -> None:
+    def __init__(
+        self,
+        frames: list[np.ndarray],
+        fps: float,
+        *,
+        opened: bool = True,
+        fail_read_after: int | None = None,
+    ) -> None:
         self._frames = frames
         self._fps = fps
         self._index = 0
         self._height, self._width = frames[0].shape[:2]
+        self._opened = opened
+        self._fail_read_after = fail_read_after
         self.released = False
 
     def isOpened(self) -> bool:
-        return True
+        return self._opened
 
     def read(self) -> tuple[bool, np.ndarray | None]:
+        if not self._opened:
+            return False, None
+        if self._fail_read_after is not None and self._index >= self._fail_read_after:
+            return False, None
         if self._index >= len(self._frames):
             return False, None
         frame = self._frames[self._index]
@@ -105,25 +118,44 @@ class FakeWriter:
 
 
 class FakeCv2(types.SimpleNamespace):
+    CAP_FFMPEG = 1900
     CAP_PROP_FPS = 5
     CAP_PROP_FRAME_WIDTH = 3
     CAP_PROP_FRAME_HEIGHT = 4
+    CAP_PROP_OPEN_TIMEOUT_MSEC = 53
+    CAP_PROP_READ_TIMEOUT_MSEC = 54
     IMWRITE_JPEG_QUALITY = 1
     FONT_HERSHEY_SIMPLEX = 0
     LINE_AA = 16
 
-    def __init__(self, frames: list[np.ndarray], fps: float) -> None:
+    def __init__(
+        self,
+        frames: list[np.ndarray],
+        fps: float,
+        *,
+        capture_opened: bool = True,
+        fail_read_after: int | None = None,
+    ) -> None:
         super().__init__()
         self._frames = frames
         self._fps = fps
+        self._capture_opened = capture_opened
+        self._fail_read_after = fail_read_after
         self.capture: FakeCapture | None = None
+        self.video_capture_calls: list[tuple[object, ...]] = []
         self.writers: list[FakeWriter] = []
 
     def imencode(self, _ext: str, image: np.ndarray, _params: list[int]) -> tuple[bool, np.ndarray]:
         return True, np.array(image.flatten()[:16], dtype=np.uint8)
 
-    def VideoCapture(self, _source: str | int) -> FakeCapture:
-        self.capture = FakeCapture(self._frames, self._fps)
+    def VideoCapture(self, *args) -> FakeCapture:
+        self.video_capture_calls.append(args)
+        self.capture = FakeCapture(
+            self._frames,
+            self._fps,
+            opened=self._capture_opened,
+            fail_read_after=self._fail_read_after,
+        )
         return self.capture
 
     def VideoWriter(self, *_args) -> FakeWriter:
@@ -203,6 +235,63 @@ def load_module(
     return module
 
 
+def test_worker_diagnose_requires_all_supported_model_backends(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_torch = types.SimpleNamespace(
+        __version__="2.11.0",
+        version=types.SimpleNamespace(cuda="12.8"),
+        cuda=types.SimpleNamespace(
+            is_available=lambda: False,
+            get_device_name=lambda _index: "",
+        ),
+    )
+    worker = load_module(
+        monkeypatch,
+        "worker_entry_test_backend_diagnose",
+        WORKER_ENTRY_PATH,
+        extra_modules={"torch": fake_torch},
+    )
+    monkeypatch.setattr(
+        worker,
+        "query_nvidia_smi",
+        lambda: {
+            "available": False,
+            "gpu_name": "",
+            "driver_version": "",
+            "error": "未找到 nvidia-smi。",
+        },
+    )
+
+    availability = {
+        "ultralytics": True,
+        "cv2": True,
+        "PIL": True,
+        "numpy": True,
+        "onnx": True,
+        "onnxruntime": True,
+        "openvino": True,
+    }
+    monkeypatch.setattr(
+        worker,
+        "import_status",
+        lambda module_name: (availability[module_name], "" if availability[module_name] else "missing"),
+    )
+
+    diagnostics = worker.collect_runtime_diagnostics()
+
+    assert diagnostics["onnx_available"] is True
+    assert diagnostics["onnxruntime_available"] is True
+    assert diagnostics["openvino_available"] is True
+    assert worker.diagnose() == 0
+
+    availability["onnxruntime"] = False
+    diagnostics = worker.collect_runtime_diagnostics()
+
+    assert diagnostics["onnxruntime_available"] is False
+    assert worker.diagnose() == 1
+
+
 def write_regions(path: Path) -> Path:
     path.write_text(
         json.dumps(
@@ -232,6 +321,18 @@ def write_regions(path: Path) -> Path:
             },
             ensure_ascii=False,
         ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def write_openvino_model_bundle(path: Path, *, task: str = "detect") -> Path:
+    path.mkdir(parents=True, exist_ok=True)
+    model_path = path / "demo.xml"
+    model_path.write_text("<xml />", encoding="utf-8")
+    (path / "demo.bin").write_bytes(b"bin")
+    (path / "metadata.yaml").write_text(
+        json.dumps({"task": task, "names": {"0": "parcel"}}, ensure_ascii=False),
         encoding="utf-8",
     )
     return path
@@ -292,13 +393,13 @@ def test_worker_entry_supports_regions_and_rejects_missing_roi_and_regions(
     monkeypatch.setitem(sys.modules, "pt_video_flow_monitor", fake_monitor)
     worker = load_module(monkeypatch, "worker_entry_test_multi_roi", WORKER_ENTRY_PATH)
 
-    weights = tmp_path / "model.pt"
+    model = tmp_path / "model.pt"
     tracker = tmp_path / "tracker.yaml"
     regions = write_regions(tmp_path / "regions.json")
     output_dir = tmp_path / "out"
     preview_path = tmp_path / "preview.jpg"
     jam_path = tmp_path / "jam.jsonl"
-    weights.write_text("stub", encoding="utf-8")
+    model.write_text("stub", encoding="utf-8")
     tracker.write_text("stub", encoding="utf-8")
 
     monkeypatch.setattr(
@@ -307,8 +408,8 @@ def test_worker_entry_supports_regions_and_rejects_missing_roi_and_regions(
         [
             "worker_entry.py",
             "detect",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -334,8 +435,8 @@ def test_worker_entry_supports_regions_and_rejects_missing_roi_and_regions(
         [
             "worker_entry.py",
             "detect",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -378,8 +479,8 @@ def test_multi_roi_worker_outputs_region_protocol_and_files(
         },
     )
 
-    weights = tmp_path / "model.pt"
-    weights.write_text("stub", encoding="utf-8")
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
     output_dir = tmp_path / "out"
     preview_path = tmp_path / "preview.jpg"
     regions_path = write_regions(tmp_path / "regions.json")
@@ -389,8 +490,8 @@ def test_multi_roi_worker_outputs_region_protocol_and_files(
         "argv",
         [
             "pt_video_flow_monitor.py",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -421,6 +522,12 @@ def test_multi_roi_worker_outputs_region_protocol_and_files(
     assert [region["id"] for region in frame_payloads[-1]["regions"]] == ["main", "branch"]
     assert frame_payloads[-1]["regions"][0]["status"] == "IDLE"
     assert frame_payloads[-1]["regions"][1]["status"] == "IDLE"
+    assert all(
+        region["stale_seconds"] == 0.0
+        for payload in frame_payloads
+        for region in payload["regions"]
+        if not region["jam_active"]
+    )
 
     assert jam_payloads == [
         {
@@ -511,8 +618,8 @@ def test_jam_timer_starts_when_non_counting_region_becomes_occupied(
         },
     )
 
-    weights = tmp_path / "model.pt"
-    weights.write_text("stub", encoding="utf-8")
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
     regions_path = write_regions(tmp_path / "regions.json")
     config = json.loads(regions_path.read_text(encoding="utf-8"))
     config["regions"][1]["count_enabled"] = False
@@ -523,8 +630,8 @@ def test_jam_timer_starts_when_non_counting_region_becomes_occupied(
         "argv",
         [
             "pt_video_flow_monitor.py",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -553,14 +660,14 @@ def test_worker_entry_reports_monitor_import_failure_as_json(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     worker = load_module(monkeypatch, "worker_entry_test_import_failure", WORKER_ENTRY_PATH)
-    weights = tmp_path / "model.pt"
+    model = tmp_path / "model.pt"
     tracker = tmp_path / "tracker.yaml"
     regions = write_regions(tmp_path / "regions.json")
-    weights.write_text("stub", encoding="utf-8")
+    model.write_text("stub", encoding="utf-8")
     tracker.write_text("stub", encoding="utf-8")
     monkeypatch.setitem(sys.modules, "pt_video_flow_monitor", None)
     args = types.SimpleNamespace(
-        weights=str(weights),
+        model=str(model),
         tracker=str(tracker),
         regions=str(regions),
         roi=None,
@@ -577,6 +684,7 @@ def test_worker_entry_reports_monitor_import_failure_as_json(
         jam_signal_path=str(tmp_path / "jam.jsonl"),
         max_frames=0,
         detect_roi=None,
+        rtsp_transport="tcp",
     )
 
     assert worker.detect(args) == 1
@@ -602,8 +710,8 @@ def test_active_jam_is_cleared_when_video_ends(
             "ultralytics": types.SimpleNamespace(YOLO=lambda weights: FakeYOLO(weights, tracked)),
         },
     )
-    weights = tmp_path / "model.pt"
-    weights.write_text("stub", encoding="utf-8")
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
     regions_path = write_regions(tmp_path / "regions.json")
     config = json.loads(regions_path.read_text(encoding="utf-8"))
     config["regions"][0]["jam_seconds"] = 1
@@ -614,8 +722,8 @@ def test_active_jam_is_cleared_when_video_ends(
         "argv",
         [
             "pt_video_flow_monitor.py",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -650,16 +758,16 @@ def test_rtsp_read_failure_is_not_reported_as_normal_completion(
             "ultralytics": types.SimpleNamespace(YOLO=lambda weights: FakeYOLO(weights, [[]])),
         },
     )
-    weights = tmp_path / "model.pt"
-    weights.write_text("stub", encoding="utf-8")
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
     regions_path = write_regions(tmp_path / "regions.json")
     monkeypatch.setattr(
         sys,
         "argv",
         [
             "pt_video_flow_monitor.py",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "rtsp://camera/live",
             "--output-dir",
@@ -693,16 +801,16 @@ def test_capture_is_released_when_video_writer_cannot_open(
         PT_MONITOR_PATH,
         extra_modules={"cv2": fake_cv2},
     )
-    weights = tmp_path / "model.pt"
-    weights.write_text("stub", encoding="utf-8")
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
     regions_path = write_regions(tmp_path / "regions.json")
     monkeypatch.setattr(
         sys,
         "argv",
         [
             "pt_video_flow_monitor.py",
-            "--weights",
-            str(weights),
+            "--model",
+            str(model),
             "--source",
             "demo.mp4",
             "--output-dir",
@@ -719,3 +827,281 @@ def test_capture_is_released_when_video_writer_cannot_open(
 
     assert fake_cv2.capture is not None
     assert fake_cv2.capture.released
+
+
+def test_worker_entry_rejects_unavailable_pt_gpu_request(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    forwarded: dict[str, list[str]] = {}
+
+    fake_monitor = types.SimpleNamespace(main=lambda: forwarded.setdefault("argv", list(sys.argv)))
+    monkeypatch.setitem(sys.modules, "pt_video_flow_monitor", fake_monitor)
+    worker = load_module(monkeypatch, "worker_entry_test_pt_device_strict", WORKER_ENTRY_PATH)
+
+    model = tmp_path / "model.pt"
+    tracker = tmp_path / "tracker.yaml"
+    regions = write_regions(tmp_path / "regions.json")
+    model.write_text("stub", encoding="utf-8")
+    tracker.write_text("stub", encoding="utf-8")
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "worker_entry.py",
+            "detect",
+            "--model",
+            str(model),
+            "--source",
+            "demo.mp4",
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--preview-path",
+            str(tmp_path / "preview.jpg"),
+            "--regions",
+            str(regions),
+            "--tracker",
+            str(tracker),
+            "--jam-signal-path",
+            str(tmp_path / "jam.jsonl"),
+            "--device",
+            "0",
+        ],
+    )
+
+    assert worker.main() == 2
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert payload["type"] == "error"
+    assert "cuda" in payload["message"].lower()
+    assert forwarded == {}
+
+
+def test_worker_entry_rejects_openvino_device_and_bundle_errors(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fake_monitor = types.SimpleNamespace(main=lambda: None)
+    monkeypatch.setitem(sys.modules, "pt_video_flow_monitor", fake_monitor)
+    worker = load_module(monkeypatch, "worker_entry_test_openvino_device_strict", WORKER_ENTRY_PATH)
+
+    openvino_dir = write_openvino_model_bundle(tmp_path / "good_openvino_model")
+    tracker = tmp_path / "tracker.yaml"
+    regions = write_regions(tmp_path / "regions.json")
+    tracker.write_text("stub", encoding="utf-8")
+    monkeypatch.setitem(
+        sys.modules,
+        "openvino.runtime",
+        types.SimpleNamespace(Core=lambda: types.SimpleNamespace(available_devices=["CPU"])),
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "worker_entry.py",
+            "detect",
+            "--model",
+            str(openvino_dir),
+            "--source",
+            "demo.mp4",
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--preview-path",
+            str(tmp_path / "preview.jpg"),
+            "--regions",
+            str(regions),
+            "--tracker",
+            str(tracker),
+            "--jam-signal-path",
+            str(tmp_path / "jam.jsonl"),
+            "--device",
+            "intel:gpu",
+        ],
+    )
+    assert worker.main() == 2
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert "intel:gpu" in payload["message"].lower()
+
+    broken_openvino_dir = tmp_path / "broken_openvino_model"
+    broken_openvino_dir.mkdir()
+    (broken_openvino_dir / "demo.xml").write_text("<xml />", encoding="utf-8")
+    (broken_openvino_dir / "demo.bin").write_bytes(b"bin")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "worker_entry.py",
+            "detect",
+            "--model",
+            str(broken_openvino_dir),
+            "--source",
+            "demo.mp4",
+            "--output-dir",
+            str(tmp_path / "out2"),
+            "--preview-path",
+            str(tmp_path / "preview2.jpg"),
+            "--regions",
+            str(regions),
+            "--tracker",
+            str(tracker),
+            "--jam-signal-path",
+            str(tmp_path / "jam2.jsonl"),
+            "--device",
+            "intel:cpu",
+        ],
+    )
+    assert worker.main() == 2
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert "metadata.yaml" in payload["message"]
+
+
+def test_openvino_device_validation_preserves_ultralytics_device_syntax(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    worker = load_module(monkeypatch, "worker_entry_test_openvino_device_syntax", WORKER_ENTRY_PATH)
+    monitor = load_module(monkeypatch, "monitor_test_openvino_device_syntax", PT_MONITOR_PATH)
+    artifact = types.SimpleNamespace(backend="openvino")
+
+    monkeypatch.setattr(worker, "available_openvino_devices", lambda: {"CPU", "GPU"})
+    monkeypatch.setattr(monitor, "available_openvino_devices", lambda: {"CPU", "GPU"})
+
+    assert worker.normalize_detect_device("auto", artifact) == "auto"
+    assert worker.normalize_detect_device("intel:cpu", artifact) == "intel:cpu"
+    assert worker.normalize_detect_device("intel:gpu", artifact) == "intel:gpu"
+    assert monitor.validate_device("auto", artifact) == "cpu"
+    assert monitor.validate_device("intel:cpu", artifact) == "intel:cpu"
+    assert monitor.validate_device("intel:gpu", artifact) == "intel:gpu"
+
+
+def test_openvino_device_discovery_uses_current_top_level_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_openvino = types.SimpleNamespace(
+        Core=lambda: types.SimpleNamespace(available_devices=["CPU", "GPU"])
+    )
+    monkeypatch.setitem(sys.modules, "openvino", fake_openvino)
+    monkeypatch.delitem(sys.modules, "openvino.runtime", raising=False)
+    worker = load_module(monkeypatch, "worker_entry_test_openvino_api", WORKER_ENTRY_PATH)
+    monitor = load_module(monkeypatch, "monitor_test_openvino_api", PT_MONITOR_PATH)
+
+    assert worker.available_openvino_devices() == {"CPU", "GPU"}
+    assert monitor.available_openvino_devices() == {"CPU", "GPU"}
+
+
+def test_openvino_model_task_is_read_from_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monitor = load_module(monkeypatch, "monitor_test_openvino_task", PT_MONITOR_PATH)
+    model_dir = write_openvino_model_bundle(tmp_path / "task_openvino_model")
+    artifact = monitor.metadata_tools().resolve_model_artifact(model_dir)
+
+    assert monitor.model_task_for_artifact(artifact) == "detect"
+
+
+def test_onnx_model_task_is_read_from_metadata_and_autoinstall_is_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("YOLO_AUTOINSTALL", "true")
+    monitor = load_module(monkeypatch, "monitor_test_onnx_task", PT_MONITOR_PATH)
+    model_path = tmp_path / "model.onnx"
+    model_path.write_text("stub", encoding="utf-8")
+    artifact = types.SimpleNamespace(
+        backend="onnx",
+        load_path=model_path,
+        metadata_path=None,
+    )
+    monkeypatch.setattr(
+        monitor,
+        "metadata_tools",
+        lambda: types.SimpleNamespace(inspect_onnx=lambda _path: {"task": "detect"}),
+    )
+
+    assert monitor.os.environ["YOLO_AUTOINSTALL"] == "false"
+    assert monitor.model_task_for_artifact(artifact) == "detect"
+
+
+def test_rtsp_capture_uses_ffmpeg_transport_and_timeouts(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    frames = [np.zeros((48, 48, 3), dtype=np.uint8) for _ in range(2)]
+    fake_cv2 = FakeCv2(frames, fps=2.0, fail_read_after=1)
+    module = load_module(
+        monkeypatch,
+        "pt_video_flow_monitor_test_rtsp_transport",
+        PT_MONITOR_PATH,
+        extra_modules={
+            "cv2": fake_cv2,
+            "ultralytics": types.SimpleNamespace(YOLO=lambda weights: FakeYOLO(weights, [[], []])),
+        },
+    )
+    model = tmp_path / "model.pt"
+    model.write_text("stub", encoding="utf-8")
+    regions_path = write_regions(tmp_path / "regions.json")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "pt_video_flow_monitor.py",
+            "--model",
+            str(model),
+            "--source",
+            "rtsp://camera/live",
+            "--rtsp-transport",
+            "udp",
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--preview-path",
+            str(tmp_path / "preview.jpg"),
+            "--regions",
+            str(regions_path),
+        ],
+    )
+
+    with pytest.raises(RuntimeError, match="视频流读取中断"):
+        module.main()
+
+    assert fake_cv2.video_capture_calls
+    source, backend, params = fake_cv2.video_capture_calls[0]
+    assert source == "rtsp://camera/live"
+    assert backend == fake_cv2.CAP_FFMPEG
+    assert fake_cv2.CAP_PROP_OPEN_TIMEOUT_MSEC in params
+    assert fake_cv2.CAP_PROP_READ_TIMEOUT_MSEC in params
+
+
+def test_probe_source_reports_json_without_password(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fake_cv2 = FakeCv2([np.zeros((8, 8, 3), dtype=np.uint8)], fps=2.0, capture_opened=False)
+    worker = load_module(
+        monkeypatch,
+        "worker_entry_test_probe_source",
+        WORKER_ENTRY_PATH,
+        extra_modules={"cv2": fake_cv2},
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "worker_entry.py",
+            "probe-source",
+            "--source",
+            "rtsp://user:secret@camera/live",
+            "--rtsp-transport",
+            "udp",
+        ],
+    )
+
+    assert worker.main() == 1
+    payload = json.loads(capsys.readouterr().out.strip())
+    assert payload["type"] == "probe"
+    assert payload["ok"] is False
+    assert payload["transport"] == "udp"
+    assert "secret" not in json.dumps(payload, ensure_ascii=False)

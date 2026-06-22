@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA = ROOT / "datasets" / "cvds_annotation_yolo_labeled_20260508" / "data.yaml"
-DEFAULT_MODEL = ROOT / "yolo26s.pt"
+DEFAULT_MODEL = ROOT / "weights" / "pretrained" / "yolo26s.pt"
 DEFAULT_PROJECT = ROOT / "runs" / "package_train"
 
 
