@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc videoio)
 
 set(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
@@ -26,19 +26,12 @@ add_executable(
     src/RegionConfig.h
     src/RuntimePaths.cpp
     src/RuntimePaths.h
-    src/WcsConfig.cpp
-    src/WcsConfig.h
-    src/WcsMessage.cpp
-    src/WcsMessage.h
-    src/WcsTcpClient.cpp
-    src/WcsTcpClient.h
 )
 
 target_link_libraries(
     CVDS_Cpp_Detector
     PRIVATE
         Qt6::Widgets
-        Qt6::Network
         ${OpenCV_LIBS}
 )
 
@@ -63,12 +56,6 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/configs/regions.example.json"
             "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/regions.example.json"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/configs/cameras.wcs.example.json"
-            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/cameras.wcs.example.json"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/configs/wcs.example.json"
-            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/wcs.example.json"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${PROJECT_ROOT}/VERSION.txt"
             "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/VERSION.txt"
