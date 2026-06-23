@@ -125,6 +125,7 @@ void MainWindow::stopMonitoring() {
 
 void MainWindow::handleFrameReady(const QString& cameraId, const QImage& image) {
     QLabel* tile = tileForCamera(cameraId);
+    if (tile == nullptr) return;
     tile->setPixmap(QPixmap::fromImage(image).scaled(tile->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
@@ -138,7 +139,7 @@ void MainWindow::handleFlowUpdate(const WcsFlowUpdate& update) { if (wcsClient_ 
 void MainWindow::handleJamOn(const WcsJamEvent& event) { appendLog("堵包报警：" + event.cameraId + "/" + event.roiId); if (wcsClient_ && config_.wcs.enabled) wcsClient_->sendJamOn(event); }
 void MainWindow::handleJamOff(const WcsJamEvent& event) { appendLog("堵包解除：" + event.cameraId + "/" + event.roiId); if (wcsClient_ && config_.wcs.enabled) wcsClient_->sendJamOff(event); }
 void MainWindow::handlePipelineLog(const QString& message) { appendLog(message); }
-void MainWindow::sendHeartbeat() { if (wcsClient_ && config_.wcs.enabled) wcsClient_->sendHeartbeat(config_.cameras.size(), snapshots_.size()); }
+void MainWindow::sendHeartbeat() { if (wcsClient_ && config_.wcs.enabled) wcsClient_->sendHeartbeat(snapshots_.size(), config_.cameras.size(), 0.0); }
 
 void MainWindow::rebuildCameraGrid() {
     QLayoutItem* child = nullptr;
