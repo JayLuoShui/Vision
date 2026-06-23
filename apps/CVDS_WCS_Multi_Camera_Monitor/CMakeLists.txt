@@ -87,6 +87,9 @@ add_custom_command(
             "${APP_ROOT}/configs/cameras.json"
             "$<TARGET_FILE_DIR:CVDS_WCS_Multi_Camera_Monitor>/configs/cameras.json"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${APP_ROOT}/configs/cameras.json"
+            "$<TARGET_FILE_DIR:CVDS_WCS_Multi_Camera_Monitor>/configs/cameras.wcs.example.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${APP_ROOT}/configs/wcs.json"
             "$<TARGET_FILE_DIR:CVDS_WCS_Multi_Camera_Monitor>/configs/wcs.json"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
