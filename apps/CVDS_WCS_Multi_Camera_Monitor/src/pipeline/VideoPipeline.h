@@ -10,10 +10,11 @@
 #include "tracking/ByteTrack.h"
 #include "utils/FpsMeter.h"
 
-#include <QAtomicInteger>
 #include <QImage>
 #include <QJsonObject>
 #include <QObject>
+
+#include <atomic>
 
 class VideoPipeline : public QObject {
     Q_OBJECT
@@ -53,7 +54,7 @@ private:
     cv::Mat drawOverlay(const cv::Mat& frame, const DetectionResults& tracks, const QVector<RegionRuntimeState>& states) const;
 
     Config config_;
-    QAtomicInteger<bool> stopRequested_ = false;
+    std::atomic_bool stopRequested_{false};
     OpenVinoDetector detector_;
     ByteTrack tracker_;
     FlowCounter flowCounter_;
