@@ -4,6 +4,8 @@
 #include <QVector>
 #include <opencv2/core.hpp>
 
+#include <vector>
+
 namespace Geometry {
 
 std::vector<cv::Point> toCvPolygon(const QVector<QPoint>& polygon);
