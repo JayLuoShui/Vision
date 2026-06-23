@@ -141,6 +141,27 @@ private:
     std::atomic_bool stopped_ = false;
 };
 
+class VideoPreviewWorker : public QObject {
+    Q_OBJECT
+
+public:
+    VideoPreviewWorker(QString source, QString rtspTransport);
+
+public slots:
+    void run();
+    void stop();
+
+signals:
+    void frameReady(const QImage& image);
+    void failed(const QString& error);
+    void finished();
+
+private:
+    QString source_;
+    QString rtspTransport_;
+    std::atomic_bool stopped_ = false;
+};
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -186,6 +207,10 @@ private:
     QPushButton* buildSidebarNavigationButton(const QString& text, QWidget* panel, QWidget* parent);
     void setSidebarPanelVisible(QWidget* panel, QPushButton* button);
     void resizeSidebarToStitchRatio();
+    void setSettingsPanelCollapsed(bool collapsed);
+    void startVideoPreview();
+    void launchPendingVideoPreview();
+    void stopVideoPreview();
     void refreshRuntimeOverview();
     DetectJobConfig currentDetectConfig() const;
     QString buildHikvisionRtsp() const;
@@ -240,6 +265,7 @@ private:
     QPushButton* startButton_ = nullptr;
     QPushButton* stopButton_ = nullptr;
     QPushButton* diagnoseButton_ = nullptr;
+    QPushButton* settingsToggleButton_ = nullptr;
     QPushButton* regionDetailsToggleButton_ = nullptr;
     QPushButton* logToggleButton_ = nullptr;
     RoiPreviewLabel* previewLabel_ = nullptr;
@@ -284,7 +310,14 @@ private:
     int dashboardJamCount_ = 0;
     bool dashboardJamActive_ = false;
     bool dashboardFlashVisible_ = false;
+    bool settingsPanelCollapsed_ = false;
+    bool previewFrameAccepted_ = false;
+    bool startDetectionAfterPreviewStops_ = false;
     QString dashboardStatusText_ = "待机";
+    QString pendingPreviewSource_;
+    QString pendingPreviewTransport_;
+    QThread* previewThread_ = nullptr;
+    VideoPreviewWorker* previewWorker_ = nullptr;
     QThread* workerThread_ = nullptr;
     DetectionWorker* worker_ = nullptr;
 };

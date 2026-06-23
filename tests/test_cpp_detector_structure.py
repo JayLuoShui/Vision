@@ -384,6 +384,93 @@ def test_cpp_monitor_layout_prioritizes_preview_and_keeps_left_panel_compact():
     assert "window.showMaximized()" in main
 
 
+def test_cpp_video_stream_application_starts_live_preview_before_detection():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    apply_stream = main_window.split("void MainWindow::applyHikvisionStream()")[1].split(
+        "void MainWindow::testVideoStream()"
+    )[0]
+    start_detection = main_window.split("void MainWindow::startDetection()")[1].split(
+        "void MainWindow::stopDetection()"
+    )[0]
+
+    assert "class VideoPreviewWorker" in header
+    assert "startVideoPreview" in header
+    assert "stopVideoPreview" in header
+    assert "previewThread_" in header
+    assert "previewWorker_" in header
+    assert "pendingPreviewSource_" in header
+    assert "startDetectionAfterPreviewStops_" in header
+    assert "startVideoPreview();" in apply_stream
+    assert "stopVideoPreview();" in start_detection
+    browse_source = main_window.split("void MainWindow::browseSource()")[1].split(
+        "void MainWindow::applyHikvisionStream()"
+    )[0]
+    assert "stopVideoPreview();" in browse_source
+    stop_preview = main_window.split("void MainWindow::stopVideoPreview()")[1].split(
+        "void MainWindow::refreshRuntimeOverview()"
+    )[0]
+    assert "thread->wait();" not in stop_preview
+    assert "pendingPreviewSource_" in main_window
+    assert "QTimer::singleShot(0, this, &MainWindow::startDetection)" in main_window
+    assert "实时视频流将在开始检测后显示" not in main_window
+    assert "VideoPreviewWorker::frameReady" in main_window
+    assert "previewLabel_->setImage" in main_window
+
+
+def test_cpp_channel_switch_never_waits_for_rtsp_thread_on_ui_thread():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    start_preview = main_window.split("void MainWindow::startVideoPreview()")[1].split(
+        "void MainWindow::stopVideoPreview()"
+    )[0]
+    stop_preview = main_window.split("void MainWindow::stopVideoPreview()")[1].split(
+        "void MainWindow::refreshRuntimeOverview()"
+    )[0]
+
+    assert "previewFrameAccepted_ = false;" in stop_preview
+    assert "QMetaObject::invokeMethod(worker, \"stop\", Qt::DirectConnection);" in stop_preview
+    assert "wait(" not in stop_preview
+    assert "wait()" not in stop_preview
+    assert "if (previewThread_ != nullptr)" in start_preview
+    assert "pendingPreviewSource_" in start_preview
+    assert "launchPendingVideoPreview" in main_window
+
+
+def test_cpp_roi_is_session_only_and_cleared_on_every_startup():
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    constructor = main_window.split("MainWindow::MainWindow(QWidget* parent)")[1].split(
+        "MainWindow::~MainWindow()"
+    )[0]
+    load_settings = main_window.split("void MainWindow::loadSettings()")[1].split(
+        "void MainWindow::saveSettings() const"
+    )[0]
+    save_settings = main_window.split("void MainWindow::saveSettings() const")[1].split(
+        "void MainWindow::populateClassCombo"
+    )[0]
+
+    assert "QFileInfo::exists(RuntimePaths::defaultRegionsConfigPath())" not in constructor
+    assert "ensureDefaultRegion();" in constructor
+    assert "detectRoiEdit_->clear();" in constructor
+    assert 'settings.remove("lastDetectRoi")' in load_settings
+    assert 'settings.value("lastDetectRoi"' not in load_settings
+    assert 'settings.setValue("lastDetectRoi"' not in save_settings
+
+
+def test_cpp_control_panel_can_collapse_and_auto_collapses_when_detection_starts():
+    header = read_text(APP_DIR / "src" / "MainWindow.h")
+    main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
+    start_detection = main_window.split("void MainWindow::startDetection()")[1].split(
+        "void MainWindow::stopDetection()"
+    )[0]
+
+    assert "settingsToggleButton_" in header
+    assert "setSettingsPanelCollapsed" in header
+    assert 'new QPushButton("收起控制面板"' in main_window
+    assert 'collapsed ? "展开控制面板" : "收起控制面板"' in main_window
+    assert "settingsPanel_->setVisible(!collapsed)" in main_window
+    assert "setSettingsPanelCollapsed(true);" in start_detection
+
+
 def test_cpp_dashboard_is_responsive_and_region_details_are_collapsible():
     header = read_text(APP_DIR / "src" / "MainWindow.h")
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
@@ -701,7 +788,7 @@ def test_cpp_startup_defers_heavy_model_and_video_loading():
     assert "refreshModelMetadata();" not in constructor_body
     assert "loadVideoPreviewFrame();" not in constructor_body
     assert "beginModelMetadataRefresh(true)" in start_detection_body
-    assert "延迟加载模型类别和视频预览" in constructor_body
+    assert "选择视频后即可绘制" in constructor_body
 
 
 def test_cpp_left_sidebar_wheel_does_not_change_parameter_controls():
@@ -795,13 +882,14 @@ def test_cpp_preview_label_supports_multiple_flow_regions_and_active_region_high
     assert '"区域 "' not in header
 
 
-def test_cpp_invalid_saved_regions_are_reported_without_default_replacement():
+def test_cpp_startup_does_not_restore_saved_regions():
     main_window = read_text(APP_DIR / "src" / "MainWindow.cpp")
     constructor = main_window.split("MainWindow::MainWindow(QWidget* parent)")[1].split("MainWindow::~MainWindow()")[0]
-    invalid_config_handler = constructor.split('appendLog("加载区域配置失败："')[1].split("} else {")[0]
 
-    assert "QMessageBox::critical" in invalid_config_handler
-    assert "ensureDefaultRegion();" not in invalid_config_handler
+    assert "loadRegionConfigDocument" not in constructor
+    assert "restoreRegionConfigDocument" not in constructor
+    assert "regions_.clear();" in constructor
+    assert "ensureDefaultRegion();" in constructor
 
 
 def test_cpp_dashboard_has_kpi_region_table_and_flash_timer():
@@ -839,6 +927,8 @@ def test_cpp_window_shutdown_waits_for_detection_thread():
     destructor = main_window.split("MainWindow::~MainWindow()")[1].split("QWidget* MainWindow::buildPathPanel()")[0]
 
     assert "stopDetection();" in destructor
+    assert "stopVideoPreview();" in destructor
+    assert "previewThread_->wait();" in destructor
     assert "workerThread_->quit();" in destructor
     assert "workerThread_->wait();" in destructor
 

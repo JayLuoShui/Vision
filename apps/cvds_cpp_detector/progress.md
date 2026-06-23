@@ -46,3 +46,24 @@
 - 263/263 测试通过，代码检查、编译、正式 worker 自检和真实 OpenVINO 单帧推理通过。
 - 正式版本升级为 2.3.1；主程序、worker 和安装包签名均为 Valid。
 - 安装包为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.3.1.exe`，SHA256 为 `8D726C40555A10179157FE23EBC0A93EFAC7088704C7D5085E70349769FB7945`。
+
+## 2026-06-22
+
+- “应用视频流”改为立即启动独立实时预览，不再等待开始检测。
+- 预览画面出现后可直接绘制 ROI；开始检测前会停止预览，避免相机被重复读取。
+- ROI 改为本次会话有效，软件重启不再恢复历史流量 ROI 和检测 ROI。
+- 控制面板增加展开/收起按钮，开始检测后自动收起，让实时监控画面占满可用区域。
+- 266/266 测试通过，Ruff、Python 编译和 C++ Release 编译通过。
+- 正式版本为 2.4.0；主程序、worker 和安装包签名均为 Valid。
+- 安装包为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.4.0.exe`，SHA256 为 `287BDA1CBD0CB982C7F379C62337099D8C2C61F392F5E40C14532D8F6D2C18C7`。
+
+## 2026-06-22 通道切换卡死修复
+
+- 从 Windows Application Hang 和 WER 日志定位到：切换通道时界面线程同步等待旧 RTSP 线程，导致窗口消息循环停止。
+- 视频预览切换改为异步串行，只执行最后一次通道请求；旧预览帧立即失效，旧线程退出后自动连接新通道。
+- 开始检测同样改为等待预览异步退出后自动启动，界面线程只在软件关闭时等待线程收尾。
+- 修复版本升级为 2.4.1。
+- 267/267 测试通过，Ruff、Python 编译和 C++ Release 编译通过。
+- 主程序、worker 和安装包签名状态均为 Valid。
+- 安装包为 `dist_installer/CVDS_Cpp_Detector2.0_Setup_2.4.1.exe`，SHA256 为 `85A6BFF6FE2DAFF5AD49018ABD71FE3B33C69A7E18E63D6815EDCC1F9C950AE5`。
+- 本机 Smart App Control 拒绝本地自签名程序启动；签名本身校验有效，未修改系统安全策略。

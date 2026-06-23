@@ -53,6 +53,8 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace {
 
@@ -178,12 +180,20 @@ void setPrivatePath(QLineEdit* edit, const QString& path, bool revealFull = fals
     });
 }
 
-cv::VideoCapture openCapture(const QString& source) {
+cv::VideoCapture openCapture(const QString& source, const QString& rtspTransport = "tcp") {
     const QString trimmed = source.trimmed();
     bool isNumber = false;
     const int index = trimmed.toInt(&isNumber);
     if (isNumber) {
         return cv::VideoCapture(index);
+    }
+    if (trimmed.startsWith("rtsp://", Qt::CaseInsensitive)) {
+        qputenv("OPENCV_FFMPEG_CAPTURE_OPTIONS", ("rtsp_transport;" + rtspTransport).toUtf8());
+        const std::vector<int> params = {
+            cv::CAP_PROP_OPEN_TIMEOUT_MSEC, 3000,
+            cv::CAP_PROP_READ_TIMEOUT_MSEC, 3000
+        };
+        return cv::VideoCapture(trimmed.toStdString(), cv::CAP_FFMPEG, params);
     }
     return cv::VideoCapture(trimmed.toStdString());
 }
@@ -791,6 +801,38 @@ void DetectionWorker::run() {
     }
 }
 
+VideoPreviewWorker::VideoPreviewWorker(QString source, QString rtspTransport)
+    : source_(std::move(source)),
+      rtspTransport_(std::move(rtspTransport)) {}
+
+void VideoPreviewWorker::run() {
+    try {
+        cv::VideoCapture capture = openCapture(source_, rtspTransport_);
+        if (!capture.isOpened()) {
+            emit failed("无法打开视频源。");
+            emit finished();
+            return;
+        }
+        while (!stopped_) {
+            cv::Mat frame;
+            if (!capture.read(frame) || frame.empty()) {
+                emit failed("视频流读取中断。");
+                break;
+            }
+            emit frameReady(matToImage(frame));
+            QThread::msleep(33);
+        }
+        capture.release();
+    } catch (const std::exception& ex) {
+        emit failed(QString::fromUtf8(ex.what()));
+    }
+    emit finished();
+}
+
+void VideoPreviewWorker::stop() {
+    stopped_ = true;
+}
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
     setWindowTitle("CVDS在线包裹流量监测 " + RuntimePaths::versionText());
@@ -851,6 +893,14 @@ MainWindow::MainWindow(QWidget* parent)
     brandLayout->addWidget(channelStatusLabel_);
     brandLayout->addWidget(clockLabel_);
     brandLayout->addWidget(versionLabel);
+    settingsToggleButton_ = new QPushButton("收起控制面板", brandBar);
+    settingsToggleButton_->setObjectName("settingsToggleButton");
+    settingsToggleButton_->setCheckable(true);
+    settingsToggleButton_->setMaximumWidth(120);
+    connect(settingsToggleButton_, &QPushButton::toggled, this, [this](bool checked) {
+        setSettingsPanelCollapsed(checked);
+    });
+    brandLayout->addWidget(settingsToggleButton_);
     brandLayout->addWidget(systemStatusLabel_);
     layout->addWidget(brandBar);
 
@@ -1160,28 +1210,24 @@ MainWindow::MainWindow(QWidget* parent)
     appendLog("worker 已就绪：cvds_detector_worker.exe");
     populateClassCombo({});
     loadSettings();
-    if (QFileInfo::exists(RuntimePaths::defaultRegionsConfigPath())) {
-        try {
-            restoreRegionConfigDocument(loadRegionConfigDocument(RuntimePaths::defaultRegionsConfigPath()));
-            appendLog("已加载区域配置：regions.json");
-        } catch (const std::exception& ex) {
-            appendLog("加载区域配置失败：" + QString::fromUtf8(ex.what()));
-            QMessageBox::critical(this, "区域配置错误", QString::fromUtf8(ex.what()));
-            refreshRegionTable();
-        }
-    } else {
-        ensureDefaultRegion();
-        refreshRegionSelectors();
-        applyRegionSelection();
-        refreshRegionTable();
-    }
-    previewLabel_->setDetectRoiFromText(detectRoiEdit_->text().trimmed());
+    regions_.clear();
+    detectRoiEdit_->clear();
+    ensureDefaultRegion();
+    refreshRegionSelectors();
+    applyRegionSelection();
+    refreshRegionTable();
+    previewLabel_->setDetectRoiFromText({});
     refreshRuntimeOverview();
-    appendLog("启动完成：已延迟加载模型类别和视频预览，选择模型或开始检测时再读取。");
+    appendLog("启动完成：ROI 已按本次会话清空，选择视频后即可绘制。");
 }
 
 MainWindow::~MainWindow() {
     saveSettings();
+    stopVideoPreview();
+    if (previewThread_ != nullptr) {
+        previewThread_->quit();
+        previewThread_->wait();
+    }
     stopDetection();
     if (modelInspectProcess_ != nullptr && modelInspectProcess_->state() != QProcess::NotRunning) {
         modelInspectProcess_->disconnect(this);
@@ -1207,7 +1253,8 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 }
 
 void MainWindow::resizeSidebarToStitchRatio() {
-    if (mainSplitter_ == nullptr || settingsPanel_ == nullptr || mainSplitter_->width() <= 0) {
+    if (mainSplitter_ == nullptr || settingsPanel_ == nullptr || mainSplitter_->width() <= 0
+        || settingsPanelCollapsed_) {
         return;
     }
     const int leftWidth = qBound(210, mainSplitter_->width() * 24 / 100, 340);
@@ -1215,6 +1262,104 @@ void MainWindow::resizeSidebarToStitchRatio() {
     QFont font = settingsPanel_->font();
     font.setPixelSize(qBound(11, leftWidth / 26, 14));
     settingsPanel_->setFont(font);
+}
+
+void MainWindow::setSettingsPanelCollapsed(bool collapsed) {
+    settingsPanelCollapsed_ = collapsed;
+    if (settingsPanel_ != nullptr) {
+        settingsPanel_->setVisible(!collapsed);
+    }
+    if (settingsToggleButton_ != nullptr) {
+        const QSignalBlocker blocker(settingsToggleButton_);
+        settingsToggleButton_->setChecked(collapsed);
+        settingsToggleButton_->setText(collapsed ? "展开控制面板" : "收起控制面板");
+    }
+    if (!collapsed) {
+        QTimer::singleShot(0, this, [this]() {
+            resizeSidebarToStitchRatio();
+        });
+    }
+}
+
+void MainWindow::startVideoPreview() {
+    pendingPreviewSource_ = privatePath(sourceEdit_);
+    pendingPreviewTransport_ =
+        hikTransportCombo_ == nullptr ? "tcp" : hikTransportCombo_->currentData().toString();
+    previewFrameAccepted_ = false;
+    if (pendingPreviewSource_.isEmpty()) {
+        return;
+    }
+    if (previewThread_ != nullptr) {
+        if (previewWorker_ != nullptr) {
+            QMetaObject::invokeMethod(previewWorker_, "stop", Qt::DirectConnection);
+        }
+        appendLog("正在切换视频通道，旧视频流释放后将自动连接新通道。");
+        return;
+    }
+    launchPendingVideoPreview();
+}
+
+void MainWindow::launchPendingVideoPreview() {
+    if (previewThread_ != nullptr || pendingPreviewSource_.isEmpty()) {
+        return;
+    }
+    const QString source = pendingPreviewSource_;
+    const QString transport = pendingPreviewTransport_;
+    pendingPreviewSource_.clear();
+    pendingPreviewTransport_.clear();
+    auto* thread = new QThread(this);
+    auto* worker = new VideoPreviewWorker(source, transport);
+    previewThread_ = thread;
+    previewWorker_ = worker;
+    previewFrameAccepted_ = true;
+    worker->moveToThread(thread);
+    connect(thread, &QThread::started, worker, &VideoPreviewWorker::run);
+    connect(worker, &VideoPreviewWorker::frameReady, this, [this, worker](const QImage& image) {
+        if (previewFrameAccepted_ && previewWorker_ == worker) {
+            previewLabel_->setImage(image);
+        }
+    });
+    connect(worker, &VideoPreviewWorker::failed, this, [this, worker](const QString& error) {
+        if (previewWorker_ == worker) {
+            appendLog("视频预览失败：" + error);
+        }
+    });
+    connect(worker, &VideoPreviewWorker::finished, thread, &QThread::quit);
+    connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(thread, &QThread::finished, this, [this, thread, worker]() {
+        const bool wasCurrent = previewThread_ == thread;
+        if (previewWorker_ == worker) {
+            previewWorker_ = nullptr;
+        }
+        if (wasCurrent) {
+            previewThread_ = nullptr;
+            previewFrameAccepted_ = false;
+        }
+        thread->deleteLater();
+        if (!wasCurrent) {
+            return;
+        }
+        if (startDetectionAfterPreviewStops_) {
+            startDetectionAfterPreviewStops_ = false;
+            QTimer::singleShot(0, this, &MainWindow::startDetection);
+            return;
+        }
+        QTimer::singleShot(0, this, [this]() {
+            launchPendingVideoPreview();
+        });
+    });
+    thread->start();
+    appendLog("实时视频预览已启动，可在画面上绘制 ROI。");
+}
+
+void MainWindow::stopVideoPreview() {
+    pendingPreviewSource_.clear();
+    pendingPreviewTransport_.clear();
+    previewFrameAccepted_ = false;
+    VideoPreviewWorker* worker = previewWorker_;
+    if (worker != nullptr) {
+        QMetaObject::invokeMethod(worker, "stop", Qt::DirectConnection);
+    }
 }
 
 void MainWindow::refreshRuntimeOverview() {
@@ -1322,6 +1467,9 @@ QWidget* MainWindow::buildPathPanel() {
         sourceEdit_->setVisible(!streamMode);
         sourceButton->setVisible(!streamMode);
         streamSettingsWidget_->setVisible(streamMode);
+        if (!streamMode) {
+            stopVideoPreview();
+        }
         refreshRuntimeOverview();
         }
     );
@@ -1657,7 +1805,8 @@ void MainWindow::loadSettings() {
     );
     const QString savedOutput = settings.value("lastOutputDir", privatePath(outputEdit_)).toString().trimmed();
     setPrivatePath(outputEdit_, savedOutput.isEmpty() ? RuntimePaths::defaultOutputDir() : savedOutput);
-    detectRoiEdit_->setText(settings.value("lastDetectRoi", detectRoiEdit_->text()).toString());
+    settings.remove("lastDetectRoi");
+    detectRoiEdit_->clear();
     hikIpEdit_->setText(settings.value("hikvisionIp", hikIpEdit_->text()).toString());
     hikUserEdit_->setText(settings.value("hikvisionUser", hikUserEdit_->text()).toString());
     settings.remove("hikvisionPassword");
@@ -1685,7 +1834,7 @@ void MainWindow::saveSettings() const {
     settings.setValue("lastModelPath", privatePath(modelEdit_));
     settings.setValue("lastSourcePath", sourcePathForSettings(privatePath(sourceEdit_)));
     settings.setValue("lastOutputDir", privatePath(outputEdit_));
-    settings.setValue("lastDetectRoi", detectRoiEdit_->text().trimmed());
+    settings.remove("lastDetectRoi");
     settings.setValue("hikvisionIp", hikIpEdit_->text().trimmed());
     settings.setValue("hikvisionUser", hikUserEdit_->text().trimmed());
     settings.remove("hikvisionPassword");
@@ -1988,6 +2137,7 @@ void MainWindow::browseSource() {
         "Video (*.mp4 *.avi *.mkv *.mov);;All files (*.*)"
     );
     if (!path.isEmpty()) {
+        stopVideoPreview();
         sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("file"));
         setPrivatePath(sourceEdit_, path, true);
         loadVideoPreviewFrame();
@@ -2006,6 +2156,7 @@ void MainWindow::applyHikvisionStream() {
     refreshRuntimeOverview();
     saveSettings();
     appendLog("已应用海康视频流配置。");
+    startVideoPreview();
 }
 
 void MainWindow::testVideoStream() {
@@ -2223,6 +2374,12 @@ void MainWindow::startDetection() {
         return;
     }
 
+    if (previewThread_ != nullptr) {
+        startDetectionAfterPreviewStops_ = true;
+        stopVideoPreview();
+        appendLog("正在释放视频预览，完成后自动开始检测。");
+        return;
+    }
     try {
         updateDetectRoiFromEditor();
         const RegionConfigDocument document = buildRegionConfigDocument();
@@ -2261,6 +2418,7 @@ void MainWindow::startDetection() {
     startButton_->setEnabled(false);
     stopButton_->setEnabled(true);
     setConfigurationEditingEnabled(false);
+    setSettingsPanelCollapsed(true);
     workerThread_->start();
 }
 
@@ -2715,11 +2873,10 @@ void MainWindow::loadVideoPreviewFrame() {
     if (source.isEmpty() || (!canBeRuntimeSource(source) && !QFileInfo::exists(source))) {
         return;
     }
-    if (canBeRuntimeSource(source)) {
-        appendLog("实时视频流将在开始检测后显示，避免连接异常阻塞界面。");
-        return;
-    }
-    cv::VideoCapture cap = openCapture(source);
+    cv::VideoCapture cap = openCapture(
+        source,
+        hikTransportCombo_ == nullptr ? "tcp" : hikTransportCombo_->currentData().toString()
+    );
     if (!cap.isOpened()) {
         appendLog("视频首帧读取失败。");
         return;

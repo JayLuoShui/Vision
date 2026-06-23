@@ -187,3 +187,27 @@
 - 区域统计详情默认收起，按需展开，继续优先保证监控画面面积。
 - 263/263 测试通过，Ruff、Python 编译、C++ 构建、正式 worker 自检和 1 帧 OpenVINO 推理通过。
 - 主程序、worker 和安装包签名状态均为 Valid；安装包 SHA256 为 `8D726C40555A10179157FE23EBC0A93EFAC7088704C7D5085E70349769FB7945`。
+
+当前正在做什么：2026-06-22 已完成 CVDS在线包裹流量监测 2.4.0 的实时预览、会话 ROI 和监控画面最大化升级。
+
+上次停在哪个位置：正式便携版位于 `D:\Demo\Vision\dist\CVDS_Cpp_Detector2.0`，安装包位于 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector2.0_Setup_2.4.0.exe`。
+
+近期的关键决定和原因：
+- 点击“应用视频流”后由独立线程立即读取并显示实时画面，不需要先开始模型检测；相机异常有 3 秒打开/读取超时，不阻塞界面。
+- 开始检测前完整停止预览线程，再由检测 worker 接管视频源，避免同一相机被两个任务重复读取。
+- 流量 ROI 和检测 ROI 仅在本次会话有效；启动时不读取默认 `regions.json`，也不从 `QSettings` 恢复检测 ROI。
+- 顶部增加控制面板展开/收起按钮；开始检测后自动收起左栏，实时监控区域自动使用全部剩余空间。
+- 266/266 测试通过，Ruff、Python 编译和 C++ Release 编译通过。
+- 主程序、worker 和安装包签名状态均为 Valid；安装包 SHA256 为 `287BDA1CBD0CB982C7F379C62337099D8C2C61F392F5E40C14532D8F6D2C18C7`。
+
+当前正在做什么：2026-06-22 已完成 CVDS在线包裹流量监测 2.4.1 的视频通道切换卡死修复。
+
+上次停在哪个位置：Windows Application Hang 与 WER 日志确认旧版在切换海康通道时由界面线程同步等待 RTSP 预览线程，导致窗口消息循环停止。现已改为异步停止旧预览、只保留最后一次通道请求、旧线程退出后自动连接新通道。
+
+近期的关键决定和原因：
+- 通道切换和开始检测都不再在界面线程调用 `QThread::wait()`；仅软件退出时等待线程安全结束。
+- 切换开始后立即拒绝旧预览帧，避免旧画面覆盖新通道；连续点击时只连接用户最后选择的通道。
+- 修复版本升级为 2.4.1；267/267 测试通过，Ruff、Python 编译和 C++ Release 编译通过。
+- 正式便携版位于 `D:\Demo\Vision\dist\CVDS_Cpp_Detector2.0`，安装包位于 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector2.0_Setup_2.4.1.exe`。
+- 主程序、worker 和安装包签名状态均为 Valid；安装包 SHA256 为 `85A6BFF6FE2DAFF5AD49018ABD71FE3B33C69A7E18E63D6815EDCC1F9C950AE5`。
+- 本机 Smart App Control 不认可本地自签名证书，正式签名程序被系统策略阻止启动；未降低或修改系统安全策略。
