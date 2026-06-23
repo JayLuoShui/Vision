@@ -9,11 +9,13 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 
+#include <algorithm>
+
 VideoPipeline::VideoPipeline(Config config, QObject* parent)
     : QObject(parent), config_(std::move(config)), tracker_(0.3f, 30) {}
 
 void VideoPipeline::stop() {
-    stopRequested_.storeRelaxed(true);
+    stopRequested_.store(true);
 }
 
 bool VideoPipeline::openCapture(cv::VideoCapture* capture, QString* error) const {
@@ -28,7 +30,7 @@ bool VideoPipeline::openCapture(cv::VideoCapture* capture, QString* error) const
 }
 
 void VideoPipeline::start() {
-    stopRequested_.storeRelaxed(false);
+    stopRequested_.store(false);
     QString error;
     if (!detector_.load(config_.inference.modelPath, config_.inference.device, config_.inference.inputSize, &error)) {
         emit failed(config_.camera.cameraId, error);
@@ -67,7 +69,7 @@ void VideoPipeline::start() {
     int frameIndex = 0;
     QVector<RegionRuntimeState> lastStates;
 
-    while (!stopRequested_.loadRelaxed()) {
+    while (!stopRequested_.load()) {
         if (frame.empty()) {
             if (!capture.read(frame) || frame.empty()) break;
         }
@@ -175,8 +177,9 @@ cv::Mat VideoPipeline::drawOverlay(const cv::Mat& frame, const DetectionResults&
         if (poly.size() >= 2) cv::polylines(out, poly, true, cv::Scalar(0, 255, 255), 2);
     }
     for (const DetectionResult& det : tracks) {
-        cv::rectangle(out, det.box, cv::Scalar(0, 255, 0), 2);
-        cv::putText(out, std::to_string(det.trackId), det.box.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 0), 2);
+        const cv::Rect rect(static_cast<int>(det.box.x), static_cast<int>(det.box.y), static_cast<int>(det.box.width), static_cast<int>(det.box.height));
+        cv::rectangle(out, rect, cv::Scalar(0, 255, 0), 2);
+        cv::putText(out, std::to_string(det.trackId), rect.tl(), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(0, 255, 0), 2);
     }
     int y = 28;
     for (const RegionRuntimeState& s : states) {
