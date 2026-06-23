@@ -7,6 +7,7 @@
 #include <QThread>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -54,7 +55,7 @@ void CameraWorker::run() {
     fpsTimer.start();
 
     while (!stopped_) {
-        emit log(QString("[%1] 正在连接视频源。" ).arg(config_.cameraId));
+        emit log(QString("[%1] 正在连接视频源。").arg(config_.cameraId));
         cv::VideoCapture capture = openCapture(config_.source, config_.rtspTransport);
         if (!capture.isOpened()) {
             emitSnapshot("OFFLINE", "无法打开视频源");
