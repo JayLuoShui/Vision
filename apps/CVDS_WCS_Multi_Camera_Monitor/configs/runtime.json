@@ -1,0 +1,8 @@
+{
+  "worker_path": "scripts/gpu_infer_worker.py",
+  "output_root": "runtime/wcs_multi_camera",
+  "preview_fps": 15,
+  "class_filter_id": -1,
+  "enable_preview_before_detection": true,
+  "stop_preview_when_detection_starts": true
+}
