@@ -6,6 +6,7 @@
 #include <QImage>
 
 class QLabel;
+class QResizeEvent;
 
 class CameraTileWidget : public QFrame {
     Q_OBJECT
