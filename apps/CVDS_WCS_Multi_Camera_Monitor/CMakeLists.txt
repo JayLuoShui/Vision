@@ -45,7 +45,6 @@ add_executable(
     src/pipeline/JamDetector.cpp
     src/pipeline/ResultWriter.cpp
     src/utils/Geometry.cpp
-    src/utils/JsonlWriter.cpp
     src/utils/FpsMeter.cpp
     include/MainWindow.h
     include/InferenceManager.h
@@ -66,7 +65,6 @@ add_executable(
     src/tracking/HungarianMatcher.h
     src/tracking/Track.h
     src/utils/Geometry.h
-    src/utils/JsonlWriter.h
     src/utils/FpsMeter.h
     "${CVDS_CPP_DETECTOR_SRC}/resources.qrc"
     "${CVDS_CPP_DETECTOR_SRC}/app_icon.rc"
