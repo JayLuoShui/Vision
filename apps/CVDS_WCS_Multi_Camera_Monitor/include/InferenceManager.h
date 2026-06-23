@@ -41,6 +41,9 @@ signals:
     void failed(const QString& cameraId, const QString& error);
     void allFinished();
 
+private slots:
+    void handlePipelineFinished(const QString& cameraId);
+
 private:
     struct PipelineState {
         QThread* thread = nullptr;
