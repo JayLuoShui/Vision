@@ -38,6 +38,11 @@ add_executable(
     include/FlowEvent.h
     include/JamEvent.h
     include/WcsMessage.h
+    "${CVDS_CPP_DETECTOR_SRC}/WcsMonitorWindow.h"
+    "${CVDS_CPP_DETECTOR_SRC}/CameraTileWidget.h"
+    "${CVDS_CPP_DETECTOR_SRC}/CameraWorker.h"
+    "${CVDS_CPP_DETECTOR_SRC}/WcsInferenceManager.h"
+    "${CVDS_CPP_DETECTOR_SRC}/WcsTcpClient.h"
     "${CVDS_CPP_DETECTOR_SRC}/resources.qrc"
     "${CVDS_CPP_DETECTOR_SRC}/app_icon.rc"
     "${CVDS_CPP_DETECTOR_SRC}/RegionConfig.cpp"
