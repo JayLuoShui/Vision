@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QResizeEvent>
+#include <QSizePolicy>
 #include <QVBoxLayout>
 
 CameraTileWidget::CameraTileWidget(QWidget* parent)
