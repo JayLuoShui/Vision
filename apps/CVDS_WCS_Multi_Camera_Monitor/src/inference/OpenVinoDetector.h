@@ -8,6 +8,7 @@
 #include <opencv2/core.hpp>
 
 #include <QString>
+#include <algorithm>
 
 class OpenVinoDetector {
 public:
