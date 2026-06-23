@@ -4,6 +4,7 @@
 
 #include <QByteArray>
 #include <QJsonObject>
+#include <QMetaType>
 #include <QString>
 #include <QVector>
 
@@ -77,6 +78,8 @@ struct CameraRuntimeSnapshot {
     int insideCount = 0;
     int jamCount = 0;
 };
+
+Q_DECLARE_METATYPE(CameraRuntimeSnapshot)
 
 QByteArray multiCameraSystemConfigToJson(const MultiCameraSystemConfig& config);
 MultiCameraSystemConfig multiCameraSystemConfigFromJson(const QByteArray& jsonBytes);
