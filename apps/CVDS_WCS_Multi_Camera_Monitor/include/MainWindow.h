@@ -3,21 +3,23 @@
 #include "InferenceManager.h"
 #include "WcsTcpClient.h"
 
+#include <QCheckBox>
+#include <QComboBox>
+#include <QCoreApplication>
+#include <QGridLayout>
 #include <QHash>
+#include <QHBoxLayout>
 #include <QImage>
+#include <QLabel>
+#include <QLineEdit>
 #include <QMainWindow>
-#include <QPointer>
+#include <QPixmap>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QTextEdit>
 #include <QTimer>
-
-class QLabel;
-class QPushButton;
-class QTableWidget;
-class QTextEdit;
-class QComboBox;
-class QLineEdit;
-class QSpinBox;
-class QCheckBox;
-class QGridLayout;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -52,7 +54,6 @@ private:
     MultiCameraSystemConfig config_;
     QString configPath_;
     QString outputRoot_;
-
     QWidget* central_ = nullptr;
     QLineEdit* configEdit_ = nullptr;
     QLineEdit* modelEdit_ = nullptr;
@@ -66,11 +67,9 @@ private:
     QGridLayout* grid_ = nullptr;
     QTableWidget* cameraTable_ = nullptr;
     QTextEdit* logEdit_ = nullptr;
-
     QHash<QString, QLabel*> tiles_;
     QHash<QString, CameraRuntimeSnapshot> snapshots_;
     QHash<QString, int> rowByCamera_;
-
     InferenceManager* inference_ = nullptr;
     WcsTcpClient* wcsClient_ = nullptr;
     QTimer heartbeatTimer_;
