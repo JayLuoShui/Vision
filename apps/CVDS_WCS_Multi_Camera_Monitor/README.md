@@ -6,6 +6,14 @@ Standalone WCS-side multi-camera monitor.
 
 Only OpenVINO IR is accepted at runtime.
 
+## Output files
+
+- cvds_online_parcel_flow_monitor.mp4
+- flow_events.csv
+- jam_signals.jsonl
+- flow_summary.json
+- cvds_preview.jpg
+
 ## Build example
 
 ```powershell
