@@ -14,7 +14,12 @@ find_package(OpenCV REQUIRED COMPONENTS core imgproc videoio)
 
 set(PROJECT_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 
-set(CVDS_COMMON_SOURCES
+add_executable(
+    CVDS_Cpp_Detector
+    WIN32
+    src/main.cpp
+    src/MainWindow.cpp
+    src/MainWindow.h
     src/resources.qrc
     src/app_icon.rc
     src/RegionConfig.cpp
@@ -27,76 +32,50 @@ set(CVDS_COMMON_SOURCES
     src/WcsMessage.h
     src/WcsTcpClient.cpp
     src/WcsTcpClient.h
-    src/CameraWorker.cpp
-    src/CameraWorker.h
-    src/CameraTileWidget.cpp
-    src/CameraTileWidget.h
-    src/WcsInferenceManager.cpp
-    src/WcsInferenceManager.h
 )
 
-add_executable(
+target_link_libraries(
     CVDS_Cpp_Detector
-    WIN32
-    src/main.cpp
-    src/MainWindow.cpp
-    src/MainWindow.h
-    ${CVDS_COMMON_SOURCES}
+    PRIVATE
+        Qt6::Widgets
+        Qt6::Network
+        ${OpenCV_LIBS}
 )
 
-add_executable(
-    CVDS_WCS_Multi_Camera_Monitor
-    WIN32
-    src/wcs_main.cpp
-    src/WcsMonitorWindow.cpp
-    src/WcsMonitorWindow.h
-    ${CVDS_COMMON_SOURCES}
+add_custom_command(
+    TARGET CVDS_Cpp_Detector POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/scripts"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/runtime"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/docs"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/worker_entry.py"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/scripts/worker_entry.py"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/inspect_model_metadata.py"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/scripts/inspect_model_metadata.py"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/pt_video_flow_monitor.py"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/scripts/pt_video_flow_monitor.py"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/configs/bytetrack.yaml"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/bytetrack.yaml"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/configs/regions.example.json"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/regions.example.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/configs/cameras.wcs.example.json"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/cameras.wcs.example.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/configs/wcs.example.json"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/configs/wcs.example.json"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_ROOT}/VERSION.txt"
+            "$<TARGET_FILE_DIR:CVDS_Cpp_Detector>/VERSION.txt"
+    COMMENT "复制 CVDS 运行资源"
 )
 
-foreach(target_name IN ITEMS CVDS_Cpp_Detector CVDS_WCS_Multi_Camera_Monitor)
-    target_link_libraries(
-        ${target_name}
-        PRIVATE
-            Qt6::Widgets
-            Qt6::Network
-            ${OpenCV_LIBS}
-    )
-
-    add_custom_command(
-        TARGET ${target_name} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/scripts"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/configs"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/runtime"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${target_name}>/docs"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/scripts/worker_entry.py"
-                "$<TARGET_FILE_DIR:${target_name}>/scripts/worker_entry.py"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/scripts/inspect_model_metadata.py"
-                "$<TARGET_FILE_DIR:${target_name}>/scripts/inspect_model_metadata.py"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/scripts/pt_video_flow_monitor.py"
-                "$<TARGET_FILE_DIR:${target_name}>/scripts/pt_video_flow_monitor.py"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/configs/bytetrack.yaml"
-                "$<TARGET_FILE_DIR:${target_name}>/configs/bytetrack.yaml"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/configs/regions.example.json"
-                "$<TARGET_FILE_DIR:${target_name}>/configs/regions.example.json"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/configs/cameras.wcs.example.json"
-                "$<TARGET_FILE_DIR:${target_name}>/configs/cameras.wcs.example.json"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${CMAKE_CURRENT_SOURCE_DIR}/configs/wcs.example.json"
-                "$<TARGET_FILE_DIR:${target_name}>/configs/wcs.example.json"
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${PROJECT_ROOT}/VERSION.txt"
-                "$<TARGET_FILE_DIR:${target_name}>/VERSION.txt"
-        COMMENT "复制 CVDS 运行资源到 ${target_name}"
-    )
-endforeach()
-
-install(TARGETS CVDS_Cpp_Detector CVDS_WCS_Multi_Camera_Monitor RUNTIME DESTINATION .)
+install(TARGETS CVDS_Cpp_Detector RUNTIME DESTINATION .)
 install(
     DIRECTORY scripts
     DESTINATION .
