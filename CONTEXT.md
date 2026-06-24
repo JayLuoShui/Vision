@@ -1,5 +1,72 @@
 # 当前上下文
 
+当前正在做什么：2026-06-24 已按用户要求撤回刚才将 `apps/cvds_cpp_detector` 改成 WCS 多路系统的代码变动。
+
+上次停在哪个位置：程序入口已恢复为单路 `MainWindow`；CMake 不再编译 `WcsMonitorWindow/WcsInferenceManager/CameraTileWidget`；发布脚本不再复制 WCS configs 和 TensorRT engine 到发布包。`D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT_Fixed\CVDS_Cpp_Detector.exe` 已重新生成并签名。
+
+近期的关键决定和原因：
+- 只撤回刚才 WCS 化的改动，不做整仓库 reset，避免误伤更早的纯 C++、OpenVINO、TensorRT 改造。
+- 当前应用相关结构测试 18/18 通过，Ruff 0 个问题，C++ Release 编译、便携包生成、签名和启动冒烟通过。
+- 全量结构测试中 `apps/CVDS_WCS_Multi_Camera_Monitor` 相关 4 项仍失败，原因是该目录在当前工作区已处于删除状态，不属于本次撤回产生的问题。
+
+当前正在做什么：2026-06-24 已完成 `apps/cvds_cpp_detector` 纯 C++ 重构核查和启动速度优化。
+
+上次停在哪个位置：确认当前发布目录 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT_Fixed` 的运行端只包含 Qt6、OpenCV、OpenVINO、TensorRT 和 C++ 程序依赖；没有 Python、conda、Torch、Ultralytics、worker、`.py`、`.pt`、`.onnx` 运行端文件。源码树中仍保留历史脚本和旧文档，但它们不参与当前 CMake 构建和发布包，未做删除。
+
+近期的关键决定和原因：
+- 软件打开时不再扫描 `weights` 目录寻找默认模型；模型路径为空时，只在点击开始检测时再自动寻找默认 OpenVINO 模型，避免 GUI 启动被大模型目录拖慢。
+- 发布脚本清理旧 build/dist 目录改为失败即停止，不再静默残留旧 DLL；发布结束会强制检查并拒绝 `opencv_java`、Python、Torch、Ultralytics、worker 等运行端文件。
+- OpenCV Java DLL 已从 CMake 运行库复制和发布脚本中排除，减少无关体积和启动加载风险。
+- 2026-06-24 本次验证结果：236/236 测试通过，Ruff 0 个问题，Release 编译和便携包生成通过；`CVDS_Cpp_Detector.exe` 签名状态 Valid；热启动实测约 0.85 秒。
+
+当前正在做什么：2026-06-24 已修复 Codex/OpenCode 在 Vision 仓库里的高频磁盘写入根因之一：项目 watcher 忽略目录不完整。
+
+上次停在哪个位置：`opencode.json` 之前只忽略了 build、dist、venv、datasets、weights 等大目录，但还会继续盯 `audit/`、`archive/`、`.superpowers/`、`tools/downloads/` 以及 `apps/DWSVisionCountService/cache/` 等非源码高频变化目录，导致额外扫描和磁盘写入。
+
+近期的关键决定和原因：
+- 这次不碰模型、不碰分支，只修项目级 `opencode.json` watcher 范围；直接原因是问题出在 Codex/OpenCode 对非源码目录的持续监听，不是业务代码逻辑。
+- 新增回归测试，强制要求 `audit/**`、`archive/**`、`.superpowers/**`、`tools/downloads/**`、`apps/DWSVisionCountService/cache/**`、`apps/DWSVisionCountService/debug/**` 必须被 watcher 忽略，防止以后配置回退。
+- 2026-06-24 本次验证结果：8/8 测试通过，Ruff 0 个问题，`opencode.json` JSON 解析通过。
+
+当前正在做什么：2026-06-24 已完成 `apps/cvds_cpp_detector` 纯 C++ OpenVINO 改造收口，并新增 TensorRT GPU 真后端；随后修复 OpenVINO YOLO 分割端到端输出检测框错误。
+
+上次停在哪个位置：TensorRT 11.0.0.114 CUDA 13.2 Windows SDK 已下载安装到 `D:\tools\TensorRT-11.0.0.114`；用户环境变量已写入 `TENSORRT_ROOT=D:\tools\TensorRT-11.0.0.114` 和 `TRT_LIBPATH=D:\tools\TensorRT-11.0.0.114\lib`。修复后的 TensorRT/OpenVINO 便携包已生成到 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT_Fixed`。
+
+近期的关键决定和原因：
+- TensorRT 运行端只支持已构建好的 `.engine/.plan`，不在软件里临时转换 ONNX；原因是 TensorRT engine 与 GPU、驱动、CUDA 和 TensorRT 版本绑定，运行端加载成品 engine 最稳。
+- CMake 支持自动探测 TensorRT SDK，兼容 TensorRT 11 的 `nvinfer_11.lib` 命名，找到 CUDA 与 TensorRT 后启用 `CVDS_WITH_TENSORRT`。
+- OpenVINO 后端不再硬要求单输出，会遍历全部输出并解析可用 YOLO 检测张量，适配端到端导出的检测模型。
+- OpenVINO YOLO 分割模型读取同目录 `metadata.yaml`；发现 `end2end: true` 时按 `[x1,y1,x2,y2,score,class_id,mask...]` 解析，忽略 mask 系数，避免错误大框。
+- 视频帧叠字不再把中文区域名传给 OpenCV `cv::putText`，改用区域 ID，避免 Hershey 字体不支持中文导致问号乱码。
+- 纯 C++ 流水线已接入仓库内 C++ ByteTrack：每帧检测后调用 `tracker_.update()`，计数和堵包使用跟踪结果。
+- C++ ByteTrack 已对齐 Ultralytics 关键阈值思路：低分候选用于续跟，新轨迹阈值跟随界面置信度，第二阶段低分匹配更严格，减少漏跟和串 ID。
+- 目标框颜色已按流量 ROI 中心点状态切换：ROI 外黄色，进入/压线后绿色，离开后恢复黄色。
+- 累计包裹数量显示延迟已处理：计数仍按每帧 trackId 首次进入 ROI 计一次，看板统计 payload 改为每帧发送，图像预览保持降频发送。
+- ROI 绘制提示“当前区域”已移到画面右上角。
+- `D:\Demo\Vision\weights\yolo26s-seg-wds-1024-best.pt` 已转换为 TensorRT engine：`D:\Demo\Vision\weights\yolo26s-seg-wds-1024-best.engine`；同名 metadata 标记 `task: segment`、`end2end: true`。
+- C++ TensorRT 后端已支持多输出和 metadata 端到端解析，适配该 engine 的 `output0 [1,300,38]` 与 `output1 [1,32,256,256]`。
+- 发布脚本应使用 PowerShell 7 `pwsh` 执行；Windows PowerShell 5 会误读无 BOM UTF-8 中文字符串。
+- 225/225 测试通过，TensorRT 真后端 Release 编译通过；便携包内已包含 `nvinfer_11.dll`、`nvonnxparser_11.dll` 和 TensorRT 资源 DLL。
+- 2026-06-24 现场报 OpenVINO `Available frontends:` 为空，根因是发布目录缺少 `openvino_ir_frontend.dll`；已补齐当前目录和新验证目录，并修复打包脚本中过宽的 `d.dll` debug 过滤。
+- 2026-06-24 检测框异常已修复并重新发布；226/226 测试通过，Ruff 0 个问题，Release 编译和便携包生成通过，`CVDS_Cpp_Detector.exe` 签名状态 Valid。
+- 2026-06-24 视频叠字乱码已修复并重新发布；16/16 结构测试通过，Ruff 0 个问题，Release 编译和便携包生成通过，`CVDS_Cpp_Detector.exe` 签名状态 Valid。
+- 2026-06-24 C++ ByteTrack 已优化并重新发布；229/229 测试通过，Ruff 0 个问题，Release 编译和便携包生成通过，`CVDS_Cpp_Detector.exe` 签名状态 Valid。
+- 2026-06-24 目标框 ROI 状态色已优化并重新发布；230/230 测试通过，Ruff 0 个问题，Release 编译和便携包生成通过，`CVDS_Cpp_Detector.exe` 签名状态 Valid。
+- 2026-06-24 累计数量显示延迟、ROI 提示位置、TensorRT engine 转换和 TensorRT 多输出解析已完成；233/233 测试通过，Ruff 0 个问题，TensorRT engine 执行通过，Release 编译和便携包生成通过，`CVDS_Cpp_Detector.exe` 签名状态 Valid。
+
+当前正在做什么：2026-06-23 已按旧会话的界面方向完成 `apps/CVDS_WCS_Multi_Camera_Monitor` 的 UI 设置优化。
+
+上次停在哪个位置：WCS 主界面已从简单竖排改成左右分栏，顶部增加“展开/收起控制面板”，开始监测后自动收起左栏，右侧监控区优先放大；重新编译签名后离屏启动验证通过。
+
+近期的关键决定和原因：
+- `Geometry.cpp` 补上 `opencv2/imgproc.hpp`，修复 `cv::pointPolygonTest` 编译失败。
+- `apps/CVDS_WCS_Multi_Camera_Monitor/CMakeLists.txt` 去掉重复编译的旧 `WcsConfig/WcsMessage/WcsTcpClient` 实现，并补上 `CameraTileWidget.h`、`CameraWorker.h`，避免链接冲突和 Qt MOC 缺失。
+- `apps/CVDS_WCS_Multi_Camera_Monitor/README.md` 已补成和现状一致的 OpenVINO IR 运行约束与 WCS 信号说明，避免结构测试继续失败。
+- 当前机器不需要关闭 Smart App Control；对本次本机构建验证，只要给 exe 补有效本地代码签名即可放行。
+- `openvino.dll` 缺失的直接原因是构建后没有复制运行库；现已把 Qt、OpenVINO、TBB 和 OpenCV DLL 复制加入 `apps/CVDS_WCS_Multi_Camera_Monitor/CMakeLists.txt` 的 `POST_BUILD`，构建目录可以直接运行。
+- `apps/cvds_cpp_detector/packaging/build_release.ps1` 已补齐 Python 环境下 OpenVINO CMake 路径的识别，便携版会自动带齐 OpenVINO DLL。
+- 参考线程 `019eb0d8-adab-7693-ad64-c1dd27e12778` 中 `2.4.0` 的界面原则，WCS 界面也统一为“控制区可收起，监控区优先”的结构。
+
 当前正在做什么：2026-06-13 已完成 Vision 仓库结构整理和本机产物清理。
 
 上次停在哪个位置：延迟测试已迁入 `tools/diagnostics/llm_latency/`，各应用的文档和打包脚本已归入应用目录，历史标注源码和旧打包配置已迁入 `archive/`；旧发布包移入本地忽略的 `artifacts/`，可重建的 build、缓存、调试输出和重复验证包已删除，释放约 48GB。

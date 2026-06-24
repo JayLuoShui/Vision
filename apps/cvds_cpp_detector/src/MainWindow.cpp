@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "RuntimePaths.h"
 
+#include <openvino/openvino.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 
@@ -33,7 +34,6 @@
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QPolygon>
-#include <QProcess>
 #include <QPushButton>
 #include <QPixmap>
 #include <QResizeEvent>
@@ -92,26 +92,6 @@ QImage matToImage(const cv::Mat& bgr) {
     cv::Mat rgb;
     cv::cvtColor(bgr, rgb, cv::COLOR_BGR2RGB);
     return QImage(rgb.data, rgb.cols, rgb.rows, static_cast<int>(rgb.step), QImage::Format_RGB888).copy();
-}
-
-QStringList inspectModelArgs(const QString& modelPath) {
-    return {"inspect-model", "--model", modelPath};
-}
-
-QStringList parseClassLabelsFromJson(const QByteArray& outputBytes) {
-    const QJsonDocument document = QJsonDocument::fromJson(outputBytes);
-    if (!document.isObject()) {
-        return {};
-    }
-    const QJsonArray labelsArray = document.object().value("class_names").toArray();
-    QStringList labels;
-    for (const QJsonValue& value : labelsArray) {
-        const QString text = value.toString().trimmed();
-        if (!text.isEmpty()) {
-            labels.push_back(text);
-        }
-    }
-    return labels;
 }
 
 bool canBeRuntimeSource(const QString& source) {
@@ -200,7 +180,7 @@ cv::VideoCapture openCapture(const QString& source, const QString& rtspTransport
 
 QString findDefaultModelPath() {
     const QDir weightsDir(RuntimePaths::defaultWeightsDir());
-    const QStringList files = weightsDir.entryList({"*.pt", "*.onnx", "*.xml"}, QDir::Files, QDir::Name);
+    const QStringList files = weightsDir.entryList({"*.xml"}, QDir::Files, QDir::Name);
     if (!files.isEmpty()) {
         return weightsDir.filePath(files.first());
     }
@@ -213,6 +193,10 @@ QString findDefaultModelPath() {
         return weightsDir.filePath(directories.first());
     }
     return {};
+}
+
+QString resolveDefaultModelPath() {
+    return findDefaultModelPath();
 }
 
 bool isOutputDirWritable(const QString& outputDir, QString* errorMessage = nullptr) {
@@ -590,7 +574,7 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
     }
 
     painter.setPen(QColor("#F3F7FA"));
-    painter.drawText(imageRect.adjusted(12, 18, -12, -18), Qt::AlignLeft | Qt::AlignTop, "当前区域: " + activeRegionId_);
+    painter.drawText(imageRect.adjusted(12, 18, -12, -18), Qt::AlignRight | Qt::AlignTop, "当前区域: " + activeRegionId_);
     if (alertFlashVisible_ && !jamRegionIds_.isEmpty()) {
         painter.setPen(QPen(QColor("#F25555"), 4));
         painter.setBrush(Qt::NoBrush);
@@ -657,148 +641,6 @@ void RoiPreviewLabel::keyPressEvent(QKeyEvent* event) {
         return;
     }
     QLabel::keyPressEvent(event);
-}
-
-DetectionWorker::DetectionWorker(DetectJobConfig config)
-    : config_(std::move(config)) {}
-
-void DetectionWorker::stop() {
-    stopped_ = true;
-}
-
-void DetectionWorker::run() {
-    try {
-        if (!QFileInfo::exists(config_.workerPath)) {
-            throw std::runtime_error("缺少 worker exe");
-        }
-        if (!QFileInfo::exists(config_.modelPath)) {
-            throw std::runtime_error("模型不存在");
-        }
-        if (!QFileInfo::exists(config_.trackerPath)) {
-            throw std::runtime_error("缺少 tracker yaml");
-        }
-        if (!QFileInfo::exists(config_.regionsPath)) {
-            throw std::runtime_error("缺少 regions.json");
-        }
-        QDir().mkpath(config_.outputDir);
-        const QString previewPath = QDir(config_.outputDir).filePath("cvds_preview.jpg");
-        QStringList args = {
-            "detect",
-            "--model", config_.modelPath,
-            "--source", config_.sourcePath,
-            "--rtsp-transport", config_.rtspTransport,
-            "--output-dir", config_.outputDir,
-            "--preview-path", previewPath,
-            "--regions", config_.regionsPath,
-            "--conf", QString::number(config_.confidence, 'f', 3),
-            "--iou", QString::number(config_.iou, 'f', 3),
-            "--imgsz", QString::number(config_.inputSize),
-            "--device", config_.device,
-            "--class-id", QString::number(config_.classFilterId),
-            "--preview-fps", QString::number(config_.previewFps),
-            "--jam-seconds", QString::number(config_.jamSeconds),
-            "--jam-signal-path", config_.jamSignalPath,
-            "--tracker", config_.trackerPath
-        };
-        if (!config_.detectRoiText.trimmed().isEmpty()) {
-            args << "--detect-roi" << config_.detectRoiText.trimmed();
-        }
-
-        emit log("程序版本：" + RuntimePaths::versionText());
-        emit log("worker：" + QFileInfo(config_.workerPath).fileName());
-        emit log("模型：" + QFileInfo(config_.modelPath).fileName());
-        emit log("输出目录：已配置");
-        emit log("区域配置：" + QFileInfo(config_.regionsPath).fileName());
-        emit log("检测模式：通过统一 worker 执行 PT / ONNX / OpenVINO 推理。");
-        emit log("请求推理设备：" + config_.device);
-        emit log("堵包信号文件：" + QFileInfo(config_.jamSignalPath).fileName());
-        QProcess process;
-        process.setProcessChannelMode(QProcess::MergedChannels);
-        process.start(config_.workerPath, args);
-        if (!process.waitForStarted(5000)) {
-            throw std::runtime_error("检测进程启动失败");
-        }
-
-        QByteArray buffer;
-        QString doneSummary;
-        QString errorMessage;
-        auto consumeLines = [&]() {
-            while (true) {
-                const int newlineIndex = buffer.indexOf('\n');
-                if (newlineIndex < 0) {
-                    break;
-                }
-                const QByteArray rawLine = buffer.left(newlineIndex).trimmed();
-                buffer.remove(0, newlineIndex + 1);
-                if (rawLine.isEmpty()) {
-                    continue;
-                }
-                QJsonParseError parseError;
-                const QJsonDocument document = QJsonDocument::fromJson(rawLine, &parseError);
-                if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-                    emit log(QString::fromUtf8(rawLine));
-                    continue;
-                }
-                const QJsonObject object = document.object();
-                const QString type = object.value("type").toString();
-                if (type == "status") {
-                    QString message = object.value("message").toString();
-                    if (object.contains("device")) {
-                        message += "，实际推理设备：" + object.value("device").toString();
-                    }
-                    emit log(message);
-                } else if (type == "frame") {
-                    const QString path = object.value("preview_path").toString();
-                    const QImage image(path);
-                    if (!image.isNull()) {
-                        emit frameReady(image);
-                    }
-                    emit dashboardPayloadReady(rawLine);
-                } else if (type == "jam" || type == "jam_clear" || type == "done") {
-                    emit dashboardPayloadReady(rawLine);
-                    if (type == "done") {
-                        const int totalCount = object.value("total_count").toInt(object.value("flow_count").toInt());
-                        doneSummary = QString("视频检测完成：总帧 %1，累计 %2，堵包 %3 次，最大同时在区域内 %4。输出：%5")
-                            .arg(object.value("frames").toInt())
-                            .arg(totalCount)
-                            .arg(object.value("jam_count").toInt())
-                            .arg(object.value("max_inside_count").toInt())
-                            .arg(object.value("output_video").toString());
-                    }
-                } else if (type == "error") {
-                    errorMessage = object.value("message").toString();
-                    emit log("检测错误：" + errorMessage);
-                } else {
-                    emit log(QString::fromUtf8(rawLine));
-                }
-            }
-        };
-
-        while (process.state() != QProcess::NotRunning) {
-            if (stopped_) {
-                process.kill();
-                process.waitForFinished(3000);
-                emit done("视频检测已停止。");
-                return;
-            }
-            process.waitForReadyRead(100);
-            buffer += process.readAllStandardOutput();
-            consumeLines();
-        }
-        buffer += process.readAllStandardOutput();
-        if (!buffer.trimmed().isEmpty()) {
-            buffer += '\n';
-            consumeLines();
-        }
-
-        if (process.exitCode() != 0) {
-            emit failed(errorMessage.isEmpty() ? "检测进程异常退出，请查看日志。" : errorMessage);
-            return;
-        }
-        emit done(doneSummary.isEmpty() ? "视频检测完成。" : doneSummary);
-    } catch (const std::exception& ex) {
-        emit failed(QString::fromUtf8(ex.what()));
-    }
 }
 
 VideoPreviewWorker::VideoPreviewWorker(QString source, QString rtspTransport)
@@ -1207,7 +1049,7 @@ MainWindow::MainWindow(QWidget* parent)
     });
 
     appendLog("已启动 CVDS 在线包裹流量监测，版本：" + RuntimePaths::versionText());
-    appendLog("worker 已就绪：cvds_detector_worker.exe");
+    appendLog("纯 C++ OpenVINO Runtime 推理引擎已就绪。");
     populateClassCombo({});
     loadSettings();
     regions_.clear();
@@ -1229,19 +1071,9 @@ MainWindow::~MainWindow() {
         previewThread_->wait();
     }
     stopDetection();
-    if (modelInspectProcess_ != nullptr && modelInspectProcess_->state() != QProcess::NotRunning) {
-        modelInspectProcess_->disconnect(this);
-        modelInspectProcess_->kill();
-        modelInspectProcess_->waitForFinished(3000);
-    }
-    if (streamProbeProcess_ != nullptr && streamProbeProcess_->state() != QProcess::NotRunning) {
-        streamProbeProcess_->disconnect(this);
-        streamProbeProcess_->kill();
-        streamProbeProcess_->waitForFinished(3000);
-    }
-    if (workerThread_ != nullptr) {
-        workerThread_->quit();
-        workerThread_->wait();
+    if (pipelineThread_ != nullptr) {
+        pipelineThread_->quit();
+        pipelineThread_->wait();
     }
 }
 
@@ -1483,7 +1315,7 @@ QWidget* MainWindow::buildParamPanel() {
     auto* form = new QFormLayout(box);
     modelEdit_ = new QLineEdit(box);
     modelEdit_->setReadOnly(true);
-    setPrivatePath(modelEdit_, findDefaultModelPath());
+    setPrivatePath(modelEdit_, {});
     auto* modelButtons = new QWidget(box);
     auto* modelButtonLayout = new QHBoxLayout(modelButtons);
     modelButtonLayout->setContentsMargins(0, 0, 0, 0);
@@ -1495,12 +1327,15 @@ QWidget* MainWindow::buildParamPanel() {
     modelButtonLayout->addWidget(openVinoButton);
     classCombo_ = new ScrollSafeComboBox(box);
     classCombo_->addItem("全部类别", -1);
+    backendCombo_ = new ScrollSafeComboBox(box);
+    backendCombo_->addItem("OpenVINO", "openvino");
+    backendCombo_->addItem("TensorRT", "tensorrt");
     deviceCombo_ = new ScrollSafeComboBox(box);
-    deviceCombo_->addItem("自动", "auto");
-    deviceCombo_->addItem("CPU", "cpu");
-    deviceCombo_->addItem("NVIDIA GPU", "0");
-    deviceCombo_->addItem("Intel GPU", "intel:gpu");
-    deviceCombo_->addItem("Intel NPU", "intel:npu");
+    deviceCombo_->addItem("AUTO", "AUTO");
+    deviceCombo_->addItem("CPU", "CPU");
+    deviceCombo_->addItem("GPU", "GPU");
+    deviceCombo_->addItem("NPU", "NPU");
+    deviceCombo_->addItem("CUDA", "CUDA");
     inputSizeSpin_ = new ScrollSafeSpinBox(box);
     inputSizeSpin_->setRange(160, 1536);
     inputSizeSpin_->setSingleStep(32);
@@ -1520,6 +1355,7 @@ QWidget* MainWindow::buildParamPanel() {
 
     form->addRow("视觉模型", modelEdit_);
     form->addRow("选择方式", modelButtons);
+    form->addRow("推理后端", backendCombo_);
     form->addRow("类别", classCombo_);
     form->addRow("执行设备", deviceCombo_);
     form->addRow("输入尺寸", inputSizeSpin_);
@@ -1797,8 +1633,8 @@ QString MainWindow::buildHikvisionRtsp() const {
 
 void MainWindow::loadSettings() {
     QSettings settings;
-    const QString savedModel = settings.value("lastModelPath", privatePath(modelEdit_)).toString();
-    setPrivatePath(modelEdit_, QFileInfo::exists(savedModel) ? savedModel : findDefaultModelPath());
+    const QString savedModel = settings.value("lastModelPath").toString();
+    setPrivatePath(modelEdit_, QFileInfo::exists(savedModel) ? savedModel : QString());
     setPrivatePath(
         sourceEdit_,
         sourcePathForSettings(settings.value("lastSourcePath", privatePath(sourceEdit_)).toString())
@@ -1824,6 +1660,9 @@ void MainWindow::loadSettings() {
     videoFpsSpin_->setValue(settings.value("previewFps", videoFpsSpin_->value()).toInt());
     confidenceSpin_->setValue(settings.value("confidence", confidenceSpin_->value()).toDouble());
     iouSpin_->setValue(settings.value("iou", iouSpin_->value()).toDouble());
+    const QString savedBackend = settings.value("inferenceBackend", "openvino").toString();
+    const int backendIndex = backendCombo_->findData(savedBackend);
+    backendCombo_->setCurrentIndex(backendIndex >= 0 ? backendIndex : 0);
     const QString savedDevice = settings.value("deviceMode", "auto").toString();
     const int deviceIndex = deviceCombo_->findData(savedDevice);
     deviceCombo_->setCurrentIndex(deviceIndex >= 0 ? deviceIndex : 0);
@@ -1847,6 +1686,7 @@ void MainWindow::saveSettings() const {
     settings.setValue("previewFps", videoFpsSpin_->value());
     settings.setValue("confidence", confidenceSpin_->value());
     settings.setValue("iou", iouSpin_->value());
+    settings.setValue("inferenceBackend", backendCombo_->currentData().toString());
     settings.setValue("deviceMode", deviceCombo_->currentData().toString());
 }
 
@@ -2003,7 +1843,7 @@ void MainWindow::refreshRegionTable() {
             state.name = region.name;
         }
 
-        const QString statusText = regionStatusText(state, workerThread_ != nullptr);
+        const QString statusText = regionStatusText(state, pipelineThread_ != nullptr);
         const QString regionText = region.id == totalCountRegionId_
             ? region.name + "（主统计区域）"
             : region.name;
@@ -2051,7 +1891,7 @@ void MainWindow::refreshRegionTable() {
                 "background:#35191C;border:1px solid #8D343C;border-radius:3px;"
                 "padding:3px 8px;color:#F25555;font-size:10px;font-weight:600;"
             );
-        } else if (workerThread_ != nullptr) {
+        } else if (pipelineThread_ != nullptr) {
             systemStatusLabel_->setText("●  正在监测");
             systemStatusLabel_->setStyleSheet(
                 "background:#10251F;border:1px solid #245B47;border-radius:3px;"
@@ -2103,11 +1943,13 @@ void MainWindow::updateDetectRoiFromEditor() {
 }
 
 void MainWindow::browseModel() {
+    const bool tensorRt = backendCombo_ != nullptr
+        && backendCombo_->currentData().toString().compare("tensorrt", Qt::CaseInsensitive) == 0;
     const QString path = QFileDialog::getOpenFileName(
         this,
         "选择视觉模型",
         privatePath(modelEdit_),
-        "视觉模型 (*.pt *.onnx *.xml)"
+        tensorRt ? "TensorRT Engine (*.engine *.plan)" : "OpenVINO IR (*.xml)"
     );
     if (!path.isEmpty()) {
         setPrivatePath(modelEdit_, path, true);
@@ -2164,53 +2006,8 @@ void MainWindow::testVideoStream() {
         QMessageBox::warning(this, "缺少海康地址", "请先填写海康设备 IP 地址。");
         return;
     }
-    if (streamProbeProcess_ != nullptr && streamProbeProcess_->state() != QProcess::NotRunning) {
-        QMessageBox::information(this, "正在测试", "视频流连接测试正在进行。");
-        return;
-    }
-
     applyHikvisionStream();
-    auto* process = new QProcess(this);
-    streamProbeProcess_ = process;
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this, [this, process](
-        int exitCode,
-        QProcess::ExitStatus
-    ) {
-        const QByteArray output = process->readAllStandardOutput().trimmed();
-        streamProbeProcess_ = nullptr;
-        process->deleteLater();
-        if (exitCode == 0) {
-            appendLog("视频流连接测试通过。");
-            QMessageBox::information(this, "连接成功", "海康视频流可以正常读取。");
-        } else {
-            QString message = "海康视频流连接失败。";
-            const QList<QByteArray> lines = output.split('\n');
-            if (!lines.isEmpty()) {
-                const QJsonDocument document = QJsonDocument::fromJson(lines.last().trimmed());
-                if (document.isObject()) {
-                    message = document.object().value("message").toString(message);
-                }
-            }
-            appendLog(message);
-            QMessageBox::warning(this, "连接失败", message);
-        }
-    });
-    process->start(
-        RuntimePaths::workerExePath(),
-        {
-            "probe-source",
-            "--source", buildHikvisionRtsp(),
-            "--rtsp-transport", hikTransportCombo_->currentData().toString()
-        }
-    );
-    if (!process->waitForStarted(3000)) {
-        streamProbeProcess_ = nullptr;
-        process->deleteLater();
-        QMessageBox::critical(this, "连接测试失败", "无法启动视频流测试进程。");
-        return;
-    }
-    appendLog("正在测试海康视频流连接。");
+    appendLog("正在通过实时预览测试海康视频流，连接失败会在运行日志中明确显示。");
 }
 
 void MainWindow::browseOutput() {
@@ -2315,40 +2112,41 @@ void MainWindow::loadRegionConfig() {
     }
 }
 
-DetectJobConfig MainWindow::currentDetectConfig() const {
-    const QString outputDir = privatePath(outputEdit_);
-    return {
-        privatePath(modelEdit_),
-        privatePath(sourceEdit_),
-        hikTransportCombo_->currentData().toString(),
-        outputDir,
-        RuntimePaths::workerExePath(),
-        RuntimePaths::trackerConfigPath(),
-        QDir(outputDir).filePath("regions.json"),
-        detectRoiEdit_->text().trimmed(),
-        QDir(outputDir).filePath("jam_signals.jsonl"),
-        loadedLabels_,
-        classCombo_->currentData().toInt(),
-        inputSizeSpin_->value(),
-        confidenceSpin_->value(),
-        iouSpin_->value(),
-        deviceCombo_->currentData().toString(),
-        videoFpsSpin_->value(),
-        jamSecondsSpin_->value()
-    };
+VideoPipeline::Config MainWindow::currentDetectConfig() const {
+    VideoPipeline::Config config;
+    config.modelPath = privatePath(modelEdit_);
+    config.sourcePath = privatePath(sourceEdit_);
+    config.rtspTransport = hikTransportCombo_->currentData().toString();
+    config.outputDir = privatePath(outputEdit_);
+    config.regions = buildRegionConfigDocument();
+    config.detectRoi = polygonFromText(detectRoiEdit_->text(), "检测区域", true);
+    config.labels = loadedLabels_;
+    config.backend = inferenceBackendFromString(backendCombo_->currentData().toString());
+    config.classFilterId = classCombo_->currentData().toInt();
+    config.inputSize = inputSizeSpin_->value();
+    config.confidence = confidenceSpin_->value();
+    config.iou = iouSpin_->value();
+    config.device = deviceCombo_->currentData().toString();
+    config.previewFps = videoFpsSpin_->value();
+    config.lowSpeedThreshold = 12.0;
+    return config;
 }
 
 void MainWindow::startDetection() {
-    if (workerThread_ != nullptr) {
+    if (pipelineThread_ != nullptr) {
         QMessageBox::information(this, "任务运行中", "检测正在运行。");
         return;
     }
-    if (!QFileInfo::exists(RuntimePaths::workerExePath())) {
-        QMessageBox::critical(this, "缺少 worker exe", "未找到安装目录 runtime 下的 worker exe。");
-        return;
+    if (privatePath(modelEdit_).trimmed().isEmpty()) {
+        const QString defaultModelPath = resolveDefaultModelPath();
+        if (!defaultModelPath.isEmpty()) {
+            setPrivatePath(modelEdit_, defaultModelPath);
+            appendLog("已自动选择默认模型：" + QFileInfo(defaultModelPath).fileName());
+        }
     }
     if (!QFileInfo::exists(privatePath(modelEdit_))) {
-        QMessageBox::warning(this, "缺少模型", "请先在推理参数中选择 PT、ONNX 或 OpenVINO 模型。");
+        const QString backendName = backendCombo_ == nullptr ? "OpenVINO" : backendCombo_->currentText();
+        QMessageBox::warning(this, "缺少模型", "请先选择 " + backendName + " 模型文件或模型目录。");
         return;
     }
     if (privatePath(sourceEdit_).isEmpty()) {
@@ -2359,21 +2157,11 @@ void MainWindow::startDetection() {
         QMessageBox::warning(this, "视频源不存在", "当前视频源不是本地文件、摄像头编号或网络流。");
         return;
     }
-    if (!QFileInfo::exists(RuntimePaths::trackerConfigPath())) {
-        QMessageBox::critical(this, "缺少 tracker yaml", "未找到随程序发布的 ByteTrack tracker yaml。");
-        return;
-    }
     QString outputError;
     if (!isOutputDirWritable(privatePath(outputEdit_), &outputError)) {
         QMessageBox::warning(this, "输出目录不可写", outputError);
         return;
     }
-    const QString modelPath = privatePath(modelEdit_);
-    if (loadedModelPath_ != modelPath || loadedLabels_.isEmpty()) {
-        beginModelMetadataRefresh(true);
-        return;
-    }
-
     if (previewThread_ != nullptr) {
         startDetectionAfterPreviewStops_ = true;
         stopVideoPreview();
@@ -2401,30 +2189,30 @@ void MainWindow::startDetection() {
     dashboardStatusText_ = "启动中";
     refreshRegionTable();
 
-    workerThread_ = new QThread(this);
+    pipelineThread_ = new QThread(this);
     refreshRegionTable();
-    worker_ = new DetectionWorker(currentDetectConfig());
-    worker_->moveToThread(workerThread_);
-    connect(workerThread_, &QThread::started, worker_, &DetectionWorker::run);
-    connect(worker_, &DetectionWorker::frameReady, this, &MainWindow::showFrame);
-    connect(worker_, &DetectionWorker::dashboardPayloadReady, this, &MainWindow::updateDashboard);
-    connect(worker_, &DetectionWorker::log, this, &MainWindow::appendLog);
-    connect(worker_, &DetectionWorker::done, this, &MainWindow::detectionFinished);
-    connect(worker_, &DetectionWorker::failed, this, &MainWindow::detectionFailed);
-    connect(worker_, &DetectionWorker::done, workerThread_, &QThread::quit);
-    connect(worker_, &DetectionWorker::failed, workerThread_, &QThread::quit);
-    connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
-    connect(workerThread_, &QThread::finished, this, &MainWindow::cleanupWorker);
+    pipeline_ = new VideoPipeline(currentDetectConfig());
+    pipeline_->moveToThread(pipelineThread_);
+    connect(pipelineThread_, &QThread::started, pipeline_, &VideoPipeline::start);
+    connect(pipeline_, &VideoPipeline::frameReady, this, &MainWindow::showFrame);
+    connect(pipeline_, &VideoPipeline::dashboardPayloadReady, this, &MainWindow::updateDashboard);
+    connect(pipeline_, &VideoPipeline::log, this, &MainWindow::appendLog);
+    connect(pipeline_, &VideoPipeline::done, this, &MainWindow::detectionFinished);
+    connect(pipeline_, &VideoPipeline::failed, this, &MainWindow::detectionFailed);
+    connect(pipeline_, &VideoPipeline::done, pipelineThread_, &QThread::quit);
+    connect(pipeline_, &VideoPipeline::failed, pipelineThread_, &QThread::quit);
+    connect(pipelineThread_, &QThread::finished, pipeline_, &QObject::deleteLater);
+    connect(pipelineThread_, &QThread::finished, this, &MainWindow::cleanupWorker);
     startButton_->setEnabled(false);
     stopButton_->setEnabled(true);
     setConfigurationEditingEnabled(false);
     setSettingsPanelCollapsed(true);
-    workerThread_->start();
+    pipelineThread_->start();
 }
 
 void MainWindow::stopDetection() {
-    if (worker_ != nullptr) {
-        QMetaObject::invokeMethod(worker_, "stop", Qt::DirectConnection);
+    if (pipeline_ != nullptr) {
+        QMetaObject::invokeMethod(pipeline_, "stop", Qt::DirectConnection);
     }
 }
 
@@ -2594,195 +2382,40 @@ void MainWindow::appendLog(const QString& message) {
 }
 
 void MainWindow::refreshModelMetadata() {
-    beginModelMetadataRefresh(false);
-}
-
-void MainWindow::beginModelMetadataRefresh(bool startDetectionAfterSuccess) {
     const QString modelPath = privatePath(modelEdit_);
-    if (!QFileInfo::exists(RuntimePaths::workerExePath()) || !QFileInfo::exists(modelPath)) {
-        if (modelInspectProcess_ != nullptr) {
-            modelInspectProcess_->disconnect(this);
-            if (modelInspectProcess_->state() != QProcess::NotRunning) {
-                modelInspectProcess_->kill();
-            }
-            modelInspectProcess_->deleteLater();
-            modelInspectProcess_ = nullptr;
-            modelInspectPath_.clear();
-            startDetectionAfterModelInspect_ = false;
-            modelInspectTimedOut_ = false;
-            startButton_->setEnabled(workerThread_ == nullptr);
-        }
+    if (!QFileInfo::exists(modelPath)) {
         loadedLabels_.clear();
         loadedModelPath_.clear();
         populateClassCombo({});
-        if (startDetectionAfterSuccess) {
-            QMessageBox::warning(this, "模型读取失败", "未找到模型文件或 worker exe，检测未启动。");
-        }
         return;
     }
-    if (loadedModelPath_ == modelPath && !loadedLabels_.isEmpty()) {
-        if (startDetectionAfterSuccess) {
-            QTimer::singleShot(0, this, &MainWindow::startDetection);
-        }
-        return;
-    }
-
-    if (modelInspectProcess_ != nullptr) {
-        if (modelInspectProcess_->state() != QProcess::NotRunning && modelInspectPath_ == modelPath) {
-            startDetectionAfterModelInspect_ =
-                startDetectionAfterModelInspect_ || startDetectionAfterSuccess;
-            if (startDetectionAfterModelInspect_) {
-                startButton_->setEnabled(false);
-            }
-            return;
-        }
-        modelInspectProcess_->disconnect(this);
-        if (modelInspectProcess_->state() != QProcess::NotRunning) {
-            modelInspectProcess_->kill();
-        }
-        modelInspectProcess_->deleteLater();
-        modelInspectProcess_ = nullptr;
-        startButton_->setEnabled(workerThread_ == nullptr);
-    }
-
-    modelInspectPath_ = modelPath;
-    startDetectionAfterModelInspect_ = startDetectionAfterSuccess;
-    modelInspectTimedOut_ = false;
-    if (startDetectionAfterModelInspect_) {
-        startButton_->setEnabled(false);
-    }
-    appendLog("正在读取模型类别：" + QFileInfo(modelPath).fileName());
-
-    auto* process = new QProcess(this);
-    modelInspectProcess_ = process;
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
-        if (error == QProcess::FailedToStart) {
-            finishModelMetadataRefresh(process, "worker 进程启动失败。");
-        }
-    });
-    connect(
-        process,
-        qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
-        this,
-        [this, process](int exitCode, QProcess::ExitStatus exitStatus) {
-            QString failure;
-            if (modelInspectTimedOut_) {
-                failure = "worker 进程 30 秒内未完成。";
-            } else if (exitStatus != QProcess::NormalExit || exitCode != 0) {
-                failure = QString::fromUtf8(process->readAllStandardOutput()).trimmed();
-                if (failure.isEmpty()) {
-                    failure = QString("worker 异常退出，代码 %1。").arg(exitCode);
-                }
-            }
-            finishModelMetadataRefresh(process, failure);
-        }
-    );
-    process->start(RuntimePaths::workerExePath(), inspectModelArgs(modelPath));
-    QTimer::singleShot(30000, this, [this, process]() {
-        if (modelInspectProcess_ == process && process->state() != QProcess::NotRunning) {
-            modelInspectTimedOut_ = true;
-            process->kill();
-        }
-    });
-}
-
-void MainWindow::finishModelMetadataRefresh(QProcess* process, const QString& failure) {
-    if (process == nullptr || process != modelInspectProcess_) {
-        return;
-    }
-
-    const bool startAfterSuccess = startDetectionAfterModelInspect_;
-    const QString modelPath = modelInspectPath_;
-    const QByteArray output = process->readAllStandardOutput();
-    modelInspectProcess_ = nullptr;
-    modelInspectPath_.clear();
-    startDetectionAfterModelInspect_ = false;
-    modelInspectTimedOut_ = false;
-    process->deleteLater();
-
-    QString error = failure.trimmed();
-    const QStringList labels = error.isEmpty() ? parseClassLabelsFromJson(output) : QStringList{};
-    if (error.isEmpty() && labels.isEmpty()) {
-        error = "worker 未返回有效的模型类别。";
-    }
-    if (!error.isEmpty()) {
-        appendLog("模型类别读取失败：" + error);
-        loadedLabels_.clear();
-        loadedModelPath_.clear();
-        populateClassCombo({});
-        startButton_->setEnabled(workerThread_ == nullptr);
-        if (startAfterSuccess) {
-            QMessageBox::warning(this, "模型读取失败", error + "\n检测未启动。");
-        }
-        return;
-    }
-
-    loadedLabels_ = labels;
     loadedModelPath_ = modelPath;
-    populateClassCombo(loadedLabels_);
-    appendLog("已读取模型类别：" + loadedLabels_.join(", "));
-    startButton_->setEnabled(workerThread_ == nullptr);
-    if (startAfterSuccess) {
-        QTimer::singleShot(0, this, &MainWindow::startDetection);
-    }
+    loadedLabels_.clear();
+    populateClassCombo({});
+    const QString backendName = backendCombo_ == nullptr ? "OpenVINO" : backendCombo_->currentText();
+    appendLog("已选择 " + backendName + " 模型：" + QFileInfo(modelPath).fileName());
 }
 
 void MainWindow::runEnvironmentDiagnose() {
-    if (!QFileInfo::exists(RuntimePaths::workerExePath())) {
-        appendLog("环境自检失败：缺少 cvds_detector_worker.exe。");
-        QMessageBox::critical(this, "环境自检失败", "未找到安装目录 runtime 下的 worker exe。");
-        return;
-    }
-
-    QProcess process;
-    process.setProcessChannelMode(QProcess::MergedChannels);
-    process.start(RuntimePaths::workerExePath(), {"diagnose"});
-    if (!process.waitForStarted(5000)) {
-        appendLog("环境自检失败：worker 进程启动失败。");
-        return;
-    }
-    if (!process.waitForFinished(30000)) {
-        process.kill();
-        process.waitForFinished(3000);
-        appendLog("环境自检失败：worker 进程 30 秒内未完成。");
-        return;
-    }
-    const QByteArray output = process.readAllStandardOutput();
-    QJsonParseError parseError;
-    const QJsonDocument document = QJsonDocument::fromJson(output.trimmed(), &parseError);
-    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
-        appendLog("环境自检失败：" + QString::fromUtf8(output).trimmed());
-        return;
-    }
-
-    const QJsonObject object = document.object();
-    appendLog("环境自检：Python 运行时 " + QString(object.value("python_runtime").toBool() ? "正常" : "异常"));
-    appendLog("环境自检：Torch " + QString(object.value("torch_available").toBool() ? "可用" : "不可用"));
-    if (!object.value("torch_version").toString().isEmpty()) {
-        appendLog("环境自检：Torch 版本 " + object.value("torch_version").toString());
-    }
-    appendLog("环境自检：Torch CUDA 版本 " + QString(object.value("torch_cuda_version").toString().isEmpty() ? "未启用" : object.value("torch_cuda_version").toString()));
-    appendLog("环境自检：Ultralytics " + QString(object.value("ultralytics_available").toBool() ? "可用" : "不可用"));
-    appendLog("环境自检：OpenCV " + QString(object.value("opencv_available").toBool() ? "可用" : "不可用"));
-    appendLog("环境自检：ONNX Runtime " + QString(object.value("onnxruntime_available").toBool() ? "可用" : "不可用"));
-    appendLog("环境自检：OpenVINO " + QString(object.value("openvino_available").toBool() ? "可用" : "不可用"));
-    const bool nvidiaAvailable = object.value("nvidia_driver_available").toBool();
-    const QString nvidiaName = object.value("nvidia_gpu_name").toString();
-    const QString nvidiaDriver = object.value("nvidia_driver_version").toString();
-    appendLog("环境自检：NVIDIA 驱动/GPU " + QString(nvidiaAvailable ? "可见" : "不可见"));
-    if (nvidiaAvailable) {
-        appendLog("环境自检：NVIDIA 设备 " + nvidiaName + "，驱动 " + nvidiaDriver);
-    }
-    appendLog("环境自检：CUDA " + QString(object.value("cuda_available").toBool() ? "可用" : "不可用"));
-    appendLog("环境自检：推荐设备 " + object.value("recommend_device").toString());
-    const QString cudaIssue = object.value("cuda_issue").toString();
-    if (!cudaIssue.isEmpty()) {
-        appendLog("环境自检：" + cudaIssue);
-    }
-    const QJsonArray errors = object.value("errors").toArray();
-    for (const QJsonValue& value : errors) {
-        appendLog("环境自检错误：" + value.toString());
+    try {
+        ov::Core core;
+        const std::vector<std::string> devices = core.get_available_devices();
+        QStringList names;
+        for (const std::string& device : devices) {
+            names.push_back(QString::fromStdString(device));
+        }
+        appendLog("环境自检：OpenVINO Runtime 正常。");
+        appendLog("环境自检：可用设备 " + (names.isEmpty() ? QStringLiteral("CPU") : names.join(", ")));
+#ifdef CVDS_WITH_TENSORRT
+        appendLog("环境自检：TensorRT Runtime 已随程序编译启用，可加载 .engine/.plan。");
+#else
+        appendLog("环境自检：TensorRT Runtime 未随程序编译启用。");
+#endif
+        appendLog("环境自检：OpenCV 视频和图像模块已链接。");
+    } catch (const std::exception& ex) {
+        const QString error = QString::fromUtf8(ex.what());
+        appendLog("环境自检失败：" + error);
+        QMessageBox::critical(this, "环境自检失败", error);
     }
 }
 
@@ -2801,10 +2434,10 @@ void MainWindow::detectionFailed(const QString& error) {
 }
 
 void MainWindow::cleanupWorker() {
-    worker_ = nullptr;
-    if (workerThread_ != nullptr) {
-        workerThread_->deleteLater();
-        workerThread_ = nullptr;
+    pipeline_ = nullptr;
+    if (pipelineThread_ != nullptr) {
+        pipelineThread_->deleteLater();
+        pipelineThread_ = nullptr;
     }
     startButton_->setEnabled(true);
     stopButton_->setEnabled(false);

@@ -111,3 +111,19 @@ def test_training_defaults_use_pretrained_weight_directory() -> None:
     ]
 
     assert not missing
+
+
+def test_opencode_watcher_ignores_high_churn_non_source_directories() -> None:
+    config_text = (ROOT / "opencode.json").read_text(encoding="utf-8")
+    required_patterns = [
+        "audit/**",
+        "archive/**",
+        ".superpowers/**",
+        "tools/downloads/**",
+        "apps/DWSVisionCountService/cache/**",
+        "apps/DWSVisionCountService/debug/**",
+    ]
+
+    missing = [pattern for pattern in required_patterns if pattern not in config_text]
+
+    assert not missing

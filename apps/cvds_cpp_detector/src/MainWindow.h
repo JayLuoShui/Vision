@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RegionConfig.h"
+#include "pipeline/VideoPipeline.h"
 
 #include <QByteArray>
 #include <QImage>
@@ -24,7 +25,6 @@ class QLineEdit;
 class QMouseEvent;
 class QPaintEvent;
 class QPlainTextEdit;
-class QProcess;
 class QPushButton;
 class QResizeEvent;
 class QSpinBox;
@@ -99,48 +99,6 @@ private:
     bool hasDraftCursor_ = false;
 };
 
-struct DetectJobConfig {
-    QString modelPath;
-    QString sourcePath;
-    QString rtspTransport = "tcp";
-    QString outputDir;
-    QString workerPath;
-    QString trackerPath;
-    QString regionsPath;
-    QString detectRoiText;
-    QString jamSignalPath;
-    QStringList labels;
-    int classFilterId = -1;
-    int inputSize = 960;
-    double confidence = 0.25;
-    double iou = 0.45;
-    QString device = "0";
-    int previewFps = 60;
-    int jamSeconds = 5;
-};
-
-class DetectionWorker : public QObject {
-    Q_OBJECT
-
-public:
-    explicit DetectionWorker(DetectJobConfig config);
-
-public slots:
-    void run();
-    void stop();
-
-signals:
-    void frameReady(const QImage& image);
-    void dashboardPayloadReady(const QByteArray& payload);
-    void log(const QString& message);
-    void done(const QString& summary);
-    void failed(const QString& error);
-
-private:
-    DetectJobConfig config_;
-    std::atomic_bool stopped_ = false;
-};
-
 class VideoPreviewWorker : public QObject {
     Q_OBJECT
 
@@ -212,13 +170,11 @@ private:
     void launchPendingVideoPreview();
     void stopVideoPreview();
     void refreshRuntimeOverview();
-    DetectJobConfig currentDetectConfig() const;
+    VideoPipeline::Config currentDetectConfig() const;
     QString buildHikvisionRtsp() const;
     void loadSettings();
     void saveSettings() const;
     void populateClassCombo(const QStringList& labels);
-    void beginModelMetadataRefresh(bool startDetectionAfterSuccess);
-    void finishModelMetadataRefresh(QProcess* process, const QString& failure);
     void setRoiDrawMode(RoiPreviewLabel::DrawMode mode);
     void ensureDefaultRegion();
     void refreshRegionSelectors();
@@ -247,6 +203,7 @@ private:
     QComboBox* regionCombo_ = nullptr;
     QComboBox* totalCountRegionCombo_ = nullptr;
     QComboBox* classCombo_ = nullptr;
+    QComboBox* backendCombo_ = nullptr;
     QComboBox* deviceCombo_ = nullptr;
     QComboBox* sourceModeCombo_ = nullptr;
     QComboBox* hikStreamCombo_ = nullptr;
@@ -296,11 +253,6 @@ private:
 
     QStringList loadedLabels_;
     QString loadedModelPath_;
-    QString modelInspectPath_;
-    QProcess* modelInspectProcess_ = nullptr;
-    QProcess* streamProbeProcess_ = nullptr;
-    bool startDetectionAfterModelInspect_ = false;
-    bool modelInspectTimedOut_ = false;
     QVector<RegionConfig> regions_;
     QVector<RegionRuntimeState> regionRuntimeStates_;
     QString totalCountRegionId_;
@@ -318,6 +270,6 @@ private:
     QString pendingPreviewTransport_;
     QThread* previewThread_ = nullptr;
     VideoPreviewWorker* previewWorker_ = nullptr;
-    QThread* workerThread_ = nullptr;
-    DetectionWorker* worker_ = nullptr;
+    QThread* pipelineThread_ = nullptr;
+    VideoPipeline* pipeline_ = nullptr;
 };

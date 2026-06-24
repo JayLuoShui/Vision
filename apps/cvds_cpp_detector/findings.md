@@ -1,5 +1,20 @@
 # 发现
 
+- 当前发布包已是纯 C++ 运行端；核查重点应看最终 `dist` 目录和 CMake 构建列表，而不是源码树里未参与构建的历史脚本。
+- GUI 启动慢的直接原因之一是窗口初始化时扫描 `weights` 下的模型目录；该动作已延后到开始检测时执行。
+- 旧发布目录如果删除失败，`opencv_java*.dll` 这类无关 DLL 会残留；发布脚本现在会失败退出并做最终文件拦截。
+- TensorRT 11 Windows SDK 的库名为 `nvinfer_11.lib`，不是旧版 `nvinfer.lib`；CMake 必须同时探测带版本后缀的库名。
+- 当前机器 CUDA 已安装且为 13.2，无需重装；TensorRT 选择 NVIDIA 官方 `TensorRT-Enterprise-11.0.0.114-Windows-amd64-cuda-13.2-Release-external.zip`。
+- TensorRT engine 与显卡、驱动、CUDA、TensorRT 版本强相关，运行端只加载 `.engine/.plan`，不在软件中现场转换 ONNX。
+- Windows PowerShell 5 会按旧编码解析无 BOM UTF-8 脚本中的中文字符串，发布脚本应使用 PowerShell 7 的 `pwsh` 执行。
+- OpenVINO 报 `Available frontends:` 为空时，优先检查发布目录是否缺少 `openvino_ir_frontend.dll`；这不是模型 XML 路径问题。
+- `yolo26s-seg-wds-1024-best_int8_openvino_model` 的输出是 `[1,300,38]` 和 `[1,32,256,256]`；`38 = 6 + 32`，其中 32 是 mask 系数，不能参与检测类别选择。
+- 视频左上角乱码来自 `cv::putText` 的 Hershey 字体不支持中文，不是模型或编码损坏。当前叠字已改为区域 ID。
+- 当前纯 C++ 流水线已接入仓库内 `ByteTrack`：`VideoPipeline` 中持有 `ByteTrack tracker_`，检测后调用 `tracker_.update()`，区域计数和堵包都使用跟踪后的 `tracks`。
+- 对比 Ultralytics ByteTrack：默认 `track_high_thresh=0.25`、`track_low_thresh=0.1`、`new_track_thresh=0.25`；旧 C++ 默认高阈值 0.5，会让 0.25-0.5 的包裹检测无法启动轨迹，是现场效果偏差的主要原因。
+- 累计包裹数量的业务计数没有等预览帧，`FlowCounter::update()` 每帧运行；延迟来自 `emitFramePayload()` 同时承载图像和统计，只在预览帧发送。已拆成每帧统计 payload 与降频图像 payload。
+- TensorRT 11 `trtexec` 当前不接受旧版 `--fp16` 参数，构建日志显示 Precision 为 Strongly Typed；生成的 engine 在 RTX 4050 上可执行，输出为 `output0 [1,300,38] fp32` 和 `output1 [1,32,256,256] fp32`。
+
 - 顶部累计数量必须只取 `total_count_region`，不能把各 ROI 数量相加。
 - worker 当前把计数、堵包、输出和绘图写在一个循环中；应先抽出纯函数，才能可靠测试多 ROI 行为。
 - Qt 当前只有一个 `flowRoi_`，需要独立区域配置模型；检测 ROI 与流量区域职责不同，继续单独保留。

@@ -1,5 +1,29 @@
 # 进度
 
+## 2026-06-24 纯 C++ OpenVINO + TensorRT 后端
+
+- 已完成纯 C++ 运行端核查：当前 CMake 和发布包只使用 Qt6、OpenCV C++、OpenVINO C++、TensorRT C++ 与 C++ ByteTrack；发布包不含 Python、conda、Torch、Ultralytics、worker、`.py`、`.pt`、`.onnx`。
+- 已优化启动速度：窗口构造和读取设置时不再扫描 `weights` 目录，默认模型改为开始检测时再按需解析；热启动实测约 0.85 秒。
+- 已加固发布脚本：旧 build/dist 删除失败会直接报错，发布结束会拒绝 `opencv_java` 和旧 Python worker 相关运行端文件残留。
+- 已重新生成并签名 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT_Fixed`；236/236 测试通过，Ruff 0 个问题，签名状态 Valid。
+- 已将 `apps/cvds_cpp_detector` 运行推理改为 C++ 原生后端选择：OpenVINO IR 与 TensorRT engine。
+- 新增 TensorRT Runtime C++ 后端，加载 `.engine/.plan`，使用 CUDA 显存、`enqueueV3` 推理，并复用 YOLO 后处理。
+- 修复 OpenVINO 后端只接受单输出的问题，现在会遍历模型输出并解析可用检测张量。
+- CMake 已支持自动探测 TensorRT SDK，找到 `NvInfer.h`、`nvinfer_11.lib` 和 CUDA 后启用 `CVDS_WITH_TENSORRT`。
+- 已安装 TensorRT 11.0.0.114 CUDA 13.2 Windows SDK 到 `D:\tools\TensorRT-11.0.0.114`，并写入用户环境变量 `TENSORRT_ROOT` 和 `TRT_LIBPATH`。
+- 已生成 TensorRT 真后端便携包 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT`。
+- 225/225 测试通过，C++ Release 编译通过，便携包中已包含 `nvinfer_11.dll`、`nvonnxparser_11.dll` 和 TensorRT 资源 DLL。
+- 修复 OpenVINO `.xml` 读取失败：发布包补齐 `openvino_ir_frontend.dll`，并修正打包脚本 debug DLL 过滤误删 `frontend.dll` 的问题。
+- 修复 OpenVINO YOLO 分割端到端输出检测框错误：读取模型 `metadata.yaml` 中的 `end2end: true`，按 `[x1,y1,x2,y2,score,class_id,mask...]` 解析，忽略 mask 系数。
+- 已重新生成并签名便携包 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_TensorRT_Fixed`；226/226 测试通过，Ruff 0 个问题，TensorRT/OpenVINO Release 编译通过，主程序签名状态 Valid。
+- 修复视频左上角叠字乱码：OpenCV 画面叠字改用区域 ID，不再把中文区域名交给 `cv::putText`。确认 C++ `ByteTrack.cpp` 已编译进 Release，并由 `VideoPipeline` 每帧调用。
+- 优化 C++ ByteTrack：推理阶段保留 0.1 以上低分候选用于续跟，新轨迹阈值跟随界面置信度，第二阶段低分匹配 IoU 改为 0.5，且只允许刚丢 1 帧的轨迹参与低分续跟，更接近 Ultralytics ByteTrack 行为。
+- 优化目标框状态色：目标中心点在流量 ROI 外时显示黄色，中心点进入或压线后显示绿色，中心点离开 ROI 后恢复黄色；ID 文字同步使用目标框颜色。
+- 检查累计包裹数量：计数逻辑为 trackId 首次中心点进入 ROI 时计一次，未发现重复计数；发现看板刷新此前跟随预览帧，有显示延迟，已改为统计 payload 每帧发送、预览图仍按频率发送。
+- ROI 绘制提示“当前区域”已移动到右上角，避免与检测/跟踪计数叠字重叠。
+- 已将 `D:\Demo\Vision\weights\yolo26s-seg-wds-1024-best.pt` 导出为 ONNX，并用 TensorRT 11 `trtexec` 转换为 `D:\Demo\Vision\weights\yolo26s-seg-wds-1024-best.engine`；同名 metadata 已写入端到端分割输出说明。
+- C++ TensorRT 后端已增强为多输出解析，并读取 engine 同名 metadata，适配 `[1,300,38]` + `[1,32,256,256]` 的 YOLO 分割输出。
+
 ## 2026-06-11
 
 - 已读取项目规则、上下文和经验教训。

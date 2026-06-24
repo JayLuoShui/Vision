@@ -13,18 +13,6 @@ QString appDir() {
     return QDir::cleanPath(QCoreApplication::applicationDirPath());
 }
 
-QString runtimeDir() {
-    return QDir(appDir()).filePath("runtime");
-}
-
-QString workerExePath() {
-    return QDir(runtimeDir()).filePath("cvds_detector_worker.exe");
-}
-
-QString scriptsDir() {
-    return QDir(appDir()).filePath("scripts");
-}
-
 QString defaultWeightsDir() {
     return QDir(appDir()).filePath("weights");
 }
@@ -56,10 +44,6 @@ QString defaultRegionsConfigPath() {
 
 QString regionsExamplePath() {
     return QDir(appDir()).filePath("configs/regions.example.json");
-}
-
-QString trackerConfigPath() {
-    return QDir(appDir()).filePath("configs/bytetrack.yaml");
 }
 
 QString docsDir() {
