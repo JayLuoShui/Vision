@@ -197,7 +197,7 @@ $openCvCount = Copy-Dlls $openCvRoots @("opencv*.dll", "opencv_videoio_ffmpeg*.d
 if ($openCvCount -eq 0) { throw "没有找到 OpenCV Release DLL，请正确设置 OPENCV_DIR。" }
 
 $openVinoRoots = @(Resolve-OpenVinoRoots $OpenVinoDir)
-$openVinoDllPattern = "^openvino(_c|_auto_batch_plugin|_auto_plugin|_hetero_plugin|_intel_cpu_plugin|_intel_gpu_plugin|_intel_npu_compiler|_intel_npu_compiler_loader|_intel_npu_plugin|_ir_frontend)?\.dll$"
+$openVinoDllPattern = "^openvino(_auto_plugin|_intel_cpu_plugin|_intel_gpu_plugin|_ir_frontend)?\.dll$"
 $openVinoCount = Copy-Dlls $openVinoRoots @("openvino*.dll") $DistRoot $openVinoDllPattern
 $openVinoIrFrontendCount = Copy-Dlls $openVinoRoots @("openvino_ir_frontend.dll") $DistRoot "^openvino_ir_frontend\.dll$"
 $tbbCount = Copy-Dlls $openVinoRoots @("tbb*.dll") $DistRoot
@@ -207,7 +207,7 @@ if ($tbbCount -eq 0) { throw "没有找到 TBB DLL，请检查 OpenVINO Runtime 
 
 $tensorRtRoots = @(Resolve-TensorRtRoots $TensorRtDir)
 if ($tensorRtRoots.Count -gt 0) {
-    $tensorRtCount = Copy-Dlls $tensorRtRoots @("nvinfer*.dll", "nvonnxparser*.dll") $DistRoot
+    $tensorRtCount = Copy-Dlls $tensorRtRoots @("nvinfer*.dll") $DistRoot "^nvinfer_[0-9]+\.dll$"
     if ($tensorRtCount -eq 0) { throw "已设置 TensorRT 路径，但没有找到 nvinfer*.dll。" }
 }
 
@@ -235,6 +235,11 @@ $blockedRuntimePattern = "^opencv_java.*\.dll$|" +
     "py" + "thon|" +
     "tor" + "ch|" +
     "ultra" + "lytics|" +
+    "nvinfer_builder_resource|" +
+    "openvino_intel_npu|" +
+    "openvino_auto_batch_plugin|" +
+    "openvino_hetero_plugin|" +
+    "^openvino_c\.dll$|" +
     "\.py$|\.pt$|\.onnx$|" +
     "work" + "er|" +
     "con" + "da"

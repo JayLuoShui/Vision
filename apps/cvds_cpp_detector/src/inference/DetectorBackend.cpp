@@ -20,8 +20,7 @@ bool DetectorBackend::load(
     QString* error) {
     backend_ = backend;
     if (backend_ == InferenceBackend::TensorRt) {
-        Q_UNUSED(device);
-        return tensorRt_.load(modelPath, inputSize, error);
+        return tensorRt_.load(modelPath, device, inputSize, error);
     }
     return openVino_.load(modelPath, device, inputSize, error);
 }

@@ -4,12 +4,14 @@
 #include "pipeline/VideoPipeline.h"
 
 #include <QByteArray>
+#include <QHash>
 #include <QImage>
 #include <QLabel>
 #include <QMainWindow>
 #include <QObject>
 #include <QPoint>
 #include <QRect>
+#include <QSize>
 #include <QString>
 #include <QStringList>
 #include <QThread>
@@ -62,6 +64,7 @@ public:
 signals:
     void flowRegionChanged(const QString& regionId, const QVector<QPoint>& polygon, bool closed);
     void roiChanged(RoiPreviewLabel::DrawMode mode, const QString& text);
+    void imageClicked(const QPoint& imagePoint);
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -146,6 +149,7 @@ private slots:
     void detectionFailed(const QString& error);
     void cleanupWorker();
     void loadVideoPreviewFrame();
+    void applyLocalVideoSources();
     void applyHikvisionStream();
     void testVideoStream();
     void addRegion();
@@ -169,12 +173,21 @@ private:
     void startVideoPreview();
     void launchPendingVideoPreview();
     void stopVideoPreview();
+    void cleanupPreview(QThread* thread);
     void refreshRuntimeOverview();
     VideoPipeline::Config currentDetectConfig() const;
+    QStringList configuredSourcePaths() const;
+    QVector<int> configuredHikvisionChannels() const;
+    bool startConfiguredPipelines(const QStringList& sources);
+    void cleanupPipeline(QThread* thread);
+    void composeMultiCameraPreview();
+    void loadConfiguredVideoPreviewFrames(const QStringList& sources);
     QString buildHikvisionRtsp() const;
+    QString buildHikvisionRtsp(int channel) const;
     void loadSettings();
     void saveSettings() const;
     void populateClassCombo(const QStringList& labels);
+    void refreshDeviceOptions(const QString& preferredDevice = {});
     void setRoiDrawMode(RoiPreviewLabel::DrawMode mode);
     void ensureDefaultRegion();
     void refreshRegionSelectors();
@@ -184,19 +197,27 @@ private:
     void setDashboardAlarmActive(bool active);
     void updateAlertStyle();
     RegionConfigDocument buildRegionConfigDocument() const;
+    RegionConfigDocument regionDocumentForCamera(const QString& cameraId, bool multiCamera) const;
     int findRegionIndexById(const QString& regionId) const;
     QString nextRegionId() const;
     void restoreRegionConfigDocument(const RegionConfigDocument& document);
     QVector<QPoint> parseEditablePolygonText(const QString& text, const QString& label, bool allowEmpty) const;
     void updateDetectRoiFromEditor();
+    void updateDashboardForCamera(const QString& cameraId, const QByteArray& payload);
+    void aggregateDashboardFromCameraStates();
+    void selectCameraAtPoint(const QPoint& imagePoint);
+    void selectDrawingRegionForCamera(const QString& cameraId);
+    bool isDetectionRunning() const;
     void setConfigurationEditingEnabled(bool enabled);
 
-    QLineEdit* modelEdit_ = nullptr;
+    QPlainTextEdit* modelEdit_ = nullptr;
     QLineEdit* sourceEdit_ = nullptr;
     QLineEdit* outputEdit_ = nullptr;
+    QPlainTextEdit* multiSourceEdit_ = nullptr;
     QLineEdit* hikIpEdit_ = nullptr;
     QLineEdit* hikUserEdit_ = nullptr;
     QLineEdit* hikPasswordEdit_ = nullptr;
+    QLineEdit* multiHikChannelEdit_ = nullptr;
     QLineEdit* regionNameEdit_ = nullptr;
     QLineEdit* flowRoiEdit_ = nullptr;
     QLineEdit* detectRoiEdit_ = nullptr;
@@ -213,7 +234,7 @@ private:
     QSpinBox* inputSizeSpin_ = nullptr;
     QSpinBox* videoFpsSpin_ = nullptr;
     QSpinBox* hikChannelSpin_ = nullptr;
-    QSpinBox* hikRtspPortSpin_ = nullptr;
+    QLineEdit* hikRtspPortEdit_ = nullptr;
     QSpinBox* jamSecondsSpin_ = nullptr;
     QDoubleSpinBox* confidenceSpin_ = nullptr;
     QDoubleSpinBox* iouSpin_ = nullptr;
@@ -255,6 +276,7 @@ private:
     QString loadedModelPath_;
     QVector<RegionConfig> regions_;
     QVector<RegionRuntimeState> regionRuntimeStates_;
+    QVector<RegionRuntimeState> dashboardRuntimeStates_;
     QString totalCountRegionId_;
     QString currentRegionId_;
     int dashboardTotalCount_ = 0;
@@ -264,12 +286,29 @@ private:
     bool dashboardFlashVisible_ = false;
     bool settingsPanelCollapsed_ = false;
     bool previewFrameAccepted_ = false;
+    bool previewComposePending_ = false;
     bool startDetectionAfterPreviewStops_ = false;
     QString dashboardStatusText_ = "待机";
-    QString pendingPreviewSource_;
+    QStringList pendingPreviewSources_;
     QString pendingPreviewTransport_;
     QThread* previewThread_ = nullptr;
     VideoPreviewWorker* previewWorker_ = nullptr;
     QThread* pipelineThread_ = nullptr;
     VideoPipeline* pipeline_ = nullptr;
+    struct PipelineRuntime {
+        QString cameraId;
+        QThread* thread = nullptr;
+        VideoPipeline* pipeline = nullptr;
+    };
+    struct PreviewRuntime {
+        QString cameraId;
+        QThread* thread = nullptr;
+        VideoPreviewWorker* worker = nullptr;
+    };
+    QVector<PreviewRuntime> previewRuntimes_;
+    QVector<PipelineRuntime> pipelineRuntimes_;
+    QHash<QString, QImage> cameraFrames_;
+    QHash<QString, QRect> cameraImageRects_;
+    QHash<QString, QSize> cameraSourceSizes_;
+    QHash<QString, QVector<RegionRuntimeState>> cameraRegionRuntimeStates_;
 };

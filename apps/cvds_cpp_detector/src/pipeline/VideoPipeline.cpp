@@ -68,6 +68,22 @@ bool trackCenterInsideFlowRegion(
     return false;
 }
 
+bool isLowInformationFrame(const cv::Mat& frame) {
+    if (frame.empty() || frame.cols < 16 || frame.rows < 16) {
+        return true;
+    }
+    cv::Mat gray;
+    if (frame.channels() == 1) {
+        gray = frame;
+    } else {
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+    }
+    cv::Scalar mean;
+    cv::Scalar stddev;
+    cv::meanStdDev(gray, mean, stddev);
+    return stddev[0] < 3.0;
+}
+
 }  // namespace
 
 VideoPipeline::VideoPipeline(Config config, QObject* parent)
@@ -94,12 +110,9 @@ bool VideoPipeline::validateConfig(QString* error) {
         if (error) *error = "输出目录不能为空";
         return false;
     }
-    if (config_.regions.regions.isEmpty()) {
-        if (error) *error = "至少需要一个统计区域";
-        return false;
-    }
     runtimeRegions_ = config_.regions.regions;
     bool totalRegionFound = false;
+    const bool totalAll = config_.regions.totalCountRegionId == QStringLiteral("__all_count_regions__");
     for (RegionConfig& region : runtimeRegions_) {
         if (region.polygon.size() < 3 || !region.polygonClosed) {
             if (error) *error = "区域必须是闭合多边形：" + region.name;
@@ -107,7 +120,7 @@ bool VideoPipeline::validateConfig(QString* error) {
         }
         if (region.id == config_.regions.totalCountRegionId) totalRegionFound = true;
     }
-    if (!totalRegionFound) {
+    if (!totalAll && !runtimeRegions_.isEmpty() && !totalRegionFound) {
         if (error) *error = "总计区域不存在：" + config_.regions.totalCountRegionId;
         return false;
     }
@@ -143,27 +156,46 @@ bool VideoPipeline::openCapture(cv::VideoCapture* capture, QString* error) const
         opened = capture->open(source.toStdString(), cv::CAP_FFMPEG, params);
     }
     if (!opened && error) *error = "无法在超时时间内打开视频源：" + source;
+    if (opened && isLiveSource(source)) {
+        capture->set(cv::CAP_PROP_BUFFERSIZE, 1);
+    }
     return opened;
 }
 
 bool VideoPipeline::readFrame(cv::VideoCapture* capture, cv::Mat* frame, QString* error) const {
-    QElapsedTimer timer;
-    timer.start();
-    const bool ok = capture->read(*frame);
-    const qint64 elapsed = timer.elapsed();
-    if (!ok || frame->empty()) {
-        if (error) {
-            *error = isLiveSource(config_.sourcePath)
-                ? "视频流读取中断或超时：" + config_.sourcePath
-                : QString();
+    const int maxAttempts = isLiveSource(config_.sourcePath) ? 4 : 1;
+    while (!stopRequested_.load()) {
+        for (int attempt = 1; attempt <= maxAttempts; ++attempt) {
+            QElapsedTimer timer;
+            timer.start();
+            const bool ok = capture->read(*frame);
+            const qint64 elapsed = timer.elapsed();
+            if (!ok || frame->empty()) {
+                if (error) {
+                    *error = isLiveSource(config_.sourcePath)
+                        ? "视频流读取中断或超时：" + config_.sourcePath
+                        : QString();
+                }
+                return false;
+            }
+            if (isLiveSource(config_.sourcePath) && elapsed > config_.readTimeoutMs) {
+                if (error) *error = "视频流读取超时：" + QString::number(elapsed) + " ms";
+                return false;
+            }
+            if (isLiveSource(config_.sourcePath) && isLowInformationFrame(*frame)) {
+                if (attempt < maxAttempts) {
+                    continue;
+                }
+                QThread::msleep(50);
+                break;
+            }
+            return true;
         }
-        return false;
+        if (!isLiveSource(config_.sourcePath)) {
+            return false;
+        }
     }
-    if (isLiveSource(config_.sourcePath) && elapsed > config_.readTimeoutMs) {
-        if (error) *error = "视频流读取超时：" + QString::number(elapsed) + " ms";
-        return false;
-    }
-    return true;
+    return false;
 }
 
 DetectionResults VideoPipeline::inferFrame(const cv::Mat& frame, QString* error) {
@@ -261,6 +293,7 @@ void VideoPipeline::start() {
     QVector<RegionRuntimeState> lastStates;
     int frameIndex = 0;
     const int previewEvery = std::max(1, static_cast<int>(std::round(sourceFps / std::max(1, config_.previewFps))));
+    const int statsEvery = std::max(1, static_cast<int>(std::round(sourceFps / 5.0)));
     QString terminalError;
 
     while (!stopRequested_.load()) {
@@ -292,8 +325,11 @@ void VideoPipeline::start() {
 
         cv::Mat overlay = drawOverlay(frame, tracks, states);
         writer_.writeFrame(overlay);
-        emitStatsPayload(frameIndex, states, static_cast<int>(tracks.size()));
-        if (frameIndex == 1 || frameIndex % previewEvery == 0) {
+        if (frameIndex == 1 || frameIndex % statsEvery == 0 || !jamEvents.isEmpty()) {
+            emitStatsPayload(frameIndex, states, static_cast<int>(tracks.size()));
+        }
+        const bool forcePreview = !jamEvents.isEmpty();
+        if (forcePreview || frameIndex == 1 || frameIndex % previewEvery == 0) {
             writer_.writePreview(overlay);
             emitFramePayload(frameIndex, matToImage(overlay));
         }
@@ -335,10 +371,13 @@ void VideoPipeline::start() {
     }
     int jamCount = 0;
     int maxInsideCount = 0;
+    const bool totalAll = config_.regions.totalCountRegionId == QStringLiteral("__all_count_regions__");
     QJsonArray finalRegions;
     for (const RegionRuntimeState& state : lastStates) {
         jamCount += state.jamCount;
-        if (state.id == config_.regions.totalCountRegionId) maxInsideCount = state.maxInsideCount;
+        if (totalAll || state.id == config_.regions.totalCountRegionId) {
+            maxInsideCount = std::max(maxInsideCount, state.maxInsideCount);
+        }
         finalRegions.append(regionPayload(state));
     }
     QJsonObject donePayload;
@@ -380,22 +419,33 @@ void VideoPipeline::emitStatsPayload(
     int frameIndex,
     const QVector<RegionRuntimeState>& states,
     int trackedCount) {
-    const RegionRuntimeState* total = findState(states, config_.regions.totalCountRegionId);
+    const bool totalAll = config_.regions.totalCountRegionId == QStringLiteral("__all_count_regions__");
+    const RegionRuntimeState* total = totalAll ? nullptr : findState(states, config_.regions.totalCountRegionId);
     bool jamActive = false;
     bool occupied = false;
+    int totalFlowCount = 0;
+    int totalInsideCount = 0;
     QJsonArray regions;
     for (const RegionRuntimeState& state : states) {
         jamActive = jamActive || state.jamActive;
         occupied = occupied || state.insideCount > 0;
+        if (totalAll) {
+            totalFlowCount += state.flowCount;
+            totalInsideCount += state.insideCount;
+        }
         regions.append(regionPayload(state));
+    }
+    if (!totalAll && total != nullptr) {
+        totalFlowCount = total->flowCount;
+        totalInsideCount = total->insideCount;
     }
     QJsonObject payload;
     payload.insert("type", "frame");
     payload.insert("frame", frameIndex);
     payload.insert("preview_path", writer_.previewPath());
-    payload.insert("total_count", total ? total->flowCount : 0);
-    payload.insert("flow_count", total ? total->flowCount : 0);
-    payload.insert("inside_count", total ? total->insideCount : 0);
+    payload.insert("total_count", totalFlowCount);
+    payload.insert("flow_count", totalFlowCount);
+    payload.insert("inside_count", totalInsideCount);
     payload.insert("tracked_count", trackedCount);
     payload.insert("jam_active", jamActive);
     payload.insert("global_status", jamActive ? "JAM" : (occupied ? "RUNNING" : "IDLE"));

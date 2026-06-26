@@ -14,8 +14,8 @@
 ## 支持范围
 
 - 模型：OpenVINO IR `.xml + .bin`；TensorRT `.engine/.plan`
-- 设备：OpenVINO 为 `AUTO / CPU / GPU / NPU`，TensorRT 为 CUDA GPU
-- 视频：本地视频文件或 RTSP 视频流
+- 设备：OpenVINO 为 `AUTO / CPU / GPU`，TensorRT 为 CUDA GPU
+- 视频：本地视频文件或 RTSP 视频流；海康多路检测可填写通道号自动生成 RTSP，其它多路检测可每行填写一路视频源，结果分别写入 `camera_1`、`camera_2` 等子目录
 
 ## 构建
 

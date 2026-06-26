@@ -7,7 +7,8 @@
 - 使用 OpenCV 读取本地视频或 RTSP 视频流。
 - 使用 OpenVINO 或 TensorRT 完成目标检测，使用 ByteTrack 完成跟踪。
 - 支持多边形检测区域、多个流量区域、累计计数和堵包判断。
-- OpenVINO 支持设备 `AUTO / CPU / GPU / NPU`；TensorRT 使用 NVIDIA CUDA GPU。
+- 支持多路视频在线检测：海康视频流可在“多路通道”填写 `1,2,3` 自动生成多路 RTSP；也可在“多路视频源”中每行填写一路本地视频或 RTSP 地址。输出会写入 `camera_1`、`camera_2` 等子目录。
+- OpenVINO 支持设备 `AUTO / CPU / GPU`；TensorRT 使用 NVIDIA CUDA GPU。
 - 支持 OpenVINO IR `.xml + .bin`，以及已构建好的 TensorRT `.engine/.plan`。
 
 ## 输出文件
@@ -54,7 +55,7 @@ dist_installer/CVDS_Cpp_Detector_Setup_<version>.exe
 .\dist\CVDS_Cpp_Detector\CVDS_Cpp_Detector.exe
 ```
 
-在界面中选择推理后端。OpenVINO 使用 `.xml` 文件或模型目录，同目录必须存在同名 `.bin`；TensorRT 使用已构建好的 `.engine/.plan`。然后选择视频源、输出目录和设备并开始检测。
+在界面中选择推理后端。OpenVINO 使用 `.xml` 文件或模型目录，同目录必须存在同名 `.bin`；TensorRT 使用已构建好的 `.engine/.plan`。单路检测选择一个视频源即可；海康多路检测在“多路通道”里填写通道号，例如 `1,2,3`；其它多路检测可在“多路视频源”里每行填写一路本地视频或 RTSP 地址，然后选择输出目录和设备并开始检测。
 
 ## 验证
 

@@ -24,6 +24,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QIntValidator>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QLabel>
@@ -35,6 +36,7 @@
 #include <QPlainTextEdit>
 #include <QPolygon>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QPixmap>
 #include <QResizeEvent>
 #include <QScrollArea>
@@ -46,6 +48,8 @@
 #include <QSplitter>
 #include <QTableWidget>
 #include <QTableWidgetItem>
+#include <QTextCursor>
+#include <QTextOption>
 #include <QTimer>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -118,6 +122,10 @@ QString privatePath(const QLineEdit* edit) {
     return edit == nullptr ? QString() : edit->property("fullPath").toString().trimmed();
 }
 
+QString privatePath(const QPlainTextEdit* edit) {
+    return edit == nullptr ? QString() : edit->property("fullPath").toString().trimmed();
+}
+
 QString privatePathLabel(const QString& path) {
     const QString trimmed = path.trimmed();
     if (trimmed.isEmpty()) {
@@ -141,6 +149,133 @@ QString privatePathLabel(const QString& path) {
     return name.isEmpty() ? "已选择目录" : name;
 }
 
+QString previewSourceLabel(const QString& source) {
+    const QString trimmed = source.trimmed();
+    if (!trimmed.contains("://")) {
+        return privatePathLabel(trimmed);
+    }
+
+    const QUrl url(trimmed);
+    QString host = url.host().isEmpty() ? "网络视频流" : url.host();
+    if (url.port() > 0) {
+        host += ":" + QString::number(url.port());
+    }
+    const QString path = url.path().isEmpty() ? QString() : " · " + url.path();
+    return url.scheme().toUpper() + " · " + host + path;
+}
+
+void configureAdaptiveLineEdit(QLineEdit* edit, int minChars = 10, int maxChars = 28) {
+    if (edit == nullptr) {
+        return;
+    }
+    const QString configKey = QString::number(minChars) + ":" + QString::number(maxChars);
+    if (edit->property("adaptiveWidthConfig").toString() == configKey) {
+        return;
+    }
+    edit->setProperty("adaptiveWidthConfig", configKey);
+    edit->setMinimumWidth(0);
+    edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    auto updateWidth = [edit, minChars, maxChars]() {
+        QString sample = edit->text().trimmed();
+        if (sample.isEmpty()) {
+            sample = edit->placeholderText().trimmed();
+        }
+        const int contentChars = static_cast<int>(sample.size()) + 1;
+        const int targetChars = std::clamp(contentChars, minChars, maxChars);
+        const int width = edit->fontMetrics().horizontalAdvance(QString(targetChars, QLatin1Char('8'))) + 28;
+        edit->setMinimumWidth(width);
+    };
+    QObject::connect(edit, &QLineEdit::textChanged, edit, [updateWidth](const QString&) {
+        updateWidth();
+    });
+    updateWidth();
+}
+
+void configureAdaptiveComboBox(QComboBox* combo, int minChars = 8) {
+    if (combo == nullptr) {
+        return;
+    }
+    combo->setMinimumWidth(0);
+    combo->setMinimumContentsLength(minChars);
+    combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+}
+
+void configureCompactField(QWidget* widget, int width = 150) {
+    if (widget == nullptr) {
+        return;
+    }
+    widget->setMinimumWidth(width);
+    widget->setMaximumWidth(width);
+    widget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+QLabel* makeCompactParamLabel(const QString& text, QWidget* parent) {
+    auto* label = new QLabel(text, parent);
+    label->setObjectName("compactParamLabel");
+    label->setFixedWidth(64);
+    label->setMinimumHeight(24);
+    label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    return label;
+}
+
+void configureModelPathEdit(QPlainTextEdit* edit) {
+    if (edit == nullptr) {
+        return;
+    }
+    edit->setReadOnly(true);
+    edit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    edit->setWordWrapMode(QTextOption::WrapAnywhere);
+    edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    edit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    edit->setMinimumHeight(46);
+    edit->setMaximumHeight(50);
+    edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+}
+
+void configurePortLineEdit(QLineEdit* edit) {
+    if (edit == nullptr) {
+        return;
+    }
+    edit->setValidator(new QIntValidator(1, 65535, edit));
+    edit->setMaxLength(5);
+    edit->setAlignment(Qt::AlignCenter);
+    const int width = edit->fontMetrics().horizontalAdvance(QStringLiteral("65535")) + 28;
+    edit->setMinimumWidth(width);
+    edit->setFixedWidth(width);
+    edit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+int checkedPortFromEdit(const QLineEdit* edit) {
+    bool ok = false;
+    const int port = edit == nullptr ? 0 : edit->text().trimmed().toInt(&ok);
+    if (!ok || port < 1 || port > 65535) {
+        throw std::runtime_error("海康 RTSP 端口必须是 1-65535。");
+    }
+    return port;
+}
+
+void normalizePortLineEdit(QLineEdit* edit) {
+    if (edit == nullptr) {
+        return;
+    }
+    try {
+        edit->setText(QString::number(checkedPortFromEdit(edit)));
+    } catch (const std::exception&) {
+        edit->setText(QStringLiteral("554"));
+    }
+}
+
+void configureAdaptiveForm(QFormLayout* form) {
+    if (form == nullptr) {
+        return;
+    }
+    form->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+    form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+    form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+    form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+}
+
 void setPrivatePath(QLineEdit* edit, const QString& path, bool revealFull = false) {
     if (edit == nullptr) {
         return;
@@ -149,6 +284,7 @@ void setPrivatePath(QLineEdit* edit, const QString& path, bool revealFull = fals
     edit->setProperty("fullPath", trimmed);
     edit->setText(revealFull ? trimmed : privatePathLabel(trimmed));
     edit->setCursorPosition(0);
+    configureAdaptiveLineEdit(edit, 12, 30);
     if (!revealFull || trimmed.isEmpty()) {
         return;
     }
@@ -156,6 +292,29 @@ void setPrivatePath(QLineEdit* edit, const QString& path, bool revealFull = fals
         if (privatePath(edit) == trimmed) {
             edit->setText(privatePathLabel(trimmed));
             edit->setCursorPosition(0);
+        }
+    });
+}
+
+void setPrivatePath(QPlainTextEdit* edit, const QString& path, bool revealFull = false) {
+    if (edit == nullptr) {
+        return;
+    }
+    const QString trimmed = path.trimmed();
+    edit->setProperty("fullPath", trimmed);
+    edit->setPlainText(revealFull ? trimmed : privatePathLabel(trimmed));
+    QTextCursor cursor = edit->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    edit->setTextCursor(cursor);
+    if (!revealFull || trimmed.isEmpty()) {
+        return;
+    }
+    QTimer::singleShot(5000, edit, [edit, trimmed]() {
+        if (privatePath(edit) == trimmed) {
+            edit->setPlainText(privatePathLabel(trimmed));
+            QTextCursor cursor = edit->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            edit->setTextCursor(cursor);
         }
     });
 }
@@ -173,7 +332,11 @@ cv::VideoCapture openCapture(const QString& source, const QString& rtspTransport
             cv::CAP_PROP_OPEN_TIMEOUT_MSEC, 3000,
             cv::CAP_PROP_READ_TIMEOUT_MSEC, 3000
         };
-        return cv::VideoCapture(trimmed.toStdString(), cv::CAP_FFMPEG, params);
+        cv::VideoCapture capture(trimmed.toStdString(), cv::CAP_FFMPEG, params);
+        if (capture.isOpened()) {
+            capture.set(cv::CAP_PROP_BUFFERSIZE, 1);
+        }
+        return capture;
     }
     return cv::VideoCapture(trimmed.toStdString());
 }
@@ -225,6 +388,26 @@ bool isOutputDirWritable(const QString& outputDir, QString* errorMessage = nullp
     probe.close();
     QFile::remove(probePath);
     return true;
+}
+
+bool isAllCountRegionsId(const QString& regionId) {
+    return regionId == QStringLiteral("__all_count_regions__");
+}
+
+bool isLowInformationFrame(const cv::Mat& frame) {
+    if (frame.empty() || frame.cols < 16 || frame.rows < 16) {
+        return true;
+    }
+    cv::Mat gray;
+    if (frame.channels() == 1) {
+        gray = frame;
+    } else {
+        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+    }
+    cv::Scalar mean;
+    cv::Scalar stddev;
+    cv::meanStdDev(gray, mean, stddev);
+    return stddev[0] < 3.0;
 }
 
 RegionRuntimeState buildFallbackState(const RegionConfig& region) {
@@ -286,6 +469,43 @@ QString dashboardStatusForStates(
         return "异常";
     }
     return fallback;
+}
+
+QPoint polygonCenter(const QVector<QPoint>& polygon) {
+    if (polygon.isEmpty()) {
+        return {};
+    }
+    qint64 sumX = 0;
+    qint64 sumY = 0;
+    for (const QPoint& point : polygon) {
+        sumX += point.x();
+        sumY += point.y();
+    }
+    return QPoint(static_cast<int>(sumX / polygon.size()), static_cast<int>(sumY / polygon.size()));
+}
+
+bool mapRegionToCameraFrame(
+    const RegionConfig& source,
+    const QRect& cameraRect,
+    const QSize& cameraSize,
+    RegionConfig* mapped) {
+    if (mapped == nullptr || cameraRect.isEmpty() || !cameraSize.isValid()) {
+        return false;
+    }
+    if (!cameraRect.contains(polygonCenter(source.polygon))) {
+        return false;
+    }
+    *mapped = source;
+    mapped->polygon.clear();
+    mapped->polygon.reserve(source.polygon.size());
+    const double sx = static_cast<double>(cameraSize.width()) / std::max(1, cameraRect.width());
+    const double sy = static_cast<double>(cameraSize.height()) / std::max(1, cameraRect.height());
+    for (const QPoint& point : source.polygon) {
+        const int x = std::clamp(static_cast<int>((point.x() - cameraRect.left()) * sx), 0, cameraSize.width() - 1);
+        const int y = std::clamp(static_cast<int>((point.y() - cameraRect.top()) * sy), 0, cameraSize.height() - 1);
+        mapped->polygon.push_back(QPoint(x, y));
+    }
+    return true;
 }
 
 }  // namespace
@@ -573,8 +793,6 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
         painter.drawEllipse(imageToLabelPoint(draftCursor_), 4, 4);
     }
 
-    painter.setPen(QColor("#F3F7FA"));
-    painter.drawText(imageRect.adjusted(12, 18, -12, -18), Qt::AlignRight | Qt::AlignTop, "当前区域: " + activeRegionId_);
     if (alertFlashVisible_ && !jamRegionIds_.isEmpty()) {
         painter.setPen(QPen(QColor("#F25555"), 4));
         painter.setBrush(Qt::NoBrush);
@@ -583,11 +801,14 @@ void RoiPreviewLabel::paintEvent(QPaintEvent* event) {
 }
 
 void RoiPreviewLabel::mousePressEvent(QMouseEvent* event) {
-    if (!roiEditingEnabled_) {
-        event->ignore();
+    if (image_.isNull()) {
         return;
     }
-    if (image_.isNull()) {
+    if (event->button() == Qt::LeftButton) {
+        emit imageClicked(labelToImagePoint(event->pos()));
+    }
+    if (!roiEditingEnabled_) {
+        event->accept();
         return;
     }
     setFocus();
@@ -649,6 +870,7 @@ VideoPreviewWorker::VideoPreviewWorker(QString source, QString rtspTransport)
 
 void VideoPreviewWorker::run() {
     try {
+        constexpr int previewIntervalMs = 33;
         cv::VideoCapture capture = openCapture(source_, rtspTransport_);
         if (!capture.isOpened()) {
             emit failed("无法打开视频源。");
@@ -661,8 +883,12 @@ void VideoPreviewWorker::run() {
                 emit failed("视频流读取中断。");
                 break;
             }
+            if (canBeRuntimeSource(source_) && isLowInformationFrame(frame)) {
+                QThread::msleep(previewIntervalMs);
+                continue;
+            }
             emit frameReady(matToImage(frame));
-            QThread::msleep(33);
+            QThread::msleep(previewIntervalMs);
         }
         capture.release();
     } catch (const std::exception& ex) {
@@ -755,8 +981,8 @@ MainWindow::MainWindow(QWidget* parent)
     auto* leftShell = new QWidget(root);
     settingsPanel_ = leftShell;
     leftShell->setObjectName("settingsPanel");
-    leftShell->setMinimumWidth(210);
-    leftShell->setMaximumWidth(340);
+    leftShell->setMinimumWidth(320);
+    leftShell->setMaximumWidth(320);
     auto* leftLayout = new QVBoxLayout(leftShell);
     leftLayout->setContentsMargins(0, 0, 4, 0);
     leftLayout->setSpacing(0);
@@ -916,6 +1142,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     logEdit_ = new QPlainTextEdit(right);
     logEdit_->setReadOnly(true);
+    logEdit_->setMaximumBlockCount(800);
     logEdit_->setMinimumHeight(80);
     logEdit_->setMaximumHeight(120);
     logEdit_->setVisible(false);
@@ -938,7 +1165,7 @@ MainWindow::MainWindow(QWidget* parent)
     splitter->addWidget(right);
     splitter->setStretchFactor(0, 0);
     splitter->setStretchFactor(1, 1);
-    splitter->setSizes({240, 1040});
+    splitter->setSizes({320, 1040});
     connect(splitter, &QSplitter::splitterMoved, this, [this](int position, int) {
         QFont font = settingsPanel_->font();
         font.setPixelSize(qBound(11, position / 26, 14));
@@ -988,6 +1215,7 @@ MainWindow::MainWindow(QWidget* parent)
         "QGroupBox{border:1px solid #263746;border-radius:5px;margin-top:12px;padding:8px;color:#8FA5B8;background:#111B25;font-weight:600;}"
         "QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 6px;background:#111B25;color:#8FA5B8;}"
         "QLabel{color:#D7E2EA;}"
+        "QLabel#compactParamLabel{background:#080D13;color:#D7E2EA;padding:3px 4px;border:none;}"
         "QWidget#dashboardStrip{background:#0B1118;}"
         "QLabel#dashboardTitle{background:transparent;font-size:9px;color:#8FA5B8;}"
         "QLabel#dashboardValue{background:transparent;font-size:18px;font-weight:700;color:#F3F7FA;}"
@@ -995,15 +1223,15 @@ MainWindow::MainWindow(QWidget* parent)
         "QLineEdit,QPlainTextEdit,QComboBox,QTableWidget{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:6px;color:#F3F7FA;selection-background-color:#2F88F5;gridline-color:#263746;}"
         "QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus{border:1px solid #4DA3FF;}"
         "QHeaderView::section{background:#172431;color:#8FA5B8;border:none;border-right:1px solid #263746;border-bottom:1px solid #263746;padding:6px;font-weight:600;}"
-        "QSpinBox,QDoubleSpinBox{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:5px 30px 5px 6px;color:#F3F7FA;selection-background-color:#2F88F5;}"
+        "QSpinBox,QDoubleSpinBox{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:5px 22px 5px 6px;color:#F3F7FA;selection-background-color:#2F88F5;}"
         "QSpinBox:focus,QDoubleSpinBox:focus{border:1px solid #4DA3FF;}"
-        "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:top right;width:24px;background:#172431;border-left:1px solid #263746;border-bottom:1px solid #263746;}"
-        "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:bottom right;width:24px;background:#172431;border-left:1px solid #263746;border-top:1px solid #263746;}"
+        "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:top right;width:18px;background:#172431;border-left:1px solid #263746;border-bottom:1px solid #263746;}"
+        "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:bottom right;width:18px;background:#172431;border-left:1px solid #263746;border-top:1px solid #263746;}"
         "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#21364A;}"
-        "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #4DA3FF;}"
-        "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #4DA3FF;}"
-        "QComboBox::drop-down{background:#172431;border-left:1px solid #263746;width:26px;}"
-        "QComboBox::down-arrow{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #4DA3FF;}"
+        "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:6px solid #4DA3FF;}"
+        "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #4DA3FF;}"
+        "QComboBox::drop-down{background:#172431;border-left:1px solid #263746;width:18px;}"
+        "QComboBox::down-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #4DA3FF;}"
         "QPushButton{background:#172431;border:1px solid #31485B;border-radius:4px;padding:7px;color:#DCE7EE;}"
         "QPushButton:hover{background:#21364A;border-color:#4DA3FF;color:#F3F7FA;}"
         "QPushButton:checked{background:#173B63;border-color:#4DA3FF;color:#F3F7FA;}"
@@ -1047,6 +1275,7 @@ MainWindow::MainWindow(QWidget* parent)
             detectRoiEdit_->setText(text);
         }
     });
+    connect(previewLabel_, &RoiPreviewLabel::imageClicked, this, &MainWindow::selectCameraAtPoint);
 
     appendLog("已启动 CVDS 在线包裹流量监测，版本：" + RuntimePaths::versionText());
     appendLog("纯 C++ OpenVINO Runtime 推理引擎已就绪。");
@@ -1066,11 +1295,29 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow() {
     saveSettings();
     stopVideoPreview();
+    for (const PreviewRuntime& runtime : previewRuntimes_) {
+        if (runtime.thread != nullptr) {
+            runtime.thread->quit();
+            runtime.thread->wait();
+        }
+    }
+    previewRuntimes_.clear();
+    previewThread_ = nullptr;
+    previewWorker_ = nullptr;
     if (previewThread_ != nullptr) {
         previewThread_->quit();
         previewThread_->wait();
     }
     stopDetection();
+    for (const PipelineRuntime& runtime : pipelineRuntimes_) {
+        if (runtime.thread != nullptr) {
+            runtime.thread->quit();
+            runtime.thread->wait();
+        }
+    }
+    pipelineRuntimes_.clear();
+    pipelineThread_ = nullptr;
+    pipeline_ = nullptr;
     if (pipelineThread_ != nullptr) {
         pipelineThread_->quit();
         pipelineThread_->wait();
@@ -1089,7 +1336,7 @@ void MainWindow::resizeSidebarToStitchRatio() {
         || settingsPanelCollapsed_) {
         return;
     }
-    const int leftWidth = qBound(210, mainSplitter_->width() * 24 / 100, 340);
+    const int leftWidth = 320;
     mainSplitter_->setSizes({leftWidth, std::max(1, mainSplitter_->width() - leftWidth)});
     QFont font = settingsPanel_->font();
     font.setPixelSize(qBound(11, leftWidth / 26, 14));
@@ -1114,14 +1361,25 @@ void MainWindow::setSettingsPanelCollapsed(bool collapsed) {
 }
 
 void MainWindow::startVideoPreview() {
-    pendingPreviewSource_ = privatePath(sourceEdit_);
+    try {
+        pendingPreviewSources_ = configuredSourcePaths();
+    } catch (const std::exception& ex) {
+        QMessageBox::warning(this, "视频源配置错误", QString::fromUtf8(ex.what()));
+        return;
+    }
     pendingPreviewTransport_ =
         hikTransportCombo_ == nullptr ? "tcp" : hikTransportCombo_->currentData().toString();
     previewFrameAccepted_ = false;
-    if (pendingPreviewSource_.isEmpty()) {
+    cameraFrames_.clear();
+    if (pendingPreviewSources_.isEmpty()) {
         return;
     }
-    if (previewThread_ != nullptr) {
+    if (previewThread_ != nullptr || !previewRuntimes_.isEmpty()) {
+        for (const PreviewRuntime& runtime : previewRuntimes_) {
+            if (runtime.worker != nullptr) {
+                QMetaObject::invokeMethod(runtime.worker, "stop", Qt::DirectConnection);
+            }
+        }
         if (previewWorker_ != nullptr) {
             QMetaObject::invokeMethod(previewWorker_, "stop", Qt::DirectConnection);
         }
@@ -1132,66 +1390,108 @@ void MainWindow::startVideoPreview() {
 }
 
 void MainWindow::launchPendingVideoPreview() {
-    if (previewThread_ != nullptr || pendingPreviewSource_.isEmpty()) {
+    if (previewThread_ != nullptr || !previewRuntimes_.isEmpty() || pendingPreviewSources_.isEmpty()) {
         return;
     }
-    const QString source = pendingPreviewSource_;
+    const QStringList sources = pendingPreviewSources_;
     const QString transport = pendingPreviewTransport_;
-    pendingPreviewSource_.clear();
+    pendingPreviewSources_.clear();
     pendingPreviewTransport_.clear();
-    auto* thread = new QThread(this);
-    auto* worker = new VideoPreviewWorker(source, transport);
-    previewThread_ = thread;
-    previewWorker_ = worker;
     previewFrameAccepted_ = true;
-    worker->moveToThread(thread);
-    connect(thread, &QThread::started, worker, &VideoPreviewWorker::run);
-    connect(worker, &VideoPreviewWorker::frameReady, this, [this, worker](const QImage& image) {
-        if (previewFrameAccepted_ && previewWorker_ == worker) {
-            previewLabel_->setImage(image);
+    for (int index = 0; index < sources.size(); ++index) {
+        const QString source = sources[index];
+        const QString sourceLabel = previewSourceLabel(source);
+        const QString cameraId = QString("camera_%1").arg(index + 1);
+        auto* thread = new QThread(this);
+        auto* worker = new VideoPreviewWorker(source, transport);
+        worker->moveToThread(thread);
+
+        PreviewRuntime runtime;
+        runtime.cameraId = cameraId;
+        runtime.thread = thread;
+        runtime.worker = worker;
+        previewRuntimes_.push_back(runtime);
+        if (index == 0) {
+            previewThread_ = thread;
+            previewWorker_ = worker;
         }
-    });
-    connect(worker, &VideoPreviewWorker::failed, this, [this, worker](const QString& error) {
-        if (previewWorker_ == worker) {
-            appendLog("视频预览失败：" + error);
-        }
-    });
-    connect(worker, &VideoPreviewWorker::finished, thread, &QThread::quit);
-    connect(thread, &QThread::finished, worker, &QObject::deleteLater);
-    connect(thread, &QThread::finished, this, [this, thread, worker]() {
-        const bool wasCurrent = previewThread_ == thread;
-        if (previewWorker_ == worker) {
-            previewWorker_ = nullptr;
-        }
-        if (wasCurrent) {
-            previewThread_ = nullptr;
-            previewFrameAccepted_ = false;
-        }
-        thread->deleteLater();
-        if (!wasCurrent) {
-            return;
-        }
-        if (startDetectionAfterPreviewStops_) {
-            startDetectionAfterPreviewStops_ = false;
-            QTimer::singleShot(0, this, &MainWindow::startDetection);
-            return;
-        }
-        QTimer::singleShot(0, this, [this]() {
-            launchPendingVideoPreview();
+
+        connect(thread, &QThread::started, worker, &VideoPreviewWorker::run);
+        connect(worker, &VideoPreviewWorker::frameReady, this, [this, cameraId](const QImage& image) {
+            if (!previewFrameAccepted_) {
+                return;
+            }
+            cameraFrames_[cameraId] = image;
+            if (previewComposePending_) {
+                return;
+            }
+            previewComposePending_ = true;
+            QTimer::singleShot(100, this, [this]() {
+                previewComposePending_ = false;
+                composeMultiCameraPreview();
+            });
         });
-    });
-    thread->start();
-    appendLog("实时视频预览已启动，可在画面上绘制 ROI。");
+        connect(worker, &VideoPreviewWorker::failed, this, [this, cameraId, sourceLabel](const QString& error) {
+            appendLog(QString("[%1] 视频预览失败（%2）：%3").arg(cameraId, sourceLabel, error));
+        });
+        connect(worker, &VideoPreviewWorker::finished, thread, &QThread::quit);
+        connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+        connect(thread, &QThread::finished, this, [this, thread]() {
+            cleanupPreview(thread);
+        });
+    }
+    for (const PreviewRuntime& runtime : previewRuntimes_) {
+        runtime.thread->start();
+    }
+    appendLog(QString("实时视频预览已启动：%1 路，可在画面上绘制 ROI。").arg(sources.size()));
 }
 
 void MainWindow::stopVideoPreview() {
-    pendingPreviewSource_.clear();
+    pendingPreviewSources_.clear();
     pendingPreviewTransport_.clear();
     previewFrameAccepted_ = false;
-    VideoPreviewWorker* worker = previewWorker_;
-    if (worker != nullptr) {
-        QMetaObject::invokeMethod(worker, "stop", Qt::DirectConnection);
+    previewComposePending_ = false;
+    for (const PreviewRuntime& runtime : previewRuntimes_) {
+        if (runtime.worker != nullptr) {
+            QMetaObject::invokeMethod(runtime.worker, "stop", Qt::DirectConnection);
+        }
     }
+    if (previewWorker_ != nullptr) {
+        QMetaObject::invokeMethod(previewWorker_, "stop", Qt::DirectConnection);
+    }
+}
+
+void MainWindow::cleanupPreview(QThread* thread) {
+    for (int i = 0; i < previewRuntimes_.size(); ++i) {
+        if (previewRuntimes_[i].thread == thread) {
+            if (previewRuntimes_[i].worker == previewWorker_) {
+                previewWorker_ = nullptr;
+            }
+            if (previewRuntimes_[i].thread != nullptr) {
+                previewRuntimes_[i].thread->deleteLater();
+            }
+            previewRuntimes_.removeAt(i);
+            break;
+        }
+    }
+    if (previewThread_ == thread) {
+        previewThread_ = previewRuntimes_.isEmpty() ? nullptr : previewRuntimes_.first().thread;
+        previewWorker_ = previewRuntimes_.isEmpty() ? nullptr : previewRuntimes_.first().worker;
+    }
+    if (!previewRuntimes_.isEmpty()) {
+        return;
+    }
+    previewThread_ = nullptr;
+    previewWorker_ = nullptr;
+    previewFrameAccepted_ = false;
+    if (startDetectionAfterPreviewStops_) {
+        startDetectionAfterPreviewStops_ = false;
+        QTimer::singleShot(0, this, &MainWindow::startDetection);
+        return;
+    }
+    QTimer::singleShot(0, this, [this]() {
+        launchPendingVideoPreview();
+    });
 }
 
 void MainWindow::refreshRuntimeOverview() {
@@ -1207,9 +1507,23 @@ void MainWindow::refreshRuntimeOverview() {
     if (streamMode) {
         const QString host = hikIpEdit_ == nullptr ? QString() : hikIpEdit_->text().trimmed();
         sourceStatusLabel_->setText(host.isEmpty() ? "●  视频流未配置" : "●  " + host + " · 在线监测");
+        QVector<int> channels;
+        try {
+            channels = configuredHikvisionChannels();
+        } catch (const std::exception&) {
+            channels.clear();
+        }
         const int channel = hikChannelSpin_ == nullptr ? 0 : hikChannelSpin_->value();
         const QString streamName = hikStreamCombo_ == nullptr ? QString() : hikStreamCombo_->currentText();
-        channelStatusLabel_->setText(channel > 0 ? QString("通道 %1 · %2").arg(channel).arg(streamName) : "通道 --");
+        if (!channels.isEmpty()) {
+            QStringList channelTexts;
+            for (int item : channels) {
+                channelTexts.push_back(QString::number(item));
+            }
+            channelStatusLabel_->setText(QString("多路通道 %1 · %2").arg(channelTexts.join(",")).arg(streamName));
+        } else {
+            channelStatusLabel_->setText(channel > 0 ? QString("通道 %1 · %2").arg(channel).arg(streamName) : "通道 --");
+        }
         return;
     }
 
@@ -1225,10 +1539,15 @@ QWidget* MainWindow::buildPathPanel() {
     layout->setColumnStretch(1, 1);
     sourceEdit_ = new QLineEdit(box);
     sourceEdit_->setReadOnly(true);
+    configureAdaptiveLineEdit(sourceEdit_, 12, 30);
     setPrivatePath(sourceEdit_, {});
+    sourceEdit_->setMinimumWidth(0);
+    sourceEdit_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     sourceModeCombo_ = new ScrollSafeComboBox(box);
     sourceModeCombo_->addItem("本地文件", "file");
     sourceModeCombo_->addItem("视频流", "stream");
+    configureAdaptiveComboBox(sourceModeCombo_, 10);
+    configureCompactField(sourceModeCombo_, 150);
     layout->addWidget(new QLabel("来源类型", box), 0, 0);
     layout->addWidget(sourceModeCombo_, 0, 1, 1, 2);
 
@@ -1241,6 +1560,20 @@ QWidget* MainWindow::buildPathPanel() {
     layout->addWidget(sourceButton, 1, 2);
     rootLayout->addLayout(layout);
 
+    multiSourceEdit_ = new QPlainTextEdit(box);
+    multiSourceEdit_->setPlaceholderText("多路视频在线检测：每行一路本地视频或 RTSP 地址；留空则使用上方单路视频源。");
+    multiSourceEdit_->setMaximumHeight(72);
+    multiSourceEdit_->setLineWrapMode(QPlainTextEdit::WidgetWidth);
+    multiSourceEdit_->setWordWrapMode(QTextOption::WrapAnywhere);
+    multiSourceEdit_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    multiSourceEdit_->setMinimumWidth(0);
+    multiSourceEdit_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+    auto* localVideoButton = new QPushButton("应用本地视频", box);
+    rootLayout->addWidget(new QLabel("多路视频源", box));
+    rootLayout->addWidget(multiSourceEdit_);
+    rootLayout->addWidget(localVideoButton);
+    connect(localVideoButton, &QPushButton::clicked, this, &MainWindow::applyLocalVideoSources);
+
     streamSettingsWidget_ = new QWidget(box);
     auto* streamLayout = new QGridLayout(streamSettingsWidget_);
     streamLayout->setContentsMargins(0, 4, 0, 0);
@@ -1248,37 +1581,54 @@ QWidget* MainWindow::buildPathPanel() {
     hikIpEdit_ = new QLineEdit(box);
     hikUserEdit_ = new QLineEdit("admin", box);
     hikPasswordEdit_ = new QLineEdit(box);
+    multiHikChannelEdit_ = new QLineEdit(box);
     hikChannelSpin_ = new ScrollSafeSpinBox(box);
-    hikRtspPortSpin_ = new ScrollSafeSpinBox(box);
+    hikRtspPortEdit_ = new QLineEdit(box);
     hikStreamCombo_ = new ScrollSafeComboBox(box);
     hikTransportCombo_ = new ScrollSafeComboBox(box);
     hikPasswordEdit_->setEchoMode(QLineEdit::Password);
     hikIpEdit_->setPlaceholderText("192.168.1.64");
     hikPasswordEdit_->setPlaceholderText("海康相机密码");
+    multiHikChannelEdit_->setPlaceholderText("多路检测填写：1,2,3；留空则使用上方单通道");
+    configureAdaptiveLineEdit(hikIpEdit_, 12, 18);
+    configureAdaptiveLineEdit(hikUserEdit_, 8, 16);
+    configureAdaptiveLineEdit(hikPasswordEdit_, 10, 20);
+    configureAdaptiveLineEdit(multiHikChannelEdit_, 10, 20);
+    configurePortLineEdit(hikRtspPortEdit_);
+    hikChannelSpin_->setMinimumWidth(0);
+    hikChannelSpin_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    configureAdaptiveComboBox(hikStreamCombo_, 6);
+    configureAdaptiveComboBox(hikTransportCombo_, 4);
     hikChannelSpin_->setRange(1, 999);
     hikChannelSpin_->setValue(1);
-    hikRtspPortSpin_->setRange(1, 65535);
-    hikRtspPortSpin_->setValue(554);
+    hikRtspPortEdit_->setText(QStringLiteral("554"));
+    connect(hikRtspPortEdit_, &QLineEdit::editingFinished, this, [this]() {
+        normalizePortLineEdit(hikRtspPortEdit_);
+    });
     hikStreamCombo_->addItem("主码流", 1);
     hikStreamCombo_->addItem("子码流", 2);
     hikTransportCombo_->addItem("TCP", "tcp");
     hikTransportCombo_->addItem("UDP", "udp");
 
-    streamLayout->addWidget(new QLabel("海康设备", box), 0, 0);
+    streamLayout->setColumnMinimumWidth(0, 72);
+    streamLayout->setColumnStretch(0, 0);
+    streamLayout->setColumnStretch(1, 1);
+    streamLayout->addWidget(new QLabel("设备IP", box), 0, 0);
     streamLayout->addWidget(hikIpEdit_, 0, 1);
-    streamLayout->addWidget(hikRtspPortSpin_, 0, 2);
-    streamLayout->addWidget(new QLabel("登录账号", box), 1, 0);
-    auto* hikAuthLayout = new QHBoxLayout();
-    hikAuthLayout->addWidget(hikUserEdit_);
-    hikAuthLayout->addWidget(hikPasswordEdit_);
-    streamLayout->addLayout(hikAuthLayout, 1, 1, 1, 2);
-    streamLayout->addWidget(new QLabel("通道/码流", box), 2, 0);
-    auto* channelLayout = new QHBoxLayout();
-    channelLayout->addWidget(hikChannelSpin_);
-    channelLayout->addWidget(hikStreamCombo_);
-    streamLayout->addLayout(channelLayout, 2, 1, 1, 2);
-    streamLayout->addWidget(new QLabel("传输协议", box), 3, 0);
-    streamLayout->addWidget(hikTransportCombo_, 3, 1, 1, 2);
+    streamLayout->addWidget(new QLabel("RTSP端口", box), 1, 0);
+    streamLayout->addWidget(hikRtspPortEdit_, 1, 1);
+    streamLayout->addWidget(new QLabel("登录账号", box), 2, 0);
+    streamLayout->addWidget(hikUserEdit_, 2, 1);
+    streamLayout->addWidget(new QLabel("登录密码", box), 3, 0);
+    streamLayout->addWidget(hikPasswordEdit_, 3, 1);
+    streamLayout->addWidget(new QLabel("通道", box), 4, 0);
+    streamLayout->addWidget(hikChannelSpin_, 4, 1);
+    streamLayout->addWidget(new QLabel("码流", box), 5, 0);
+    streamLayout->addWidget(hikStreamCombo_, 5, 1);
+    streamLayout->addWidget(new QLabel("多路通道", box), 6, 0);
+    streamLayout->addWidget(multiHikChannelEdit_, 6, 1);
+    streamLayout->addWidget(new QLabel("传输协议", box), 7, 0);
+    streamLayout->addWidget(hikTransportCombo_, 7, 1);
     auto* streamButtons = new QHBoxLayout();
     auto* hikButton = new QPushButton("应用视频流", box);
     auto* testButton = new QPushButton("测试连接", box);
@@ -1286,7 +1636,7 @@ QWidget* MainWindow::buildPathPanel() {
     connect(testButton, &QPushButton::clicked, this, &MainWindow::testVideoStream);
     streamButtons->addWidget(hikButton);
     streamButtons->addWidget(testButton);
-    streamLayout->addLayout(streamButtons, 4, 0, 1, 3);
+    streamLayout->addLayout(streamButtons, 8, 0, 1, 2);
     rootLayout->addWidget(streamSettingsWidget_);
 
     connect(
@@ -1312,56 +1662,86 @@ QWidget* MainWindow::buildPathPanel() {
 
 QWidget* MainWindow::buildParamPanel() {
     auto* box = new QGroupBox("推理参数");
-    auto* form = new QFormLayout(box);
-    modelEdit_ = new QLineEdit(box);
-    modelEdit_->setReadOnly(true);
+    auto* grid = new QGridLayout(box);
+    grid->setColumnMinimumWidth(0, 64);
+    grid->setColumnStretch(0, 0);
+    grid->setColumnStretch(1, 1);
+    grid->setHorizontalSpacing(8);
+    grid->setVerticalSpacing(7);
+    modelEdit_ = new QPlainTextEdit(box);
+    configureModelPathEdit(modelEdit_);
+    configureCompactField(modelEdit_);
     setPrivatePath(modelEdit_, {});
     auto* modelButtons = new QWidget(box);
-    auto* modelButtonLayout = new QHBoxLayout(modelButtons);
+    configureCompactField(modelButtons);
+    auto* modelButtonLayout = new QVBoxLayout(modelButtons);
     modelButtonLayout->setContentsMargins(0, 0, 0, 0);
+    modelButtonLayout->setSpacing(6);
     auto* modelFileButton = new QPushButton("模型文件", modelButtons);
     auto* openVinoButton = new QPushButton("OpenVINO目录", modelButtons);
+    configureCompactField(modelFileButton);
+    configureCompactField(openVinoButton);
     connect(modelFileButton, &QPushButton::clicked, this, &MainWindow::browseModel);
     connect(openVinoButton, &QPushButton::clicked, this, &MainWindow::browseOpenVinoDirectory);
     modelButtonLayout->addWidget(modelFileButton);
     modelButtonLayout->addWidget(openVinoButton);
     classCombo_ = new ScrollSafeComboBox(box);
     classCombo_->addItem("全部类别", -1);
+    configureAdaptiveComboBox(classCombo_, 8);
+    configureCompactField(classCombo_);
     backendCombo_ = new ScrollSafeComboBox(box);
     backendCombo_->addItem("OpenVINO", "openvino");
     backendCombo_->addItem("TensorRT", "tensorrt");
+    configureAdaptiveComboBox(backendCombo_, 10);
+    configureCompactField(backendCombo_);
     deviceCombo_ = new ScrollSafeComboBox(box);
-    deviceCombo_->addItem("AUTO", "AUTO");
-    deviceCombo_->addItem("CPU", "CPU");
-    deviceCombo_->addItem("GPU", "GPU");
-    deviceCombo_->addItem("NPU", "NPU");
-    deviceCombo_->addItem("CUDA", "CUDA");
+    refreshDeviceOptions("AUTO");
+    configureAdaptiveComboBox(deviceCombo_, 10);
+    configureCompactField(deviceCombo_);
+    connect(backendCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+        refreshDeviceOptions();
+        saveSettings();
+    });
     inputSizeSpin_ = new ScrollSafeSpinBox(box);
     inputSizeSpin_->setRange(160, 1536);
     inputSizeSpin_->setSingleStep(32);
     inputSizeSpin_->setValue(960);
+    configureCompactField(inputSizeSpin_);
     videoFpsSpin_ = new ScrollSafeSpinBox(box);
     videoFpsSpin_->setRange(1, 120);
     videoFpsSpin_->setSingleStep(5);
     videoFpsSpin_->setValue(60);
+    configureCompactField(videoFpsSpin_);
     confidenceSpin_ = new ScrollSafeDoubleSpinBox(box);
     confidenceSpin_->setRange(0.01, 0.99);
     confidenceSpin_->setSingleStep(0.05);
     confidenceSpin_->setValue(0.25);
+    configureCompactField(confidenceSpin_);
     iouSpin_ = new ScrollSafeDoubleSpinBox(box);
     iouSpin_->setRange(0.01, 0.99);
     iouSpin_->setSingleStep(0.05);
     iouSpin_->setValue(0.45);
+    configureCompactField(iouSpin_);
 
-    form->addRow("视觉模型", modelEdit_);
-    form->addRow("选择方式", modelButtons);
-    form->addRow("推理后端", backendCombo_);
-    form->addRow("类别", classCombo_);
-    form->addRow("执行设备", deviceCombo_);
-    form->addRow("输入尺寸", inputSizeSpin_);
-    form->addRow("预览FPS", videoFpsSpin_);
-    form->addRow("置信度", confidenceSpin_);
-    form->addRow("NMS IoU", iouSpin_);
+    int row = 0;
+    grid->addWidget(makeCompactParamLabel("视觉模型", box), row, 0);
+    grid->addWidget(modelEdit_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("选择方式", box), row, 0);
+    grid->addWidget(modelButtons, row++, 1);
+    grid->addWidget(makeCompactParamLabel("推理后端", box), row, 0);
+    grid->addWidget(backendCombo_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("类别", box), row, 0);
+    grid->addWidget(classCombo_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("执行设备", box), row, 0);
+    grid->addWidget(deviceCombo_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("输入尺寸", box), row, 0);
+    grid->addWidget(inputSizeSpin_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("预览FPS", box), row, 0);
+    grid->addWidget(videoFpsSpin_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("置信度", box), row, 0);
+    grid->addWidget(confidenceSpin_, row++, 1);
+    grid->addWidget(makeCompactParamLabel("NMS IoU", box), row, 0);
+    grid->addWidget(iouSpin_, row, 1);
     return box;
 }
 
@@ -1369,12 +1749,18 @@ QWidget* MainWindow::buildRoiPanel() {
     auto* box = new QGroupBox("流量监测");
     auto* layout = new QVBoxLayout(box);
     auto* form = new QFormLayout();
+    configureAdaptiveForm(form);
 
     regionCombo_ = new ScrollSafeComboBox(box);
     totalCountRegionCombo_ = new ScrollSafeComboBox(box);
     regionNameEdit_ = new QLineEdit(box);
     flowRoiEdit_ = new QLineEdit(box);
     detectRoiEdit_ = new QLineEdit(box);
+    configureAdaptiveComboBox(regionCombo_, 10);
+    configureAdaptiveComboBox(totalCountRegionCombo_, 10);
+    configureAdaptiveLineEdit(regionNameEdit_, 10, 22);
+    configureAdaptiveLineEdit(flowRoiEdit_, 18, 32);
+    configureAdaptiveLineEdit(detectRoiEdit_, 18, 32);
     countEnabledCheck_ = new QCheckBox("参与累计", box);
     jamEnabledCheck_ = new QCheckBox("启用堵包", box);
     jamSecondsSpin_ = new ScrollSafeSpinBox(box);
@@ -1387,7 +1773,7 @@ QWidget* MainWindow::buildRoiPanel() {
     form->addRow("区域名称", regionNameEdit_);
     form->addRow("当前区域ROI", flowRoiEdit_);
     form->addRow("检测区域", detectRoiEdit_);
-    form->addRow("主统计区域", totalCountRegionCombo_);
+    form->addRow("计数口径", totalCountRegionCombo_);
     form->addRow("堵包判定秒", jamSecondsSpin_);
 
     auto* switchLayout = new QHBoxLayout();
@@ -1436,16 +1822,30 @@ QWidget* MainWindow::buildRoiPanel() {
         applyRegionSelection();
     });
     connect(totalCountRegionCombo_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+        auto refreshKpiForCountScope = [this]() {
+            if (isDetectionRunning()) {
+                aggregateDashboardFromCameraStates();
+                dashboardStatusText_ = dashboardStatusForStates(
+                    dashboardRuntimeStates_, dashboardJamActive_, "运行中");
+                setDashboardAlarmActive(dashboardJamActive_);
+            }
+            refreshRegionTable();
+        };
         const QString selectedId = totalCountRegionCombo_->currentData().toString();
         const int selectedIndex = findRegionIndexById(selectedId);
+        if (isAllCountRegionsId(selectedId)) {
+            totalCountRegionId_ = selectedId;
+            refreshKpiForCountScope();
+            return;
+        }
         if (selectedIndex >= 0 && !regions_[selectedIndex].countEnabled) {
-            QMessageBox::warning(this, "主统计区域错误", "主统计区域必须参与累计。");
+            QMessageBox::warning(this, "计数口径错误", "计数口径必须参与累计。");
             const QSignalBlocker blocker(totalCountRegionCombo_);
             totalCountRegionCombo_->setCurrentIndex(totalCountRegionCombo_->findData(totalCountRegionId_));
             return;
         }
         totalCountRegionId_ = selectedId;
-        refreshRegionTable();
+        refreshKpiForCountScope();
     });
     connect(regionNameEdit_, &QLineEdit::editingFinished, this, &MainWindow::renameCurrentRegion);
     connect(addButton, &QPushButton::clicked, this, &MainWindow::addRegion);
@@ -1486,7 +1886,7 @@ QWidget* MainWindow::buildRoiPanel() {
         const int index = findRegionIndexById(currentRegionId_);
         if (index >= 0) {
             if (totalCountRegionId_ == currentRegionId_ && !checked) {
-                QMessageBox::warning(this, "主统计区域错误", "主统计区域必须参与累计。");
+                QMessageBox::warning(this, "计数口径错误", "计数口径必须参与累计。");
                 const QSignalBlocker blocker(countEnabledCheck_);
                 countEnabledCheck_->setChecked(true);
                 return;
@@ -1531,17 +1931,26 @@ QWidget* MainWindow::buildActionPanel() {
 
 QWidget* MainWindow::buildControlPanel() {
     auto* box = new QGroupBox("检测控制");
-    auto* layout = new QFormLayout(box);
+    auto* layout = new QGridLayout(box);
+    layout->setColumnMinimumWidth(0, 72);
+    layout->setColumnStretch(0, 0);
+    layout->setColumnStretch(1, 1);
+    layout->setHorizontalSpacing(8);
+    layout->setVerticalSpacing(8);
     outputEdit_ = new QLineEdit(box);
     outputEdit_->setReadOnly(true);
+    configureCompactField(outputEdit_);
     setPrivatePath(outputEdit_, RuntimePaths::defaultOutputDir());
     auto* outputButton = new QPushButton("选择输出目录", box);
+    configureCompactField(outputButton);
     connect(outputButton, &QPushButton::clicked, this, &MainWindow::browseOutput);
-    diagnoseButton_ = new QPushButton("环境自检", box);
+    diagnoseButton_ = new QPushButton("运行环境自检", box);
+    configureCompactField(diagnoseButton_);
     connect(diagnoseButton_, &QPushButton::clicked, this, &MainWindow::runEnvironmentDiagnose);
-    layout->addRow("输出目录", outputEdit_);
-    layout->addRow(QString(), outputButton);
-    layout->addRow(QString(), diagnoseButton_);
+    layout->addWidget(new QLabel("输出目录", box), 0, 0);
+    layout->addWidget(outputEdit_, 0, 1);
+    layout->addWidget(outputButton, 1, 1);
+    layout->addWidget(diagnoseButton_, 2, 1);
     return box;
 }
 
@@ -1620,13 +2029,17 @@ QWidget* MainWindow::buildDashboardPanel() {
 }
 
 QString MainWindow::buildHikvisionRtsp() const {
+    return buildHikvisionRtsp(hikChannelSpin_->value());
+}
+
+QString MainWindow::buildHikvisionRtsp(int channel) const {
     QUrl url;
     url.setScheme("rtsp");
     url.setHost(hikIpEdit_->text().trimmed());
-    url.setPort(hikRtspPortSpin_->value());
+    url.setPort(checkedPortFromEdit(hikRtspPortEdit_));
     url.setUserName(hikUserEdit_->text().trimmed());
     url.setPassword(hikPasswordEdit_->text());
-    const int streamId = hikChannelSpin_->value() * 100 + hikStreamCombo_->currentData().toInt();
+    const int streamId = channel * 100 + hikStreamCombo_->currentData().toInt();
     url.setPath("/Streaming/Channels/" + QString::number(streamId));
     return url.toString(QUrl::FullyEncoded);
 }
@@ -1635,20 +2048,23 @@ void MainWindow::loadSettings() {
     QSettings settings;
     const QString savedModel = settings.value("lastModelPath").toString();
     setPrivatePath(modelEdit_, QFileInfo::exists(savedModel) ? savedModel : QString());
-    setPrivatePath(
-        sourceEdit_,
-        sourcePathForSettings(settings.value("lastSourcePath", privatePath(sourceEdit_)).toString())
-    );
+    setPrivatePath(sourceEdit_, {});
+    if (multiSourceEdit_ != nullptr) {
+        multiSourceEdit_->clear();
+    }
     const QString savedOutput = settings.value("lastOutputDir", privatePath(outputEdit_)).toString().trimmed();
     setPrivatePath(outputEdit_, savedOutput.isEmpty() ? RuntimePaths::defaultOutputDir() : savedOutput);
     settings.remove("lastDetectRoi");
     detectRoiEdit_->clear();
     hikIpEdit_->setText(settings.value("hikvisionIp", hikIpEdit_->text()).toString());
     hikUserEdit_->setText(settings.value("hikvisionUser", hikUserEdit_->text()).toString());
-    settings.remove("hikvisionPassword");
-    hikPasswordEdit_->clear();
+    hikPasswordEdit_->setText(settings.value("hikvisionPassword").toString());
     hikChannelSpin_->setValue(settings.value("hikvisionChannel", hikChannelSpin_->value()).toInt());
-    hikRtspPortSpin_->setValue(settings.value("hikvisionRtspPort", hikRtspPortSpin_->value()).toInt());
+    if (multiHikChannelEdit_ != nullptr) {
+        multiHikChannelEdit_->setText(settings.value("hikvisionMultiChannels").toString());
+    }
+    const int savedRtspPort = settings.value("hikvisionRtspPort", hikRtspPortEdit_->text()).toInt();
+    hikRtspPortEdit_->setText(QString::number(std::clamp(savedRtspPort, 1, 65535)));
     const int streamIndex = hikStreamCombo_->findData(settings.value("hikvisionStream", 1).toInt());
     hikStreamCombo_->setCurrentIndex(streamIndex >= 0 ? streamIndex : 0);
     const int transportIndex = hikTransportCombo_->findData(settings.value("hikvisionTransport", "tcp").toString());
@@ -1663,22 +2079,27 @@ void MainWindow::loadSettings() {
     const QString savedBackend = settings.value("inferenceBackend", "openvino").toString();
     const int backendIndex = backendCombo_->findData(savedBackend);
     backendCombo_->setCurrentIndex(backendIndex >= 0 ? backendIndex : 0);
-    const QString savedDevice = settings.value("deviceMode", "auto").toString();
-    const int deviceIndex = deviceCombo_->findData(savedDevice);
-    deviceCombo_->setCurrentIndex(deviceIndex >= 0 ? deviceIndex : 0);
+    const QString savedDevice = settings.value("deviceMode", "AUTO").toString();
+    refreshDeviceOptions(savedDevice);
 }
 
 void MainWindow::saveSettings() const {
     QSettings settings;
     settings.setValue("lastModelPath", privatePath(modelEdit_));
-    settings.setValue("lastSourcePath", sourcePathForSettings(privatePath(sourceEdit_)));
+    settings.remove("lastSourcePath");
+    settings.remove("multiSourcePaths");
     settings.setValue("lastOutputDir", privatePath(outputEdit_));
     settings.remove("lastDetectRoi");
     settings.setValue("hikvisionIp", hikIpEdit_->text().trimmed());
     settings.setValue("hikvisionUser", hikUserEdit_->text().trimmed());
-    settings.remove("hikvisionPassword");
+    settings.setValue("hikvisionPassword", hikPasswordEdit_->text());
     settings.setValue("hikvisionChannel", hikChannelSpin_->value());
-    settings.setValue("hikvisionRtspPort", hikRtspPortSpin_->value());
+    if (multiHikChannelEdit_ != nullptr) {
+        settings.setValue("hikvisionMultiChannels", multiHikChannelEdit_->text().trimmed());
+    }
+    bool portOk = false;
+    const int port = hikRtspPortEdit_ == nullptr ? 554 : hikRtspPortEdit_->text().trimmed().toInt(&portOk);
+    settings.setValue("hikvisionRtspPort", portOk && port >= 1 && port <= 65535 ? port : 554);
     settings.setValue("hikvisionStream", hikStreamCombo_->currentData().toInt());
     settings.setValue("hikvisionTransport", hikTransportCombo_->currentData().toString());
     settings.setValue("sourceMode", sourceModeCombo_->currentData().toString());
@@ -1688,6 +2109,35 @@ void MainWindow::saveSettings() const {
     settings.setValue("iou", iouSpin_->value());
     settings.setValue("inferenceBackend", backendCombo_->currentData().toString());
     settings.setValue("deviceMode", deviceCombo_->currentData().toString());
+}
+
+void MainWindow::refreshDeviceOptions(const QString& preferredDevice) {
+    if (backendCombo_ == nullptr || deviceCombo_ == nullptr) {
+        return;
+    }
+    const QString backend = backendCombo_->currentData().toString().trimmed().toLower();
+    const QString previous = preferredDevice.trimmed().isEmpty()
+        ? deviceCombo_->currentData().toString()
+        : preferredDevice.trimmed();
+
+    const QSignalBlocker blocker(deviceCombo_);
+    deviceCombo_->clear();
+    if (backend == "tensorrt") {
+        deviceCombo_->addItem("NVIDIA CUDA GPU 0", "0");
+    } else {
+        deviceCombo_->addItem("AUTO", "AUTO");
+        deviceCombo_->addItem("CPU", "CPU");
+        deviceCombo_->addItem("OpenVINO GPU（Intel）", "GPU");
+    }
+
+    int index = deviceCombo_->findData(previous);
+    if (index < 0 && backend == "tensorrt" && previous.compare("CUDA", Qt::CaseInsensitive) == 0) {
+        index = deviceCombo_->findData("0");
+    }
+    if (index < 0) {
+        index = 0;
+    }
+    deviceCombo_->setCurrentIndex(index);
 }
 
 void MainWindow::populateClassCombo(const QStringList& labels) {
@@ -1712,8 +2162,8 @@ void MainWindow::ensureDefaultRegion() {
         return;
     }
     RegionConfig region;
-    region.id = "main_region";
-    region.name = "主统计区域";
+    region.id = "region_1";
+    region.name = "区域 1";
     region.priority = 1;
     regions_.push_back(region);
     totalCountRegionId_ = region.id;
@@ -1744,7 +2194,9 @@ void MainWindow::refreshRegionSelectors() {
         currentRegionId_ = regions_.first().id;
     }
     if (totalCountRegionId_.trimmed().isEmpty() || findRegionIndexById(totalCountRegionId_) < 0) {
-        totalCountRegionId_ = regions_.first().id;
+        if (!isAllCountRegionsId(totalCountRegionId_)) {
+            totalCountRegionId_ = regions_.first().id;
+        }
     }
 
     {
@@ -1759,6 +2211,7 @@ void MainWindow::refreshRegionSelectors() {
     {
         const QSignalBlocker totalBlocker(totalCountRegionCombo_);
         totalCountRegionCombo_->clear();
+        totalCountRegionCombo_->addItem("多区域汇总", QStringLiteral("__all_count_regions__"));
         for (const RegionConfig& region : regions_) {
             totalCountRegionCombo_->addItem(region.name, region.id);
         }
@@ -1795,6 +2248,12 @@ void MainWindow::applyRegionSelection() {
     }
     previewLabel_->setActiveRegionId(currentRegionId_);
     syncCurrentRegionEditors();
+    if (isDetectionRunning()) {
+        aggregateDashboardFromCameraStates();
+        dashboardStatusText_ = dashboardStatusForStates(
+            dashboardRuntimeStates_, dashboardJamActive_, "运行中");
+        setDashboardAlarmActive(dashboardJamActive_);
+    }
     refreshRegionTable();
 }
 
@@ -1802,7 +2261,9 @@ void MainWindow::refreshRegionTable() {
     if (regionTable_ == nullptr) {
         return;
     }
-    regionTable_->setRowCount(regions_.size());
+    const int runtimeRowCount = isDetectionRunning() && !regionRuntimeStates_.isEmpty()
+        ? regionRuntimeStates_.size()
+        : 0;
     bool hasConfiguredRegion = false;
     for (const RegionConfig& region : regions_) {
         if (region.polygonClosed && region.polygon.size() >= 3) {
@@ -1810,43 +2271,43 @@ void MainWindow::refreshRegionTable() {
             break;
         }
     }
+    const int displayRowCount = runtimeRowCount > 0 ? runtimeRowCount : (hasConfiguredRegion ? regions_.size() : 0);
+    regionTable_->setRowCount(displayRowCount);
     if (regionEmptyLabel_ != nullptr) {
         regionEmptyLabel_->setVisible(!hasConfiguredRegion);
     }
     QStringList jamIds;
-    int insideSum = 0;
-    int jamSum = 0;
     for (const RegionRuntimeState& state : regionRuntimeStates_) {
-        insideSum += state.insideCount;
-        jamSum += state.jamCount;
         if (state.jamActive) {
             jamIds.push_back(state.id);
         }
     }
-    if (dashboardInsideCount_ <= 0) {
-        dashboardInsideCount_ = insideSum;
-    }
-    if (dashboardJamCount_ <= 0) {
-        dashboardJamCount_ = jamSum;
-    }
+    const bool alertVisible = dashboardJamActive_ && dashboardFlashVisible_;
 
-    for (int row = 0; row < regions_.size(); ++row) {
-        const RegionConfig& region = regions_[row];
-        RegionRuntimeState state = buildFallbackState(region);
-        for (const RegionRuntimeState& item : regionRuntimeStates_) {
-            if (item.id == region.id) {
-                state = item;
-                break;
+    for (int row = 0; row < regionTable_->rowCount(); ++row) {
+        const bool runtimeRow = runtimeRowCount > 0;
+        const RegionConfig region = runtimeRow ? RegionConfig{} : regions_[row];
+        RegionRuntimeState state = runtimeRow ? regionRuntimeStates_[row] : buildFallbackState(region);
+        if (!runtimeRow) {
+            for (const RegionRuntimeState& item : regionRuntimeStates_) {
+                if (item.id == region.id) {
+                    state = item;
+                    break;
+                }
             }
-        }
-        if (state.name.trimmed().isEmpty()) {
-            state.name = region.name;
+            if (state.name.trimmed().isEmpty()) {
+                state.name = region.name;
+            }
         }
 
         const QString statusText = regionStatusText(state, pipelineThread_ != nullptr);
-        const QString regionText = region.id == totalCountRegionId_
-            ? region.name + "（主统计区域）"
-            : region.name;
+        const QString regionName = runtimeRow ? state.name : region.name;
+        const bool isKpiRegion = state.id == (currentRegionId_.trimmed().isEmpty()
+            ? totalCountRegionId_
+            : currentRegionId_);
+        const QString regionText = isKpiRegion
+            ? regionName + "（当前看板）"
+            : regionName;
         const QStringList values = {
             regionText,
             QString::number(state.flowCount),
@@ -1863,9 +2324,9 @@ void MainWindow::refreshRegionTable() {
                 regionTable_->setItem(row, column, item);
             }
             item->setText(values[column]);
-            if (state.jamActive && dashboardFlashVisible_) {
+            if (state.jamActive && alertVisible) {
                 item->setBackground(QColor("#4A2024"));
-            } else if (region.id == currentRegionId_) {
+            } else if (state.id == currentRegionId_) {
                 item->setBackground(QColor("#172431"));
             } else {
                 item->setBackground(QColor("#0B1118"));
@@ -1874,7 +2335,7 @@ void MainWindow::refreshRegionTable() {
     }
 
     previewLabel_->setJamRegionIds(jamIds);
-    previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
+    previewLabel_->setAlertFlashVisible(alertVisible);
     kpiTotalCountValueLabel_->setText(QString::number(dashboardTotalCount_));
     kpiStatusValueLabel_->setText(dashboardStatusText_);
     kpiInsideCountValueLabel_->setText(QString::number(dashboardInsideCount_));
@@ -1912,9 +2373,37 @@ RegionConfigDocument MainWindow::buildRegionConfigDocument() const {
     return regionConfigDocumentFromJson(regionConfigDocumentToJson(document));
 }
 
+RegionConfigDocument MainWindow::regionDocumentForCamera(const QString& cameraId, bool multiCamera) const {
+    if (!multiCamera) {
+        return buildRegionConfigDocument();
+    }
+
+    RegionConfigDocument document;
+    document.version = 1;
+    document.totalCountRegionId = totalCountRegionId_;
+    const QRect cameraRect = cameraImageRects_.value(cameraId);
+    const QSize cameraSize = cameraSourceSizes_.value(cameraId);
+    QStringList regionIds;
+    for (const RegionConfig& region : regions_) {
+        if (!region.polygonClosed || region.polygon.size() < 3) {
+            continue;
+        }
+        RegionConfig mapped;
+        if (mapRegionToCameraFrame(region, cameraRect, cameraSize, &mapped)) {
+            regionIds.push_back(mapped.id);
+            document.regions.push_back(mapped);
+        }
+    }
+    if (!document.regions.isEmpty() && !regionIds.contains(document.totalCountRegionId)) {
+        document.totalCountRegionId = QStringLiteral("__all_count_regions__");
+    }
+    return document;
+}
+
 void MainWindow::restoreRegionConfigDocument(const RegionConfigDocument& document) {
     setDashboardAlarmActive(false);
     regionRuntimeStates_.clear();
+    dashboardRuntimeStates_.clear();
     dashboardTotalCount_ = 0;
     dashboardInsideCount_ = 0;
     dashboardJamCount_ = 0;
@@ -1981,11 +2470,37 @@ void MainWindow::browseSource() {
     if (!path.isEmpty()) {
         stopVideoPreview();
         sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("file"));
-        setPrivatePath(sourceEdit_, path, true);
+        sourceEdit_->setProperty("fullPath", path.trimmed());
+        sourceEdit_->setText("已加入多路视频源");
+        sourceEdit_->setCursorPosition(0);
+        sourceEdit_->setMinimumWidth(0);
+        sourceEdit_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
+        multiSourceEdit_->appendPlainText(path);
         loadVideoPreviewFrame();
         refreshRuntimeOverview();
         saveSettings();
     }
+}
+
+void MainWindow::applyLocalVideoSources() {
+    sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("file"));
+    const QStringList sources = configuredSourcePaths();
+    if (sources.isEmpty()) {
+        QMessageBox::warning(this, "缺少本地视频", "请先选择本地视频，或在多路视频源中每行填写一个视频路径。");
+        return;
+    }
+    setDashboardAlarmActive(false);
+    regions_.clear();
+    detectRoiEdit_->clear();
+    previewLabel_->setDetectRoiFromText({});
+    ensureDefaultRegion();
+    refreshRegionSelectors();
+    applyRegionSelection();
+    refreshRegionTable();
+    refreshRuntimeOverview();
+    saveSettings();
+    appendLog(QString("已应用本地视频源：%1 路。").arg(sources.size()));
+    loadConfiguredVideoPreviewFrames(sources);
 }
 
 void MainWindow::applyHikvisionStream() {
@@ -1994,10 +2509,24 @@ void MainWindow::applyHikvisionStream() {
         return;
     }
     sourceModeCombo_->setCurrentIndex(sourceModeCombo_->findData("stream"));
-    setPrivatePath(sourceEdit_, buildHikvisionRtsp());
+    QVector<int> channels;
+    try {
+        channels = configuredHikvisionChannels();
+    } catch (const std::exception& ex) {
+        QMessageBox::warning(this, "视频源配置错误", QString::fromUtf8(ex.what()));
+        return;
+    }
+    try {
+        setPrivatePath(sourceEdit_, channels.isEmpty() ? buildHikvisionRtsp() : buildHikvisionRtsp(channels.first()));
+    } catch (const std::exception& ex) {
+        QMessageBox::warning(this, "视频源配置错误", QString::fromUtf8(ex.what()));
+        return;
+    }
     refreshRuntimeOverview();
     saveSettings();
-    appendLog("已应用海康视频流配置。");
+    appendLog(channels.isEmpty()
+        ? "已应用海康视频流配置。"
+        : QString("已应用海康多路通道：%1。").arg(multiHikChannelEdit_->text().trimmed()));
     startVideoPreview();
 }
 
@@ -2065,7 +2594,7 @@ void MainWindow::deleteCurrentRegion() {
             }
         }
         if (nextTotalCountRegionId.isEmpty()) {
-            QMessageBox::warning(this, "无法删除", "没有可作为主统计区域的计数区域，请先启用其他区域的累计。");
+            QMessageBox::warning(this, "无法删除", "没有可作为计数口径的区域，请先启用其他区域的累计。");
             return;
         }
     }
@@ -2132,8 +2661,160 @@ VideoPipeline::Config MainWindow::currentDetectConfig() const {
     return config;
 }
 
+QStringList MainWindow::configuredSourcePaths() const {
+    QStringList sources;
+    if (multiSourceEdit_ != nullptr) {
+        const QStringList lines = multiSourceEdit_->toPlainText().split(QRegularExpression("[\\r\\n]+"));
+        for (const QString& line : lines) {
+            const QString source = line.trimmed();
+            if (!source.isEmpty() && !source.startsWith("#")) {
+                sources.push_back(source);
+            }
+        }
+    }
+    const bool streamMode = sourceModeCombo_ != nullptr
+        && sourceModeCombo_->currentData().toString() == "stream";
+    if (streamMode) {
+        if (hikPasswordEdit_ != nullptr && hikPasswordEdit_->text().isEmpty()) {
+            throw std::runtime_error("海康密码不能为空，请先输入密码后再应用视频流。");
+        }
+        const QVector<int> channels = configuredHikvisionChannels();
+        if (channels.isEmpty()) {
+            sources.push_back(buildHikvisionRtsp());
+        } else {
+            for (int channel : channels) {
+                sources.push_back(buildHikvisionRtsp(channel));
+            }
+        }
+        sources.removeDuplicates();
+        return sources;
+    }
+    if (sources.isEmpty()) {
+        const QString source = privatePath(sourceEdit_).trimmed();
+        if (!source.isEmpty()) {
+            sources.push_back(source);
+        }
+    }
+    sources.removeDuplicates();
+    return sources;
+}
+
+QVector<int> MainWindow::configuredHikvisionChannels() const {
+    QVector<int> channels;
+    if (multiHikChannelEdit_ == nullptr) {
+        return channels;
+    }
+    const QString text = multiHikChannelEdit_->text().trimmed();
+    if (text.isEmpty()) {
+        return channels;
+    }
+    const QStringList tokens = text.split(QRegularExpression("[,，;；\\s]+"), Qt::SkipEmptyParts);
+    for (const QString& token : tokens) {
+        const int channel = token.toInt();
+        if (channel <= 0 || QString::number(channel) != token.trimmed()) {
+            throw std::runtime_error(QString("海康多路通道必须是正整数：%1").arg(token).toUtf8().constData());
+        }
+        if (!channels.contains(channel)) {
+            channels.push_back(channel);
+        }
+    }
+    return channels;
+}
+
+bool MainWindow::startConfiguredPipelines(const QStringList& sources) {
+    cameraFrames_.clear();
+    pipelineRuntimes_.clear();
+    pipelineThread_ = nullptr;
+    pipeline_ = nullptr;
+
+    const bool multiCamera = sources.size() > 1;
+    if (multiCamera) {
+        const QString rootOutputDir = privatePath(outputEdit_);
+        for (int index = 0; index < sources.size(); ++index) {
+            const QString cameraId = QString("camera_%1").arg(index + 1);
+            if (!cameraImageRects_.contains(cameraId) || !cameraSourceSizes_.contains(cameraId)) {
+                QMessageBox::warning(
+                    this,
+                    "多路 ROI 尚未完成画面归属",
+                    "请先点击“应用视频流”，等待多路预览画面稳定显示后再绘制 ROI 并开始检测。");
+                return false;
+            }
+            const QString cameraOutputDir = QDir(rootOutputDir).filePath(QString("camera_%1").arg(index + 1));
+            if (!QDir().mkpath(cameraOutputDir)) {
+                QMessageBox::warning(this, "输出目录不可写", "无法创建多路输出目录：" + cameraOutputDir);
+                return false;
+            }
+        }
+    }
+    for (int index = 0; index < sources.size(); ++index) {
+        VideoPipeline::Config config = currentDetectConfig();
+        config.sourcePath = sources[index];
+        const QString cameraId = QString("camera_%1").arg(index + 1);
+        config.regions = regionDocumentForCamera(cameraId, multiCamera);
+        if (multiCamera) {
+            config.outputDir = QDir(config.outputDir).filePath(QString("camera_%1").arg(index + 1));
+        }
+
+        auto* thread = new QThread(this);
+        auto* pipeline = new VideoPipeline(config);
+        pipeline->moveToThread(thread);
+
+        PipelineRuntime runtime;
+        runtime.cameraId = cameraId;
+        runtime.thread = thread;
+        runtime.pipeline = pipeline;
+        pipelineRuntimes_.push_back(runtime);
+        if (index == 0) {
+            pipelineThread_ = thread;
+            pipeline_ = pipeline;
+        }
+
+        connect(thread, &QThread::started, pipeline, &VideoPipeline::start);
+        connect(pipeline, &VideoPipeline::frameReady, this, [this, cameraId](const QImage& image) {
+            cameraFrames_[cameraId] = image;
+            if (previewComposePending_) {
+                return;
+            }
+            previewComposePending_ = true;
+            QTimer::singleShot(100, this, [this]() {
+                previewComposePending_ = false;
+                composeMultiCameraPreview();
+            });
+        });
+        connect(pipeline, &VideoPipeline::dashboardPayloadReady, this, [this, cameraId](const QByteArray& payload) {
+            updateDashboardForCamera(cameraId, payload);
+        });
+        connect(pipeline, &VideoPipeline::log, this, [this, cameraId](const QString& message) {
+            appendLog(QString("[%1] %2").arg(cameraId, message));
+        });
+        connect(pipeline, &VideoPipeline::done, this, [this, cameraId](const QString& summary) {
+            appendLog(QString("[%1] %2").arg(cameraId, summary));
+        });
+        connect(pipeline, &VideoPipeline::failed, this, [this, cameraId](const QString& error) {
+            appendLog(QString("[%1] 检测失败：%2").arg(cameraId, error));
+        });
+        connect(pipeline, &VideoPipeline::done, pipeline, &QObject::deleteLater);
+        connect(pipeline, &VideoPipeline::failed, pipeline, &QObject::deleteLater);
+        connect(pipeline, &VideoPipeline::done, thread, &QThread::quit);
+        connect(pipeline, &VideoPipeline::failed, thread, &QThread::quit);
+        connect(thread, &QThread::finished, this, [this, thread]() {
+            cleanupPipeline(thread);
+        });
+    }
+
+    startButton_->setEnabled(false);
+    stopButton_->setEnabled(true);
+    setConfigurationEditingEnabled(false);
+    setSettingsPanelCollapsed(true);
+    for (const PipelineRuntime& runtime : pipelineRuntimes_) {
+        runtime.thread->start();
+    }
+    appendLog(QString("已启动 %1 路视频在线检测。").arg(sources.size()));
+    return true;
+}
+
 void MainWindow::startDetection() {
-    if (pipelineThread_ != nullptr) {
+    if (pipelineThread_ != nullptr || !pipelineRuntimes_.isEmpty()) {
         QMessageBox::information(this, "任务运行中", "检测正在运行。");
         return;
     }
@@ -2149,20 +2830,29 @@ void MainWindow::startDetection() {
         QMessageBox::warning(this, "缺少模型", "请先选择 " + backendName + " 模型文件或模型目录。");
         return;
     }
-    if (privatePath(sourceEdit_).isEmpty()) {
+    QStringList sources;
+    try {
+        sources = configuredSourcePaths();
+    } catch (const std::exception& ex) {
+        QMessageBox::warning(this, "视频源配置错误", QString::fromUtf8(ex.what()));
+        return;
+    }
+    if (sources.isEmpty()) {
         QMessageBox::warning(this, "缺少视频源", "请先选择或填写视频源。");
         return;
     }
-    if (!canBeRuntimeSource(privatePath(sourceEdit_)) && !QFileInfo::exists(privatePath(sourceEdit_))) {
-        QMessageBox::warning(this, "视频源不存在", "当前视频源不是本地文件、摄像头编号或网络流。");
-        return;
+    for (const QString& source : sources) {
+        if (!canBeRuntimeSource(source) && !QFileInfo::exists(source)) {
+            QMessageBox::warning(this, "视频源不存在", "视频源不是本地文件、摄像头编号或网络流：" + source);
+            return;
+        }
     }
     QString outputError;
     if (!isOutputDirWritable(privatePath(outputEdit_), &outputError)) {
         QMessageBox::warning(this, "输出目录不可写", outputError);
         return;
     }
-    if (previewThread_ != nullptr) {
+    if (previewThread_ != nullptr || !previewRuntimes_.isEmpty()) {
         startDetectionAfterPreviewStops_ = true;
         stopVideoPreview();
         appendLog("正在释放视频预览，完成后自动开始检测。");
@@ -2181,6 +2871,8 @@ void MainWindow::startDetection() {
 
     saveSettings();
     regionRuntimeStates_.clear();
+    dashboardRuntimeStates_.clear();
+    cameraRegionRuntimeStates_.clear();
     dashboardTotalCount_ = 0;
     dashboardInsideCount_ = 0;
     dashboardJamCount_ = 0;
@@ -2189,28 +2881,21 @@ void MainWindow::startDetection() {
     dashboardStatusText_ = "启动中";
     refreshRegionTable();
 
-    pipelineThread_ = new QThread(this);
     refreshRegionTable();
-    pipeline_ = new VideoPipeline(currentDetectConfig());
-    pipeline_->moveToThread(pipelineThread_);
-    connect(pipelineThread_, &QThread::started, pipeline_, &VideoPipeline::start);
-    connect(pipeline_, &VideoPipeline::frameReady, this, &MainWindow::showFrame);
-    connect(pipeline_, &VideoPipeline::dashboardPayloadReady, this, &MainWindow::updateDashboard);
-    connect(pipeline_, &VideoPipeline::log, this, &MainWindow::appendLog);
-    connect(pipeline_, &VideoPipeline::done, this, &MainWindow::detectionFinished);
-    connect(pipeline_, &VideoPipeline::failed, this, &MainWindow::detectionFailed);
-    connect(pipeline_, &VideoPipeline::done, pipelineThread_, &QThread::quit);
-    connect(pipeline_, &VideoPipeline::failed, pipelineThread_, &QThread::quit);
-    connect(pipelineThread_, &QThread::finished, pipeline_, &QObject::deleteLater);
-    connect(pipelineThread_, &QThread::finished, this, &MainWindow::cleanupWorker);
-    startButton_->setEnabled(false);
-    stopButton_->setEnabled(true);
-    setConfigurationEditingEnabled(false);
-    setSettingsPanelCollapsed(true);
-    pipelineThread_->start();
+    if (!startConfiguredPipelines(sources)) {
+        cleanupWorker();
+    }
 }
 
 void MainWindow::stopDetection() {
+    if (!pipelineRuntimes_.isEmpty()) {
+        for (const PipelineRuntime& runtime : pipelineRuntimes_) {
+            if (runtime.pipeline != nullptr) {
+                QMetaObject::invokeMethod(runtime.pipeline, "stop", Qt::DirectConnection);
+            }
+        }
+        return;
+    }
     if (pipeline_ != nullptr) {
         QMetaObject::invokeMethod(pipeline_, "stop", Qt::DirectConnection);
     }
@@ -2221,6 +2906,10 @@ void MainWindow::showFrame(const QImage& image) {
 }
 
 void MainWindow::updateDashboard(const QByteArray& payload) {
+    updateDashboardForCamera("camera_1", payload);
+}
+
+void MainWindow::updateDashboardForCamera(const QString& cameraId, const QByteArray& payload) {
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(payload, &parseError);
     if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
@@ -2251,39 +2940,12 @@ void MainWindow::updateDashboard(const QByteArray& payload) {
             state.status = state.jamActive ? "堵包" : "运行中";
             states.push_back(state);
         }
-        regionRuntimeStates_ = states;
-        dashboardTotalCount_ = object.contains("total_count")
-            ? object.value("total_count").toInt()
-            : object.value("flow_count").toInt();
-        if (!regionsArray.isEmpty()) {
-            dashboardInsideCount_ = 0;
-            for (const RegionRuntimeState& state : regionRuntimeStates_) {
-                dashboardInsideCount_ += state.insideCount;
-            }
-        } else {
-            dashboardInsideCount_ = object.value("inside_count").toInt();
-        }
-        if (!regionsArray.isEmpty()) {
-            dashboardJamCount_ = 0;
-            for (const RegionRuntimeState& state : regionRuntimeStates_) {
-                dashboardJamCount_ += state.jamCount;
-            }
-        } else {
-            dashboardJamCount_ = object.value("jam_count").toInt();
-        }
-        dashboardJamActive_ = object.value("jam_active").toBool();
-        if (!dashboardJamActive_) {
-            for (const RegionRuntimeState& state : regionRuntimeStates_) {
-                if (state.jamActive) {
-                    dashboardJamActive_ = true;
-                    break;
-                }
-            }
-        }
+        cameraRegionRuntimeStates_.insert(cameraId, states);
+        aggregateDashboardFromCameraStates();
         const QString fallbackStatus = type == "done"
             ? QStringLiteral("已完成")
             : object.value("global_status").toString();
-        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, dashboardJamActive_, fallbackStatus);
+        dashboardStatusText_ = dashboardStatusForStates(dashboardRuntimeStates_, dashboardJamActive_, fallbackStatus);
         if (type == "done" && !dashboardJamActive_) {
             dashboardStatusText_ = "已完成";
         }
@@ -2293,11 +2955,12 @@ void MainWindow::updateDashboard(const QByteArray& payload) {
 
     if (type == "jam") {
         const bool isClear = eventType == "jam_cleared";
+        QVector<RegionRuntimeState> states = cameraRegionRuntimeStates_.value(cameraId);
         if (object.contains("region_id")) {
             const QString regionId = object.value("region_id").toString();
             int stateIndex = -1;
-            for (int i = 0; i < regionRuntimeStates_.size(); ++i) {
-                if (regionRuntimeStates_[i].id == regionId) {
+            for (int i = 0; i < states.size(); ++i) {
+                if (states[i].id == regionId) {
                     stateIndex = i;
                     break;
                 }
@@ -2306,10 +2969,10 @@ void MainWindow::updateDashboard(const QByteArray& payload) {
                 RegionRuntimeState state;
                 state.id = regionId;
                 state.name = object.value("region_name").toString();
-                regionRuntimeStates_.push_back(state);
-                stateIndex = regionRuntimeStates_.size() - 1;
+                states.push_back(state);
+                stateIndex = states.size() - 1;
             }
-            RegionRuntimeState& state = regionRuntimeStates_[stateIndex];
+            RegionRuntimeState& state = states[stateIndex];
             state.id = regionId;
             state.name = object.value("region_name").toString(state.name);
             state.signal = object.value("signal").toString();
@@ -2323,26 +2986,15 @@ void MainWindow::updateDashboard(const QByteArray& payload) {
                 ? (state.insideCount <= 0 ? "空闲" : "运行中")
                 : "堵包";
         } else if (isClear) {
-            for (RegionRuntimeState& state : regionRuntimeStates_) {
+            for (RegionRuntimeState& state : states) {
                 state.jamActive = false;
                 state.status = state.insideCount <= 0 ? "空闲" : "运行中";
             }
         }
 
-        dashboardJamActive_ = false;
-        dashboardInsideCount_ = 0;
-        dashboardJamCount_ = 0;
-        for (const RegionRuntimeState& state : regionRuntimeStates_) {
-            dashboardInsideCount_ += state.insideCount;
-            dashboardJamCount_ += state.jamCount;
-            if (state.id == totalCountRegionId_) {
-                dashboardTotalCount_ = state.flowCount;
-            }
-            if (state.jamActive) {
-                dashboardJamActive_ = true;
-            }
-        }
-        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, dashboardJamActive_, "运行中");
+        cameraRegionRuntimeStates_.insert(cameraId, states);
+        aggregateDashboardFromCameraStates();
+        dashboardStatusText_ = dashboardStatusForStates(dashboardRuntimeStates_, dashboardJamActive_, "运行中");
         setDashboardAlarmActive(dashboardJamActive_);
         refreshRegionTable();
 
@@ -2360,18 +3012,121 @@ void MainWindow::updateDashboard(const QByteArray& payload) {
         }
     } else if (type == "jam_clear") {
         const int legacyInsideCount = object.value("inside_count").toInt();
-        for (RegionRuntimeState& state : regionRuntimeStates_) {
+        QVector<RegionRuntimeState> states = cameraRegionRuntimeStates_.value(cameraId);
+        for (RegionRuntimeState& state : states) {
             state.jamActive = false;
             state.insideCount = legacyInsideCount;
             state.status = state.insideCount <= 0 ? "空闲" : "运行中";
         }
-        dashboardJamActive_ = false;
-        dashboardInsideCount_ = legacyInsideCount;
-        dashboardStatusText_ = dashboardStatusForStates(regionRuntimeStates_, false, "运行中");
-        setDashboardAlarmActive(false);
+        cameraRegionRuntimeStates_.insert(cameraId, states);
+        aggregateDashboardFromCameraStates();
+        dashboardStatusText_ = dashboardStatusForStates(dashboardRuntimeStates_, dashboardJamActive_, "运行中");
+        setDashboardAlarmActive(dashboardJamActive_);
         refreshRegionTable();
         appendLog("堵包解除，信号 " + object.value("signal").toString());
     }
+}
+
+void MainWindow::aggregateDashboardFromCameraStates() {
+    regionRuntimeStates_.clear();
+    dashboardRuntimeStates_.clear();
+    dashboardTotalCount_ = 0;
+    dashboardInsideCount_ = 0;
+    dashboardJamCount_ = 0;
+    dashboardJamActive_ = false;
+
+    const bool multiCameraRuntime = cameraRegionRuntimeStates_.size() > 1;
+    QStringList allCameraIds = cameraRegionRuntimeStates_.keys();
+    allCameraIds.sort();
+    for (const QString& cameraId : allCameraIds) {
+        const QVector<RegionRuntimeState> states = cameraRegionRuntimeStates_.value(cameraId);
+        for (const RegionRuntimeState& state : states) {
+            RegionRuntimeState displayState = state;
+            if (multiCameraRuntime) {
+                displayState.name = cameraId + " / "
+                    + (displayState.name.trimmed().isEmpty() ? displayState.id : displayState.name);
+            }
+            regionRuntimeStates_.push_back(displayState);
+        }
+    }
+
+    QStringList cameraIds = allCameraIds;
+    cameraIds.sort();
+
+    const QString kpiRegionId = totalCountRegionId_;
+
+    for (const QString& cameraId : cameraIds) {
+        const QVector<RegionRuntimeState> states = cameraRegionRuntimeStates_.value(cameraId);
+        for (const RegionRuntimeState& state : states) {
+            const bool stateMatchesKpiRegion = kpiRegionId == QStringLiteral("__all_count_regions__")
+                || state.id == kpiRegionId;
+            dashboardJamActive_ = dashboardJamActive_ || state.jamActive;
+            if (!stateMatchesKpiRegion) {
+                continue;
+            }
+            dashboardRuntimeStates_.push_back(state);
+            dashboardJamCount_ += state.jamCount;
+            dashboardTotalCount_ += state.flowCount;
+            dashboardInsideCount_ += state.insideCount;
+        }
+    }
+}
+
+void MainWindow::selectCameraAtPoint(const QPoint& imagePoint) {
+    QStringList cameraIds = cameraImageRects_.keys();
+    cameraIds.sort();
+    for (const QString& cameraId : cameraIds) {
+        if (cameraImageRects_.value(cameraId).contains(imagePoint)) {
+            if (!isDetectionRunning()) {
+                selectDrawingRegionForCamera(cameraId);
+                composeMultiCameraPreview();
+            }
+            return;
+        }
+    }
+}
+
+void MainWindow::selectDrawingRegionForCamera(const QString& cameraId) {
+    const QRect cameraRect = cameraImageRects_.value(cameraId);
+    if (cameraRect.isEmpty()) {
+        return;
+    }
+
+    for (const RegionConfig& region : regions_) {
+        if (!region.polygon.isEmpty() && cameraRect.contains(polygonCenter(region.polygon))) {
+            currentRegionId_ = region.id;
+            refreshRegionSelectors();
+            applyRegionSelection();
+            return;
+        }
+    }
+
+    int emptyIndex = -1;
+    for (int i = 0; i < regions_.size(); ++i) {
+        if (regions_[i].polygon.isEmpty()) {
+            emptyIndex = i;
+            break;
+        }
+    }
+    if (emptyIndex >= 0) {
+        currentRegionId_ = regions_[emptyIndex].id;
+        refreshRegionSelectors();
+        applyRegionSelection();
+        return;
+    }
+
+    RegionConfig region;
+    region.id = nextRegionId();
+    region.name = QString("区域 %1").arg(regions_.size() + 1);
+    region.priority = regions_.size() + 1;
+    regions_.push_back(region);
+    currentRegionId_ = region.id;
+    refreshRegionSelectors();
+    applyRegionSelection();
+}
+
+bool MainWindow::isDetectionRunning() const {
+    return pipelineThread_ != nullptr || !pipelineRuntimes_.isEmpty();
 }
 
 void MainWindow::appendLog(const QString& message) {
@@ -2446,6 +3201,79 @@ void MainWindow::cleanupWorker() {
     refreshRegionTable();
 }
 
+void MainWindow::cleanupPipeline(QThread* thread) {
+    for (int i = 0; i < pipelineRuntimes_.size(); ++i) {
+        if (pipelineRuntimes_[i].thread == thread) {
+            if (pipelineRuntimes_[i].thread != nullptr) {
+                pipelineRuntimes_[i].thread->deleteLater();
+            }
+            pipelineRuntimes_.removeAt(i);
+            break;
+        }
+    }
+    if (pipelineThread_ == thread) {
+        pipelineThread_ = pipelineRuntimes_.isEmpty() ? nullptr : pipelineRuntimes_.first().thread;
+        pipeline_ = pipelineRuntimes_.isEmpty() ? nullptr : pipelineRuntimes_.first().pipeline;
+    }
+    if (!pipelineRuntimes_.isEmpty()) {
+        refreshRuntimeOverview();
+        return;
+    }
+    pipelineThread_ = nullptr;
+    pipeline_ = nullptr;
+    cameraFrames_.clear();
+    cameraRegionRuntimeStates_.clear();
+    regionRuntimeStates_.clear();
+    dashboardRuntimeStates_.clear();
+    previewComposePending_ = false;
+    startButton_->setEnabled(true);
+    stopButton_->setEnabled(false);
+    setConfigurationEditingEnabled(true);
+    refreshRuntimeOverview();
+    refreshRegionTable();
+}
+
+void MainWindow::composeMultiCameraPreview() {
+    if (cameraFrames_.isEmpty() || previewLabel_ == nullptr) {
+        return;
+    }
+    QStringList cameraIds = cameraFrames_.keys();
+    cameraIds.sort();
+    if (cameraIds.size() == 1) {
+        previewLabel_->setImage(cameraFrames_.value(cameraIds.first()));
+        return;
+    }
+
+    const QSize cellSize(640, 360);
+    const int columns = cameraIds.size() <= 2 ? cameraIds.size() : 2;
+    const int rows = (cameraIds.size() + columns - 1) / columns;
+    QImage canvas(cellSize.width() * columns, cellSize.height() * rows, QImage::Format_RGB888);
+    canvas.fill(QColor("#080D13"));
+    cameraImageRects_.clear();
+    cameraSourceSizes_.clear();
+    QPainter painter(&canvas);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    for (int index = 0; index < cameraIds.size(); ++index) {
+        const QString& cameraId = cameraIds[index];
+        const QImage image = cameraFrames_.value(cameraId);
+        const QRect cell(
+            (index % columns) * cellSize.width(),
+            (index / columns) * cellSize.height(),
+            cellSize.width(),
+            cellSize.height());
+        const QImage scaled = image.scaled(cell.size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        const QPoint topLeft(
+            cell.left() + (cell.width() - scaled.width()) / 2,
+            cell.top() + (cell.height() - scaled.height()) / 2);
+        cameraImageRects_.insert(cameraId, QRect(topLeft, scaled.size()));
+        cameraSourceSizes_.insert(cameraId, image.size());
+        painter.drawImage(topLeft, scaled);
+        painter.setPen(QPen(QColor("#263746"), 1));
+        painter.drawRect(cell.adjusted(1, 1, -2, -2));
+    }
+    previewLabel_->setImage(canvas);
+}
+
 void MainWindow::setConfigurationEditingEnabled(bool enabled) {
     if (pathPanel_ != nullptr) {
         pathPanel_->setEnabled(enabled);
@@ -2474,12 +3302,21 @@ void MainWindow::setDashboardAlarmActive(bool active) {
     } else {
         flashTimer_->stop();
         dashboardFlashVisible_ = false;
+        previewLabel_->setJamRegionIds({});
     }
     previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
     updateAlertStyle();
 }
 
 void MainWindow::toggleAlarmFlash() {
+    if (!dashboardJamActive_) {
+        dashboardFlashVisible_ = false;
+        previewLabel_->setJamRegionIds({});
+        previewLabel_->setAlertFlashVisible(false);
+        updateAlertStyle();
+        refreshRegionTable();
+        return;
+    }
     dashboardFlashVisible_ = !dashboardFlashVisible_;
     previewLabel_->setAlertFlashVisible(dashboardFlashVisible_);
     updateAlertStyle();
@@ -2490,8 +3327,12 @@ void MainWindow::updateAlertStyle() {
     if (dashboardRoot_ == nullptr) {
         return;
     }
-    if (!dashboardFlashVisible_) {
-        dashboardRoot_->setStyleSheet({});
+    if (!dashboardJamActive_ || !dashboardFlashVisible_) {
+        dashboardRoot_->setStyleSheet(
+            "QWidget#dashboardRoot QFrame#monitorPanel{background:#080D13;border:1px solid #263746;border-radius:3px;}"
+            "QWidget#dashboardRoot QFrame#dashboardCard{background:#111B25;border:1px solid #263746;border-left:2px solid #2F88F5;border-radius:3px;}"
+            "QWidget#dashboardRoot QTableWidget{background:#0B1118;border:1px solid #263746;border-radius:4px;}"
+        );
         return;
     }
     dashboardRoot_->setStyleSheet(
@@ -2499,6 +3340,32 @@ void MainWindow::updateAlertStyle() {
         "QWidget#dashboardRoot QFrame#dashboardCard{border:1px solid #8D343C;border-left:3px solid #F25555;}"
         "QWidget#dashboardRoot QTableWidget{border:1px solid #8D343C;}"
     );
+}
+
+void MainWindow::loadConfiguredVideoPreviewFrames(const QStringList& sources) {
+    stopVideoPreview();
+    cameraFrames_.clear();
+    cameraImageRects_.clear();
+    cameraSourceSizes_.clear();
+    for (int index = 0; index < sources.size(); ++index) {
+        const QString& source = sources[index];
+        cv::VideoCapture capture = openCapture(
+            source,
+            hikTransportCombo_ == nullptr ? "tcp" : hikTransportCombo_->currentData().toString()
+        );
+        if (!capture.isOpened()) {
+            appendLog(QString("[%1] 视频首帧读取失败。").arg(QString("camera_%1").arg(index + 1)));
+            continue;
+        }
+        cv::Mat frame;
+        if (!capture.read(frame) || frame.empty()) {
+            appendLog(QString("[%1] 视频首帧为空。").arg(QString("camera_%1").arg(index + 1)));
+            continue;
+        }
+        cameraFrames_.insert(QString("camera_%1").arg(index + 1), matToImage(frame));
+    }
+    composeMultiCameraPreview();
+    appendLog(QString("已载入 %1 路本地视频首帧，可绘制 ROI。").arg(cameraFrames_.size()));
 }
 
 void MainWindow::loadVideoPreviewFrame() {

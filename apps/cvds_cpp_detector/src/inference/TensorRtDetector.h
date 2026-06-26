@@ -20,7 +20,7 @@ public:
     TensorRtDetector(const TensorRtDetector&) = delete;
     TensorRtDetector& operator=(const TensorRtDetector&) = delete;
 
-    bool load(const QString& modelPath, int inputSize, QString* error = nullptr);
+    bool load(const QString& modelPath, const QString& device, int inputSize, QString* error = nullptr);
     DetectionResults infer(
         const cv::Mat& frame,
         float confidence,

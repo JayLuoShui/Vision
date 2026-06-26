@@ -157,11 +157,12 @@ void validateDocument(const RegionConfigDocument& document) {
             throw configError("区域 jam_seconds 必须大于等于 1：" + config.id);
         }
     }
-    if (!ids.contains(document.totalCountRegionId)) {
+    const bool totalRegionIsAll = document.totalCountRegionId == QStringLiteral("__all_count_regions__");
+    if (!totalRegionIsAll && !ids.contains(document.totalCountRegionId)) {
         throw configError("主统计区域不存在：" + document.totalCountRegionId);
     }
     for (const RegionConfig& config : document.regions) {
-        if (config.id == document.totalCountRegionId && !config.countEnabled) {
+        if (!totalRegionIsAll && config.id == document.totalCountRegionId && !config.countEnabled) {
             throw configError("主统计区域必须开启计数：" + document.totalCountRegionId);
         }
     }

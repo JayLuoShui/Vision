@@ -60,7 +60,13 @@ QVector<RoiEntryEvent> FlowCounter::takeEntryEvents() {
 }
 
 int FlowCounter::totalCount() const {
-    if (!totalRegionId_.isEmpty() && states_.contains(totalRegionId_)) return states_.value(totalRegionId_).flowCount;
+    const bool totalRegionIsAll = totalRegionId_ == QStringLiteral("__all_count_regions__");
+    if (!totalRegionId_.isEmpty() && !totalRegionIsAll && states_.contains(totalRegionId_)) {
+        return states_.value(totalRegionId_).flowCount;
+    }
+    if (!totalRegionId_.isEmpty() && !totalRegionIsAll && !states_.contains(totalRegionId_)) {
+        return 0;
+    }
     int total = 0;
     for (const RoiFlowState& s : states_) total += s.flowCount;
     return total;

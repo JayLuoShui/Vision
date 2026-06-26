@@ -178,17 +178,31 @@ void TensorRtDetector::reset() {
     loaded_ = false;
 }
 
-bool TensorRtDetector::load(const QString& modelPath, int inputSize, QString* error) {
+bool TensorRtDetector::load(const QString& modelPath, const QString& device, int inputSize, QString* error) {
     reset();
     if (error) error->clear();
 
 #ifndef CVDS_WITH_TENSORRT
     Q_UNUSED(modelPath);
+    Q_UNUSED(device);
     Q_UNUSED(inputSize);
     if (error) *error = "当前程序未启用 TensorRT，请使用带 TensorRT SDK 构建的版本。";
     return false;
 #else
     try {
+        bool parsedDevice = false;
+        const QString trimmedDevice = device.trimmed();
+        const int cudaDevice = trimmedDevice.isEmpty() ? 0 : trimmedDevice.toInt(&parsedDevice);
+        if (!trimmedDevice.isEmpty() && !parsedDevice) {
+            if (error) *error = "TensorRT 执行设备必须是 NVIDIA CUDA GPU 编号，例如 0。";
+            return false;
+        }
+        cudaError_t cudaStatus = cudaSetDevice(cudaDevice);
+        if (cudaStatus != cudaSuccess) {
+            if (error) *error = cudaErrorText(cudaStatus, "选择 NVIDIA CUDA GPU " + QString::number(cudaDevice));
+            return false;
+        }
+
         const QString enginePath = modelPath.trimmed();
         const QFileInfo info(enginePath);
         if (!info.isFile() || !(enginePath.endsWith(".engine", Qt::CaseInsensitive)
@@ -273,7 +287,7 @@ bool TensorRtDetector::load(const QString& modelPath, int inputSize, QString* er
             impl_->outputBindings.push_back(std::move(binding));
         }
 
-        cudaError_t cudaStatus = cudaStreamCreate(&impl_->stream);
+        cudaStatus = cudaStreamCreate(&impl_->stream);
         if (cudaStatus != cudaSuccess) {
             if (error) *error = cudaErrorText(cudaStatus, "创建 CUDA stream");
             return false;

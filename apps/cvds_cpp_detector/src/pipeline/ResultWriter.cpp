@@ -102,6 +102,7 @@ bool ResultWriter::writeSummary(
     root.insert("flow_count", totalCount);
     int jamCount = 0;
     int maxInsideCount = 0;
+    const bool totalAll = totalRegionId == QStringLiteral("__all_count_regions__");
     QJsonArray regions;
     for (const RegionRuntimeState& s : states) {
         QJsonObject r;
@@ -114,7 +115,7 @@ bool ResultWriter::writeSummary(
         r.insert("status", s.status);
         r.insert("stale_seconds", s.jamActive ? s.staleSeconds : 0.0);
         jamCount += s.jamCount;
-        if (s.id == totalRegionId) maxInsideCount = s.maxInsideCount;
+        if (totalAll || s.id == totalRegionId) maxInsideCount = std::max(maxInsideCount, s.maxInsideCount);
         regions.append(r);
     }
     root.insert("jam_count", jamCount);

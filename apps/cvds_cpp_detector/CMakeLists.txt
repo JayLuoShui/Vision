@@ -48,7 +48,7 @@ file(GLOB OPENVINO_RUNTIME_DLLS
     "${OPENVINO_RUNTIME_DIR}/tbb*.dll"
 )
 list(FILTER OPENVINO_RUNTIME_DLLS INCLUDE REGEX
-    "(openvino(_c|_auto_batch_plugin|_auto_plugin|_hetero_plugin|_intel_cpu_plugin|_intel_gpu_plugin|_intel_npu_compiler|_intel_npu_compiler_loader|_intel_npu_plugin|_ir_frontend)?|tbb[^/]*)\\.dll$"
+    "(openvino(_auto_plugin|_intel_cpu_plugin|_intel_gpu_plugin|_ir_frontend)?|tbb[^/]*)\\.dll$"
 )
 
 file(GLOB OPENCV_RUNTIME_DLLS
@@ -64,11 +64,13 @@ if(CVDS_TENSORRT_AVAILABLE)
     get_filename_component(TENSORRT_LIB_DIR "${TENSORRT_NVINFER_LIBRARY}" DIRECTORY)
     get_filename_component(TENSORRT_ROOT_FROM_LIB "${TENSORRT_LIB_DIR}/.." ABSOLUTE)
     file(GLOB TENSORRT_RUNTIME_DLLS
-        "${TENSORRT_ROOT_FROM_LIB}/bin/nvinfer*.dll"
-        "${TENSORRT_ROOT_FROM_LIB}/lib/nvinfer*.dll"
-        "${TENSORRT_ROOT_FROM_LIB}/lib/x64/nvinfer*.dll"
-        "${TENSORRT_ROOT_FROM_LIB}/lib64/nvinfer*.dll"
+        "${TENSORRT_ROOT_FROM_LIB}/bin/nvinfer_[0-9]*.dll"
+        "${TENSORRT_ROOT_FROM_LIB}/lib/nvinfer_[0-9]*.dll"
+        "${TENSORRT_ROOT_FROM_LIB}/lib/x64/nvinfer_[0-9]*.dll"
+        "${TENSORRT_ROOT_FROM_LIB}/lib64/nvinfer_[0-9]*.dll"
     )
+    list(FILTER TENSORRT_RUNTIME_DLLS EXCLUDE REGEX "nvinfer_builder_resource.*\\.dll$")
+    list(FILTER TENSORRT_RUNTIME_DLLS EXCLUDE REGEX "nvinfer_(lean|dispatch|plugin|vc_plugin).*\\.dll$")
 endif()
 
 add_executable(
