@@ -286,8 +286,8 @@ void VideoPipeline::emitSuccess(const PipelineRuntimeContext& context) {
 
 void VideoPipeline::configurePayloadPublisher() {
     auto composite = std::make_unique<CompositeWcsPayloadPublisher>();
-    if (config_.wcsPayloadJsonlEnabled) {
-        QString path = config_.wcsPayloadJsonlPath.trimmed();
+    if (config_.wcsPublisher.jsonlEnabled) {
+        QString path = config_.wcsPublisher.jsonlPath.trimmed();
         if (path.isEmpty()) {
             path = QDir(config_.outputDir).filePath(kWcsPayloadJsonlName);
         }
