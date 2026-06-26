@@ -39,8 +39,7 @@ public:
         double lowSpeedThreshold = 5.0;
         int openTimeoutMs = 8000;
         int readTimeoutMs = 8000;
-        bool wcsPayloadJsonlEnabled = false;
-        QString wcsPayloadJsonlPath;
+        WcsPublisherConfig wcsPublisher;
     };
 
     explicit VideoPipeline(Config config, QObject* parent = nullptr);
