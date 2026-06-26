@@ -27,7 +27,6 @@ constexpr double kStatsPayloadFps = 5.0;
 constexpr int kLiveReadMaxAttempts = 4;
 constexpr int kLowInformationRetrySleepMs = 50;
 constexpr int kPipelineLoopSleepMs = 1;
-constexpr const char* kTotalAllRegionsId = "__all_count_regions__";
 constexpr const char* kOutputVideoName = "cvds_online_parcel_flow_monitor.mp4";
 constexpr const char* kFlowEventsName = "flow_events.csv";
 constexpr const char* kJamSignalsName = "jam_signals.jsonl";
@@ -38,7 +37,7 @@ void setError(QString* error, QString message) {
 }
 
 bool isTotalAllRegions(const QString& totalCountRegionId) {
-    return totalCountRegionId == QStringLiteral(kTotalAllRegionsId);
+    return totalCountRegionId == QStringLiteral("__all_count_regions__");
 }
 
 bool isLiveSource(const QString& source) {
