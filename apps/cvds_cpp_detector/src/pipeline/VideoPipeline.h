@@ -6,7 +6,6 @@
 #include "pipeline/JamDetector.h"
 #include "pipeline/ResultWriter.h"
 #include "tracking/ByteTrack.h"
-#include "utils/FpsMeter.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -54,7 +53,13 @@ signals:
     void failed(const QString& error);
 
 private:
+    struct PipelineRuntimeContext;
+
     bool validateConfig(QString* error);
+    bool initializeRuntime(PipelineRuntimeContext* context, QString* error);
+    bool processCurrentFrame(PipelineRuntimeContext* context);
+    void finishRuntime(PipelineRuntimeContext* context);
+    void emitSuccess(const PipelineRuntimeContext& context);
     bool openCapture(cv::VideoCapture* capture, QString* error) const;
     bool readFrame(cv::VideoCapture* capture, cv::Mat* frame, QString* error) const;
     DetectionResults inferFrame(const cv::Mat& frame, QString* error);
