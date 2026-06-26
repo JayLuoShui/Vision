@@ -6,6 +6,11 @@
 #include <memory>
 #include <vector>
 
+struct WcsPublisherConfig {
+    bool jsonlEnabled = false;
+    QString jsonlPath;
+};
+
 class WcsPayloadPublisher {
 public:
     virtual ~WcsPayloadPublisher() = default;
