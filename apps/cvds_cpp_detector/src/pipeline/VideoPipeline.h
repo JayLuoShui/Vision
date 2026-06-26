@@ -9,6 +9,7 @@
 #include "utils/FpsMeter.h"
 
 #include <QByteArray>
+#include <QHash>
 #include <QImage>
 #include <QObject>
 #include <QStringList>
@@ -58,6 +59,13 @@ private:
     bool readFrame(cv::VideoCapture* capture, cv::Mat* frame, QString* error) const;
     DetectionResults inferFrame(const cv::Mat& frame, QString* error);
     void configureTracker();
+    bool writeAndEmitJamEvents(
+        const QHash<QString, QString>& events,
+        const QVector<RegionRuntimeState>& states,
+        int frameIndex,
+        const QString& reason,
+        QString* error);
+    void emitDonePayload(const QVector<RegionRuntimeState>& states, int frameIndex);
     void emitDashboard(const QJsonObject& payload);
     void emitFramePayload(
         int frameIndex,
