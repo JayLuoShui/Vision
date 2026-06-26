@@ -113,6 +113,8 @@ add_executable(
     src/pipeline/ResultWriter.h
     src/pipeline/VideoPipeline.cpp
     src/pipeline/VideoPipeline.h
+    src/pipeline/WcsPayloadPublisher.cpp
+    src/pipeline/WcsPayloadPublisher.h
     src/utils/FpsMeter.cpp
     src/utils/FpsMeter.h
     src/utils/Geometry.cpp
