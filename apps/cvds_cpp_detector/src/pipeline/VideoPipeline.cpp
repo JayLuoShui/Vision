@@ -1,14 +1,13 @@
 #include "pipeline/VideoPipeline.h"
 
-#include "utils/Geometry.h"
+#include "pipeline/DashboardPayloadBuilder.h"
 #include "utils/FpsMeter.h"
+#include "utils/Geometry.h"
 
-#include <QDateTime>
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFileInfo>
 #include <QHash>
-#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QThread>
@@ -29,9 +28,6 @@ constexpr int kLiveReadMaxAttempts = 4;
 constexpr int kLowInformationRetrySleepMs = 50;
 constexpr int kPipelineLoopSleepMs = 1;
 constexpr const char* kOutputVideoName = "cvds_online_parcel_flow_monitor.mp4";
-constexpr const char* kFlowEventsName = "flow_events.csv";
-constexpr const char* kJamSignalsName = "jam_signals.jsonl";
-constexpr const char* kSummaryName = "flow_summary.json";
 
 void setError(QString* error, QString message) {
     if (error) *error = std::move(message);
@@ -57,20 +53,6 @@ int frameInterval(double sourceFps, double targetFps) {
     return std::max(1, static_cast<int>(std::round(sourceFps / std::max(1.0, targetFps))));
 }
 
-QJsonObject regionPayload(const RegionRuntimeState& state) {
-    QJsonObject object;
-    object.insert("id", state.id);
-    object.insert("name", state.name);
-    object.insert("flow_count", state.flowCount);
-    object.insert("inside_count", state.insideCount);
-    object.insert("max_inside_count", state.maxInsideCount);
-    object.insert("jam_active", state.jamActive);
-    object.insert("jam_count", state.jamCount);
-    object.insert("status", state.status);
-    object.insert("stale_seconds", state.jamActive ? state.staleSeconds : 0.0);
-    return object;
-}
-
 const RegionRuntimeState* findState(
     const QVector<RegionRuntimeState>& states,
     const QString& regionId) {
@@ -78,45 +60,6 @@ const RegionRuntimeState* findState(
         if (state.id == regionId) return &state;
     }
     return nullptr;
-}
-
-struct RegionAggregate {
-    bool jamActive = false;
-    bool occupied = false;
-    int totalFlowCount = 0;
-    int totalInsideCount = 0;
-    int jamCount = 0;
-    int maxInsideCount = 0;
-    QJsonArray regions;
-};
-
-RegionAggregate aggregateRegions(
-    const QVector<RegionRuntimeState>& states,
-    const QString& totalCountRegionId) {
-    RegionAggregate aggregate;
-    const bool totalAll = isTotalAllRegions(totalCountRegionId);
-    const RegionRuntimeState* total = totalAll ? nullptr : findState(states, totalCountRegionId);
-
-    for (const RegionRuntimeState& state : states) {
-        aggregate.jamActive = aggregate.jamActive || state.jamActive;
-        aggregate.occupied = aggregate.occupied || state.insideCount > 0;
-        aggregate.jamCount += state.jamCount;
-        aggregate.regions.append(regionPayload(state));
-
-        if (totalAll) {
-            aggregate.totalFlowCount += state.flowCount;
-            aggregate.totalInsideCount += state.insideCount;
-            aggregate.maxInsideCount = std::max(aggregate.maxInsideCount, state.maxInsideCount);
-        }
-    }
-
-    if (!totalAll && total != nullptr) {
-        aggregate.totalFlowCount = total->flowCount;
-        aggregate.totalInsideCount = total->insideCount;
-        aggregate.maxInsideCount = total->maxInsideCount;
-    }
-
-    return aggregate;
 }
 
 std::string overlayRegionLabel(const RegionRuntimeState& state) {
@@ -496,24 +439,13 @@ void VideoPipeline::start() {
 }
 
 void VideoPipeline::emitDonePayload(const QVector<RegionRuntimeState>& states, int frameIndex) {
-    const RegionAggregate aggregate = aggregateRegions(states, config_.regions.totalCountRegionId);
-    const QDir outputDir(config_.outputDir);
-
-    QJsonObject payload;
-    payload.insert("type", "done");
-    payload.insert("frames", frameIndex);
-    payload.insert("total_count_region", config_.regions.totalCountRegionId);
-    payload.insert("total_count", flowCounter_.totalCount());
-    payload.insert("flow_count", flowCounter_.totalCount());
-    payload.insert("jam_count", aggregate.jamCount);
-    payload.insert("global_jam_count", aggregate.jamCount);
-    payload.insert("max_inside_count", aggregate.maxInsideCount);
-    payload.insert("regions", aggregate.regions);
-    payload.insert("output_video", outputDir.filePath(kOutputVideoName));
-    payload.insert("events_csv", outputDir.filePath(kFlowEventsName));
-    payload.insert("jam_signals", outputDir.filePath(kJamSignalsName));
-    payload.insert("summary_json", outputDir.filePath(kSummaryName));
-    emitDashboard(payload);
+    emitDashboard(DashboardPayloadBuilder::buildDonePayload({
+        frameIndex,
+        config_.regions.totalCountRegionId,
+        states,
+        flowCounter_.totalCount(),
+        config_.outputDir,
+    }));
 }
 
 void VideoPipeline::emitDashboard(const QJsonObject& payload) {
@@ -531,20 +463,13 @@ void VideoPipeline::emitStatsPayload(
     int frameIndex,
     const QVector<RegionRuntimeState>& states,
     int trackedCount) {
-    const RegionAggregate aggregate = aggregateRegions(states, config_.regions.totalCountRegionId);
-
-    QJsonObject payload;
-    payload.insert("type", "frame");
-    payload.insert("frame", frameIndex);
-    payload.insert("preview_path", writer_.previewPath());
-    payload.insert("total_count", aggregate.totalFlowCount);
-    payload.insert("flow_count", aggregate.totalFlowCount);
-    payload.insert("inside_count", aggregate.totalInsideCount);
-    payload.insert("tracked_count", trackedCount);
-    payload.insert("jam_active", aggregate.jamActive);
-    payload.insert("global_status", aggregate.jamActive ? "JAM" : (aggregate.occupied ? "RUNNING" : "IDLE"));
-    payload.insert("regions", aggregate.regions);
-    emitDashboard(payload);
+    emitDashboard(DashboardPayloadBuilder::buildFramePayload({
+        frameIndex,
+        writer_.previewPath(),
+        config_.regions.totalCountRegionId,
+        states,
+        trackedCount,
+    }));
 }
 
 void VideoPipeline::emitJamPayload(
@@ -552,20 +477,12 @@ void VideoPipeline::emitJamPayload(
     const RegionRuntimeState& state,
     int frameIndex,
     const QString& reason) {
-    QJsonObject payload;
-    payload.insert("type", "jam");
-    payload.insert("event_type", eventType);
-    payload.insert("timestamp_ms", QDateTime::currentMSecsSinceEpoch());
-    payload.insert("frame", frameIndex);
-    payload.insert("region_id", state.id);
-    payload.insert("region_name", state.name);
-    payload.insert("flow_count", state.flowCount);
-    payload.insert("inside_count", state.insideCount);
-    payload.insert("jam_count", state.jamCount);
-    payload.insert("stale_seconds", state.staleSeconds);
-    payload.insert("signal", eventType == "jam_detected" ? "IO_JAM_ON" : "IO_JAM_OFF");
-    if (!reason.isEmpty()) payload.insert("reason", reason);
-    emitDashboard(payload);
+    emitDashboard(DashboardPayloadBuilder::buildJamPayload({
+        eventType,
+        state,
+        frameIndex,
+        reason,
+    }));
 }
 
 QImage VideoPipeline::matToImage(const cv::Mat& frame) {
