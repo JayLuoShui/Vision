@@ -103,6 +103,8 @@ add_executable(
     src/tracking/KalmanFilter.h
     src/tracking/Track.cpp
     src/tracking/Track.h
+    src/pipeline/DashboardPayloadBuilder.cpp
+    src/pipeline/DashboardPayloadBuilder.h
     src/pipeline/FlowCounter.cpp
     src/pipeline/FlowCounter.h
     src/pipeline/JamDetector.cpp
