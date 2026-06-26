@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -28,6 +29,7 @@ constexpr int kLiveReadMaxAttempts = 4;
 constexpr int kLowInformationRetrySleepMs = 50;
 constexpr int kPipelineLoopSleepMs = 1;
 constexpr const char* kOutputVideoName = "cvds_online_parcel_flow_monitor.mp4";
+constexpr const char* kWcsPayloadJsonlName = "wcs_payloads.jsonl";
 
 void setError(QString* error, QString message) {
     if (error) *error = std::move(message);
@@ -181,6 +183,7 @@ bool VideoPipeline::initializeRuntime(PipelineRuntimeContext* context, QString* 
         return false;
     }
 
+    configurePayloadPublisher();
     flowCounter_.configure(runtimeRegions_, config_.regions.totalCountRegionId);
     jamDetector_.configure(runtimeRegions_, config_.lowSpeedThreshold);
     configureTracker();
@@ -279,6 +282,19 @@ void VideoPipeline::emitSuccess(const PipelineRuntimeContext& context) {
             .arg(context.frameIndex)
             .arg(flowCounter_.totalCount())
             .arg(QDir(config_.outputDir).filePath(kOutputVideoName)));
+}
+
+void VideoPipeline::configurePayloadPublisher() {
+    auto composite = std::make_unique<CompositeWcsPayloadPublisher>();
+    if (config_.wcsPayloadJsonlEnabled) {
+        QString path = config_.wcsPayloadJsonlPath.trimmed();
+        if (path.isEmpty()) {
+            path = QDir(config_.outputDir).filePath(kWcsPayloadJsonlName);
+        }
+        composite->addPublisher(std::make_unique<JsonlWcsPayloadPublisher>(path));
+        emit log("WCS payload JSONL 输出已启用：" + path);
+    }
+    wcsPublisher_ = std::move(composite);
 }
 
 bool VideoPipeline::openCapture(cv::VideoCapture* capture, QString* error) const {
@@ -449,7 +465,15 @@ void VideoPipeline::emitDonePayload(const QVector<RegionRuntimeState>& states, i
 }
 
 void VideoPipeline::emitDashboard(const QJsonObject& payload) {
-    emit dashboardPayloadReady(QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    const QByteArray bytes = QJsonDocument(payload).toJson(QJsonDocument::Compact);
+    emit dashboardPayloadReady(bytes);
+
+    if (!wcsPublisher_) return;
+
+    QString error;
+    if (!wcsPublisher_->publish(payload, &error)) {
+        emit log("WCS payload 发布失败：" + error);
+    }
 }
 
 void VideoPipeline::emitFramePayload(
