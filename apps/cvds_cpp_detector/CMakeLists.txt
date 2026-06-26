@@ -109,6 +109,8 @@ add_executable(
     src/pipeline/FlowCounter.h
     src/pipeline/JamDetector.cpp
     src/pipeline/JamDetector.h
+    src/pipeline/PipelineRuntimeManager.cpp
+    src/pipeline/PipelineRuntimeManager.h
     src/pipeline/ResultWriter.cpp
     src/pipeline/ResultWriter.h
     src/pipeline/VideoPipeline.cpp
