@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RegionConfig.h"
-#include "pipeline/VideoPipeline.h"
+#include "pipeline/PipelineRuntimeManager.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -179,7 +179,6 @@ private:
     QStringList configuredSourcePaths() const;
     QVector<int> configuredHikvisionChannels() const;
     bool startConfiguredPipelines(const QStringList& sources);
-    void cleanupPipeline(QThread* thread);
     void composeMultiCameraPreview();
     void loadConfiguredVideoPreviewFrames(const QStringList& sources);
     QString buildHikvisionRtsp() const;
@@ -293,20 +292,13 @@ private:
     QString pendingPreviewTransport_;
     QThread* previewThread_ = nullptr;
     VideoPreviewWorker* previewWorker_ = nullptr;
-    QThread* pipelineThread_ = nullptr;
-    VideoPipeline* pipeline_ = nullptr;
-    struct PipelineRuntime {
-        QString cameraId;
-        QThread* thread = nullptr;
-        VideoPipeline* pipeline = nullptr;
-    };
+    PipelineRuntimeManager* pipelineManager_ = nullptr;
     struct PreviewRuntime {
         QString cameraId;
         QThread* thread = nullptr;
         VideoPreviewWorker* worker = nullptr;
     };
     QVector<PreviewRuntime> previewRuntimes_;
-    QVector<PipelineRuntime> pipelineRuntimes_;
     QHash<QString, QImage> cameraFrames_;
     QHash<QString, QRect> cameraImageRects_;
     QHash<QString, QSize> cameraSourceSizes_;
