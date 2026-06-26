@@ -1,6 +1,7 @@
 #include "pipeline/VideoPipeline.h"
 
 #include "utils/Geometry.h"
+#include "utils/FpsMeter.h"
 
 #include <QDateTime>
 #include <QDir>
@@ -152,6 +153,18 @@ bool isLowInformationFrame(const cv::Mat& frame) {
 
 }  // namespace
 
+struct VideoPipeline::PipelineRuntimeContext {
+    cv::VideoCapture capture;
+    cv::Mat frame;
+    FpsMeter inferFps;
+    QVector<RegionRuntimeState> lastStates;
+    double sourceFps = kFallbackSourceFps;
+    int previewEvery = 1;
+    int statsEvery = 1;
+    int frameIndex = 0;
+    QString terminalError;
+};
+
 VideoPipeline::VideoPipeline(Config config, QObject* parent)
     : QObject(parent), config_(std::move(config)), tracker_(0.3f, 30) {}
 
@@ -201,6 +214,128 @@ bool VideoPipeline::validateConfig(QString* error) {
         return false;
     }
     return true;
+}
+
+bool VideoPipeline::initializeRuntime(PipelineRuntimeContext* context, QString* error) {
+    emit log("正在加载 " + inferenceBackendName(config_.backend) + " 模型");
+    if (!detector_.load(config_.backend, config_.modelPath, config_.device, config_.inputSize, error)) {
+        return false;
+    }
+
+    if (!openCapture(&context->capture, error)) {
+        return false;
+    }
+
+    if (!readFrame(&context->capture, &context->frame, error)) {
+        context->capture.release();
+        if (error && error->isEmpty()) *error = "视频源没有有效首帧";
+        return false;
+    }
+
+    context->sourceFps = normalizeSourceFps(context->capture.get(cv::CAP_PROP_FPS));
+    if (!writer_.open(config_.outputDir, context->sourceFps, context->frame.size(), error)) {
+        context->capture.release();
+        return false;
+    }
+
+    flowCounter_.configure(runtimeRegions_, config_.regions.totalCountRegionId);
+    jamDetector_.configure(runtimeRegions_, config_.lowSpeedThreshold);
+    configureTracker();
+
+    context->inferFps.reset();
+    context->previewEvery = frameInterval(context->sourceFps, config_.previewFps);
+    context->statsEvery = frameInterval(context->sourceFps, kStatsPayloadFps);
+
+    emit log("开始视频检测与流量监测");
+    return true;
+}
+
+bool VideoPipeline::processCurrentFrame(PipelineRuntimeContext* context) {
+    ++context->frameIndex;
+
+    QString error;
+    const DetectionResults detections = inferFrame(context->frame, &error);
+    if (!error.isEmpty()) {
+        context->terminalError = error;
+        return false;
+    }
+
+    const DetectionResults tracks = tracker_.update(detections, 1.0 / context->sourceFps);
+    QVector<RegionRuntimeState> states = flowCounter_.update(tracks);
+    writer_.writeFlowEvents(flowCounter_.takeEntryEvents(), context->frameIndex);
+
+    QHash<QString, QString> jamEvents;
+    states = jamDetector_.update(states, tracker_.tracks(), &jamEvents);
+    context->lastStates = states;
+    if (!writeAndEmitJamEvents(jamEvents, states, context->frameIndex, {}, &error)) {
+        context->terminalError = error;
+        return false;
+    }
+
+    const bool forceDashboard = context->frameIndex == 1
+        || context->frameIndex % context->statsEvery == 0
+        || !jamEvents.isEmpty();
+    const bool forcePreview = context->frameIndex == 1
+        || context->frameIndex % context->previewEvery == 0
+        || !jamEvents.isEmpty();
+
+    cv::Mat overlay = drawOverlay(context->frame, tracks, states);
+    writer_.writeFrame(overlay);
+    if (forceDashboard) {
+        emitStatsPayload(context->frameIndex, states, static_cast<int>(tracks.size()));
+    }
+    if (forcePreview) {
+        writer_.writePreview(overlay);
+        emitFramePayload(context->frameIndex, matToImage(overlay));
+    }
+    context->inferFps.addFrame();
+
+    context->frame.release();
+    if (!readFrame(&context->capture, &context->frame, &error)) {
+        if (!error.isEmpty()) context->terminalError = error;
+        return false;
+    }
+    QThread::msleep(kPipelineLoopSleepMs);
+    return true;
+}
+
+void VideoPipeline::finishRuntime(PipelineRuntimeContext* context) {
+    QHash<QString, QString> clearEvents;
+    context->lastStates = jamDetector_.clearActive(context->lastStates, &clearEvents);
+
+    QString clearError;
+    if (!writeAndEmitJamEvents(
+            clearEvents,
+            context->lastStates,
+            context->frameIndex,
+            "monitor_stopped",
+            &clearError)
+        && context->terminalError.isEmpty()) {
+        context->terminalError = clearError;
+    }
+
+    QString summaryError;
+    writer_.writeSummary(
+        context->lastStates,
+        config_.regions.totalCountRegionId,
+        flowCounter_.totalCount(),
+        context->frameIndex,
+        &summaryError);
+    writer_.close();
+    context->capture.release();
+
+    if (context->terminalError.isEmpty() && !summaryError.isEmpty()) {
+        context->terminalError = summaryError;
+    }
+}
+
+void VideoPipeline::emitSuccess(const PipelineRuntimeContext& context) {
+    emitDonePayload(context.lastStates, context.frameIndex);
+    emit done(
+        QString("视频检测完成：总帧 %1，累计 %2。输出：%3")
+            .arg(context.frameIndex)
+            .arg(flowCounter_.totalCount())
+            .arg(QDir(config_.outputDir).filePath(kOutputVideoName)));
 }
 
 bool VideoPipeline::openCapture(cv::VideoCapture* capture, QString* error) const {
@@ -336,124 +471,28 @@ bool VideoPipeline::writeAndEmitJamEvents(
 
 void VideoPipeline::start() {
     stopRequested_.store(false);
+
     QString error;
     if (!validateConfig(&error)) {
         emit failed(error);
         return;
     }
 
-    emit log("正在加载 " + inferenceBackendName(config_.backend) + " 模型");
-    if (!detector_.load(config_.backend, config_.modelPath, config_.device, config_.inputSize, &error)) {
+    PipelineRuntimeContext context;
+    if (!initializeRuntime(&context, &error)) {
         emit failed(error);
         return;
     }
 
-    cv::VideoCapture capture;
-    if (!openCapture(&capture, &error)) {
-        emit failed(error);
+    while (!stopRequested_.load() && processCurrentFrame(&context)) {}
+
+    finishRuntime(&context);
+    if (!context.terminalError.isEmpty()) {
+        emit failed(context.terminalError);
         return;
     }
 
-    cv::Mat frame;
-    if (!readFrame(&capture, &frame, &error)) {
-        capture.release();
-        emit failed(error.isEmpty() ? "视频源没有有效首帧" : error);
-        return;
-    }
-
-    const double sourceFps = normalizeSourceFps(capture.get(cv::CAP_PROP_FPS));
-    if (!writer_.open(config_.outputDir, sourceFps, frame.size(), &error)) {
-        capture.release();
-        emit failed(error);
-        return;
-    }
-
-    flowCounter_.configure(runtimeRegions_, config_.regions.totalCountRegionId);
-    jamDetector_.configure(runtimeRegions_, config_.lowSpeedThreshold);
-    configureTracker();
-    emit log("开始视频检测与流量监测");
-
-    FpsMeter inferFps;
-    inferFps.reset();
-    QVector<RegionRuntimeState> lastStates;
-    int frameIndex = 0;
-    const int previewEvery = frameInterval(sourceFps, config_.previewFps);
-    const int statsEvery = frameInterval(sourceFps, kStatsPayloadFps);
-    QString terminalError;
-
-    while (!stopRequested_.load()) {
-        ++frameIndex;
-
-        QString inferError;
-        const DetectionResults detections = inferFrame(frame, &inferError);
-        if (!inferError.isEmpty()) {
-            terminalError = inferError;
-            break;
-        }
-
-        const DetectionResults tracks = tracker_.update(detections, 1.0 / sourceFps);
-        QVector<RegionRuntimeState> states = flowCounter_.update(tracks);
-        writer_.writeFlowEvents(flowCounter_.takeEntryEvents(), frameIndex);
-
-        QHash<QString, QString> jamEvents;
-        states = jamDetector_.update(states, tracker_.tracks(), &jamEvents);
-        lastStates = states;
-        if (!writeAndEmitJamEvents(jamEvents, states, frameIndex, {}, &error)) {
-            terminalError = error;
-            break;
-        }
-
-        const bool forceDashboard = frameIndex == 1 || frameIndex % statsEvery == 0 || !jamEvents.isEmpty();
-        const bool forcePreview = frameIndex == 1 || frameIndex % previewEvery == 0 || !jamEvents.isEmpty();
-        cv::Mat overlay = drawOverlay(frame, tracks, states);
-        writer_.writeFrame(overlay);
-        if (forceDashboard) {
-            emitStatsPayload(frameIndex, states, static_cast<int>(tracks.size()));
-        }
-        if (forcePreview) {
-            writer_.writePreview(overlay);
-            emitFramePayload(frameIndex, matToImage(overlay));
-        }
-        inferFps.addFrame();
-
-        frame.release();
-        if (!readFrame(&capture, &frame, &error)) {
-            if (!error.isEmpty()) terminalError = error;
-            break;
-        }
-        QThread::msleep(kPipelineLoopSleepMs);
-    }
-
-    QHash<QString, QString> clearEvents;
-    lastStates = jamDetector_.clearActive(lastStates, &clearEvents);
-    QString clearError;
-    if (!writeAndEmitJamEvents(clearEvents, lastStates, frameIndex, "monitor_stopped", &clearError)
-        && terminalError.isEmpty()) {
-        terminalError = clearError;
-    }
-
-    QString summaryError;
-    writer_.writeSummary(
-        lastStates,
-        config_.regions.totalCountRegionId,
-        flowCounter_.totalCount(),
-        frameIndex,
-        &summaryError);
-    writer_.close();
-    capture.release();
-
-    if (terminalError.isEmpty() && !summaryError.isEmpty()) terminalError = summaryError;
-    if (!terminalError.isEmpty()) {
-        emit failed(terminalError);
-        return;
-    }
-
-    emitDonePayload(lastStates, frameIndex);
-    emit done(
-        QString("视频检测完成：总帧 %1，累计 %2。输出：%3")
-            .arg(frameIndex)
-            .arg(flowCounter_.totalCount())
-            .arg(QDir(config_.outputDir).filePath(kOutputVideoName)));
+    emitSuccess(context);
 }
 
 void VideoPipeline::emitDonePayload(const QVector<RegionRuntimeState>& states, int frameIndex) {
