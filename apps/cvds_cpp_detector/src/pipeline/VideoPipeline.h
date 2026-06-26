@@ -5,6 +5,7 @@
 #include "pipeline/FlowCounter.h"
 #include "pipeline/JamDetector.h"
 #include "pipeline/ResultWriter.h"
+#include "pipeline/WcsPayloadPublisher.h"
 #include "tracking/ByteTrack.h"
 
 #include <QByteArray>
@@ -14,6 +15,7 @@
 #include <QStringList>
 
 #include <atomic>
+#include <memory>
 
 class VideoPipeline : public QObject {
     Q_OBJECT
@@ -37,6 +39,8 @@ public:
         double lowSpeedThreshold = 5.0;
         int openTimeoutMs = 8000;
         int readTimeoutMs = 8000;
+        bool wcsPayloadJsonlEnabled = false;
+        QString wcsPayloadJsonlPath;
     };
 
     explicit VideoPipeline(Config config, QObject* parent = nullptr);
@@ -60,6 +64,7 @@ private:
     bool processCurrentFrame(PipelineRuntimeContext* context);
     void finishRuntime(PipelineRuntimeContext* context);
     void emitSuccess(const PipelineRuntimeContext& context);
+    void configurePayloadPublisher();
     bool openCapture(cv::VideoCapture* capture, QString* error) const;
     bool readFrame(cv::VideoCapture* capture, cv::Mat* frame, QString* error) const;
     DetectionResults inferFrame(const cv::Mat& frame, QString* error);
@@ -98,4 +103,5 @@ private:
     FlowCounter flowCounter_;
     JamDetector jamDetector_;
     ResultWriter writer_;
+    std::unique_ptr<WcsPayloadPublisher> wcsPublisher_;
 };
