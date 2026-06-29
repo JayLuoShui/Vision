@@ -224,6 +224,7 @@ exe 路径：dist/CVDS_Qt_Platform/CVDS_Qt_Platform.exe
 
 ```text
 源码：apps/cvds_cpp_detector
+UI 实时调整：双击 apps/cvds_ui_mockup/run_ui_mockup.bat，右侧编辑 QSS 后自动更新 preview.png
 安装包路径：dist_installer/CVDS_Cpp_Detector2.0_Setup_2.0.0.exe
 模型格式：PT、ONNX 模型文件，以及 OpenVINO 模型目录
 窗口功能：视觉模型选择、路径记忆、本地视频/海康相机视频流、多 ROI 新增/命名/删除/绘制/保存/加载、主统计区域、可选检测区域、实时 KPI、区域状态表、分区堵包和红色闪烁报警

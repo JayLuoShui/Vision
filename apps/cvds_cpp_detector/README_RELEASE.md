@@ -1,42 +1,46 @@
-# CVDS_Cpp_Detector 发布说明
+# CVDS_Cpp_Detector 发布包说明
 
-本发布包是单一 `CVDS_Cpp_Detector.exe`，采用纯 C++ OpenVINO Runtime；如果构建机安装了 TensorRT SDK，也可启用纯 C++ TensorRT GPU 推理。
+本目录是 `CVDS_Cpp_Detector` 的 Windows 便携发布包。程序为单一 Qt 桌面应用，运行端使用纯 C++ OpenVINO Runtime；如果构建时启用了 TensorRT，也可加载 TensorRT engine。
 
-## 发布包内容
+## 包内主要内容
 
 - `CVDS_Cpp_Detector.exe`
-- Qt、OpenCV、OpenVINO、TBB、可选 TensorRT 和 MSVC 运行库
-- `models/` 中的 OpenVINO IR `.xml + .bin`
+- Qt、OpenCV、OpenVINO、TBB、MSVC 运行库
+- 可选 `nvinfer_*.dll`
+- `models/` 下的 OpenVINO IR `.xml + .bin`
 - `VERSION.txt`
+- `README_RELEASE.md`
 
-发布包不需要安装 Python 或 conda，也不包含独立推理进程。
+发布包不需要 Python、conda、Torch、Ultralytics 或独立 worker 进程。
 
-## 支持范围
+## 支持内容
 
-- 模型：OpenVINO IR `.xml + .bin`；TensorRT `.engine/.plan`
-- 设备：OpenVINO 为 `AUTO / CPU / GPU`，TensorRT 为 CUDA GPU
-- 视频：本地视频文件或 RTSP 视频流；海康多路检测可填写通道号自动生成 RTSP，其它多路检测可每行填写一路视频源，结果分别写入 `camera_1`、`camera_2` 等子目录
+| 类别 | 当前支持 |
+|---|---|
+| 模型 | OpenVINO IR `.xml + .bin`、TensorRT `.engine/.plan` |
+| OpenVINO 设备 | `AUTO`、`CPU`、`GPU` |
+| TensorRT 设备 | NVIDIA CUDA GPU 编号，例如 `0` |
+| 视频源 | 本地视频、RTSP、海康 RTSP |
+| 多路检测 | 多路本地/RTSP 源，或海康通道号列表 |
+| 输出 | 每路独立生成视频、CSV、JSONL、summary 和预览图 |
 
-## 构建
+## 使用方式
 
-```powershell
-pwsh -ExecutionPolicy Bypass -File .\apps\cvds_cpp_detector\packaging\build_release.ps1
-```
-
-输出：
+双击：
 
 ```text
-dist/CVDS_Cpp_Detector/CVDS_Cpp_Detector.exe
-dist_installer/CVDS_Cpp_Detector_Setup_<version>.exe
+CVDS_Cpp_Detector.exe
 ```
 
-## 运行
+常规流程：
 
-```powershell
-.\dist\CVDS_Cpp_Detector\CVDS_Cpp_Detector.exe
-```
+1. 选择视频源或填写海康参数。
+2. 点击“应用本地视频”或“应用视频流”，让画面出现。
+3. 绘制流量 ROI 和检测 ROI。
+4. 选择模型、后端、设备和输出目录。
+5. 点击“开始检测”。
 
-程序输出名称保持不变：
+## 输出文件
 
 - `cvds_online_parcel_flow_monitor.mp4`
 - `flow_events.csv`
@@ -44,4 +48,4 @@ dist_installer/CVDS_Cpp_Detector_Setup_<version>.exe
 - `flow_summary.json`
 - `cvds_preview.jpg`
 
-堵包信号名称保持为 `IO_JAM_ON` 和 `IO_JAM_OFF`。
+堵包信号固定为 `IO_JAM_ON` 和 `IO_JAM_OFF`。

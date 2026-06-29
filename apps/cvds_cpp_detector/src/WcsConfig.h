@@ -8,6 +8,8 @@
 #include <QString>
 #include <QVector>
 
+// 维护说明：以下结构体描述 WCS 集成配置和运行快照。
+// 当前主程序仍是 CVDS_Cpp_Detector，WCS 配置只作为可选上报能力。
 struct CameraConfig {
     QString cameraId;
     QString name;
@@ -30,6 +32,7 @@ struct CameraConfig {
     QVector<RegionConfig> regions;
 };
 
+// 维护说明：这里保留历史后端字段，但当前发布运行端以 OpenVINO/TensorRT 为准。
 struct GpuInferenceConfig {
     QString modelPath;
     QString backend = "tensorrt";       // tensorrt | onnxruntime-gpu | pytorch-cuda
@@ -43,6 +46,7 @@ struct GpuInferenceConfig {
     QString trackerPath;
 };
 
+// 维护说明：WCS 使用按行 JSON，便于对端 TCP 服务按换行拆包。
 struct WcsEndpointConfig {
     bool enabled = true;
     QString deviceId = "VISION_IPC_01";

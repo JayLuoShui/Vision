@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RegionConfig.h"
-#include "pipeline/VideoPipeline.h"
+#include "pipeline/PipelineRuntimeManager.h"
 
 #include <QByteArray>
 #include <QHash>
@@ -35,6 +35,8 @@ class QTableWidget;
 class QTimer;
 class QWidget;
 
+// 维护说明：RoiPreviewLabel 只负责画面显示和 ROI 编辑，不做计数或推理。
+// 流量 ROI 可以有多个；检测 ROI 只有一个，作为推理前裁剪/过滤范围。
 class RoiPreviewLabel : public QLabel {
     Q_OBJECT
 
@@ -123,6 +125,8 @@ private:
     std::atomic_bool stopped_ = false;
 };
 
+// 维护说明：主窗口负责界面状态、参数收集和看板聚合。
+// 真正的检测循环在 VideoPipeline，线程生命周期由 PipelineRuntimeManager 管理。
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -179,7 +183,6 @@ private:
     QStringList configuredSourcePaths() const;
     QVector<int> configuredHikvisionChannels() const;
     bool startConfiguredPipelines(const QStringList& sources);
-    void cleanupPipeline(QThread* thread);
     void composeMultiCameraPreview();
     void loadConfiguredVideoPreviewFrames(const QStringList& sources);
     QString buildHikvisionRtsp() const;
@@ -249,7 +252,7 @@ private:
     RoiPreviewLabel* previewLabel_ = nullptr;
     QLabel* kpiTotalCountValueLabel_ = nullptr;
     QLabel* kpiStatusValueLabel_ = nullptr;
-    QLabel* kpiInsideCountValueLabel_ = nullptr;
+    QLabel* kpiRegionStatusValueLabel_ = nullptr;
     QLabel* kpiJamCountValueLabel_ = nullptr;
     QLabel* systemStatusLabel_ = nullptr;
     QLabel* sourceStatusLabel_ = nullptr;
@@ -293,20 +296,13 @@ private:
     QString pendingPreviewTransport_;
     QThread* previewThread_ = nullptr;
     VideoPreviewWorker* previewWorker_ = nullptr;
-    QThread* pipelineThread_ = nullptr;
-    VideoPipeline* pipeline_ = nullptr;
-    struct PipelineRuntime {
-        QString cameraId;
-        QThread* thread = nullptr;
-        VideoPipeline* pipeline = nullptr;
-    };
+    PipelineRuntimeManager* pipelineManager_ = nullptr;
     struct PreviewRuntime {
         QString cameraId;
         QThread* thread = nullptr;
         VideoPreviewWorker* worker = nullptr;
     };
     QVector<PreviewRuntime> previewRuntimes_;
-    QVector<PipelineRuntime> pipelineRuntimes_;
     QHash<QString, QImage> cameraFrames_;
     QHash<QString, QRect> cameraImageRects_;
     QHash<QString, QSize> cameraSourceSizes_;

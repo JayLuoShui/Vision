@@ -3,4 +3,9 @@
         <file alias="cogy_brand.png">../assets/cogy_brand.png</file>
         <file alias="cogy_mark.png">../assets/cogy_mark.png</file>
     </qresource>
+    <qresource prefix="/styles">
+        <file alias="cvds.qss">../../cvds_ui_mockup/cvds.qss</file>
+        <file alias="arrow_up.xpm">../assets/arrow_up.xpm</file>
+        <file alias="arrow_down.xpm">../assets/arrow_down.xpm</file>
+    </qresource>
 </RCC>

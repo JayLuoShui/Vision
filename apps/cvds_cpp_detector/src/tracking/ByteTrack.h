@@ -6,6 +6,8 @@
 
 #include <vector>
 
+// 维护说明：ByteTrack 输入的是检测框，输出的是带稳定 trackId 的目标。
+// 低分候选用于续跟，避免包裹短暂低置信度时断 ID。
 class ByteTrack {
 public:
     explicit ByteTrack(

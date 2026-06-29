@@ -18,6 +18,8 @@
 - `apps/cvds_qt_app.py`：Qt GUI 主程序，负责训练可视化、图片/视频检测展示和 PLC 事件输出。
 - `apps/cvds_cpp_detector/CMakeLists.txt`：C++/Qt 在线包裹流量监测软件的构建配置。
 - `apps/cvds_cpp_detector/src/MainWindow.cpp`：C++ 看板界面，负责 Stitch A 布局、路径脱敏、视频源、多 ROI 编辑、KPI、区域状态表、闪烁告警和 worker 状态解析。
+- `apps/cvds_ui_mockup/qt_preview.py`：PySide6 交互式界面 mock，复刻主窗口结构，热应用 QSS 并用 `grab()` 自动截图。
+- `apps/cvds_ui_mockup/cvds.qss`：UI mock 的可实时编辑样式表，与 C++ 主界面保持同一色板和控件风格。
 - `apps/cvds_cpp_detector/src/RegionConfig.cpp`：严格读取、校验和原子保存 `regions.json`，维护区域配置和运行状态结构。
 - `apps/cvds_cpp_detector/src/RuntimePaths.cpp`：统一解析安装目录、worker、weights、configs 和用户 AppData 输出目录。
 - `apps/cvds_cpp_detector/scripts/worker_entry.py`：打包成 `cvds_detector_worker.exe` 的统一入口，提供多格式检测、模型检查、视频源测试和环境自检。

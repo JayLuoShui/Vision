@@ -10,11 +10,14 @@
 
 class QThread;
 
+// 维护说明：每个请求对应一路相机和一个 VideoPipeline 实例。
 struct PipelineStartRequest {
     QString cameraId;
     VideoPipeline::Config config;
 };
 
+// 维护说明：PipelineRuntimeManager 只管线程和信号转发，不参与推理、计数或 UI 聚合。
+// 这样 MainWindow 不需要直接持有多个 QThread/VideoPipeline 指针。
 class PipelineRuntimeManager final : public QObject {
     Q_OBJECT
 

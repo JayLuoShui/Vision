@@ -6,6 +6,8 @@
 #include <QString>
 #include <QVector>
 
+// 维护说明：DashboardPayloadBuilder 统一生成 UI 和可选 WCS 发布用的 JSON。
+// 新增字段时优先在这里改，避免各处手写不同格式。
 class DashboardPayloadBuilder {
 public:
     struct FramePayloadInput {

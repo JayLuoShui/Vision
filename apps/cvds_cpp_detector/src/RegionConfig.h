@@ -6,6 +6,8 @@
 #include <QString>
 #include <QVector>
 
+// 维护说明：RegionConfig 是界面、检测管线和输出文件之间共享的 ROI 配置。
+// 不要在读取配置时静默修复非法区域；应在保存或启动前明确报错。
 struct RegionConfig {
     QString id;
     QString name;
@@ -17,12 +19,14 @@ struct RegionConfig {
     int priority = 0;
 };
 
+// 维护说明：totalCountRegionId 决定顶部 KPI 的累计口径，可以是单个区域或多区域汇总。
 struct RegionConfigDocument {
     int version = 1;
     QString totalCountRegionId;
     QVector<RegionConfig> regions;
 };
 
+// 维护说明：RegionRuntimeState 是每帧对外展示和写文件的区域状态，不保存长期配置。
 struct RegionRuntimeState {
     QString id;
     QString name;

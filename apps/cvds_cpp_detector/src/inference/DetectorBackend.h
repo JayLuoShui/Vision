@@ -13,6 +13,8 @@ enum class InferenceBackend {
     TensorRt
 };
 
+// 维护说明：DetectorBackend 是推理后端门面，调用方只关心 load/infer。
+// 新增后端时优先在这里收口，不要让 VideoPipeline 直接依赖具体 SDK。
 InferenceBackend inferenceBackendFromString(const QString& value);
 QString inferenceBackendName(InferenceBackend backend);
 

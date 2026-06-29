@@ -9,50 +9,8 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def test_wcs_openvino_app_files_exist():
-    expected = [
-        WCS_APP / "CMakeLists.txt",
-        WCS_APP / "README.md",
-        WCS_APP / "src" / "main.cpp",
-        WCS_APP / "src" / "MainWindow.cpp",
-        WCS_APP / "include" / "MainWindow.h",
-        WCS_APP / "src" / "inference" / "OpenVinoDetector.h",
-        WCS_APP / "src" / "inference" / "OpenVinoDetector.cpp",
-        WCS_APP / "src" / "inference" / "LetterBox.h",
-        WCS_APP / "src" / "inference" / "LetterBox.cpp",
-        WCS_APP / "src" / "inference" / "YoloPostprocess.h",
-        WCS_APP / "src" / "inference" / "YoloPostprocess.cpp",
-        WCS_APP / "src" / "tracking" / "ByteTrack.h",
-        WCS_APP / "src" / "tracking" / "ByteTrack.cpp",
-        WCS_APP / "src" / "tracking" / "KalmanFilter.h",
-        WCS_APP / "src" / "tracking" / "HungarianMatcher.h",
-        WCS_APP / "src" / "tracking" / "Track.h",
-        WCS_APP / "src" / "pipeline" / "VideoPipeline.h",
-        WCS_APP / "src" / "pipeline" / "VideoPipeline.cpp",
-        WCS_APP / "src" / "pipeline" / "FlowCounter.h",
-        WCS_APP / "src" / "pipeline" / "JamDetector.h",
-        WCS_APP / "src" / "pipeline" / "ResultWriter.h",
-        WCS_APP / "src" / "utils" / "Geometry.h",
-        WCS_APP / "src" / "utils" / "FpsMeter.h",
-        WCS_APP / "configs" / "cameras.json",
-        WCS_APP / "configs" / "wcs.json",
-        WCS_APP / "configs" / "runtime.json",
-    ]
-    missing = [str(path) for path in expected if not path.exists()]
-    assert missing == []
-
-
-def test_wcs_cmake_links_openvino_and_does_not_copy_python_runtime():
-    cmake = read_text(WCS_APP / "CMakeLists.txt")
-    assert "find_package(OpenVINO REQUIRED COMPONENTS Runtime)" in cmake
-    assert "openvino::runtime" in cmake
-    assert "find_package(OpenCV REQUIRED COMPONENTS core imgproc videoio imgcodecs dnn)" in cmake
-    assert "$<TARGET_RUNTIME_DLLS:CVDS_WCS_Multi_Camera_Monitor>" in cmake
-    assert "openvino*.dll" in cmake
-    assert "opencv*.dll" in cmake
-    forbidden = ["worker_entry.py", "pt_video_flow_monitor.py", "gpu_infer_worker.py", "PyInstaller", "PATTERN \"*.pt\"", "PATTERN \"*.onnx\""]
-    for token in forbidden:
-        assert token not in cmake
+def test_legacy_wcs_openvino_app_has_been_removed():
+    assert not WCS_APP.exists()
 
 
 def test_cpp_detector_cmake_no_longer_installs_python_worker_or_runtime_pt_onnx():
@@ -112,10 +70,13 @@ def test_cpp_detector_has_native_openvino_pipeline_modules():
 def test_cpp_detector_main_window_uses_native_pipeline_without_worker_process():
     header = read_text(CPP_APP / "src" / "MainWindow.h")
     source = read_text(CPP_APP / "src" / "MainWindow.cpp")
-    assert '#include "pipeline/VideoPipeline.h"' in header
-    assert "VideoPipeline* pipeline_" in header
-    assert "new VideoPipeline" in source
-    assert "QThread" in header
+    manager_header = read_text(CPP_APP / "src" / "pipeline" / "PipelineRuntimeManager.h")
+    manager_source = read_text(CPP_APP / "src" / "pipeline" / "PipelineRuntimeManager.cpp")
+    assert '#include "pipeline/PipelineRuntimeManager.h"' in header
+    assert '#include "pipeline/VideoPipeline.h"' in manager_header
+    assert "PipelineRuntimeManager* pipelineManager_" in header
+    assert "new VideoPipeline" in manager_source
+    assert "QThread" in manager_header
     forbidden = [
         "class DetectionWorker",
         "workerPath",
@@ -220,16 +181,17 @@ def test_cpp_detector_dashboard_stats_are_throttled_without_delaying_jam_events(
     header = read_text(CPP_APP / "src" / "pipeline" / "VideoPipeline.h")
     assert "emitStatsPayload(" in header
     assert "statsEvery" in source
-    assert "if (frameIndex == 1 || frameIndex % statsEvery == 0 || !jamEvents.isEmpty())" in source
-    assert "emitFramePayload(frameIndex, matToImage(overlay))" in source
-    assert "emitDashboard(payload);" in source
+    assert "|| !jamEvents.isEmpty();" in source
+    assert "emitFramePayload(context->frameIndex, matToImage(overlay))" in source
+    assert "emitDashboard(DashboardPayloadBuilder::buildFramePayload({" in source
 
 
 def test_cpp_detector_jam_clear_forces_preview_refresh_and_clears_alarm_regions():
     pipeline = read_text(CPP_APP / "src" / "pipeline" / "VideoPipeline.cpp")
     window = read_text(CPP_APP / "src" / "MainWindow.cpp")
-    assert "const bool forcePreview = !jamEvents.isEmpty()" in pipeline
-    assert "if (forcePreview || frameIndex == 1 || frameIndex % previewEvery == 0)" in pipeline
+    assert "const bool forcePreview = context->frameIndex == 1" in pipeline
+    assert "|| !jamEvents.isEmpty();" in pipeline
+    assert "if (forcePreview)" in pipeline
     assert "previewLabel_->setJamRegionIds({});" in window
     refresh_table = window[window.index("void MainWindow::refreshRegionTable") :]
     assert "const bool alertVisible = dashboardJamActive_ && dashboardFlashVisible_;" in refresh_table
@@ -252,9 +214,10 @@ def test_cpp_detector_hides_region_table_until_roi_is_closed():
 def test_cpp_detector_supports_multiple_native_video_pipelines():
     header = read_text(CPP_APP / "src" / "MainWindow.h")
     source = read_text(CPP_APP / "src" / "MainWindow.cpp")
+    manager = read_text(CPP_APP / "src" / "pipeline" / "PipelineRuntimeManager.cpp")
     assert "multiSourceEdit_" in header
     assert "multiHikChannelEdit_" in header
-    assert "pipelineRuntimes_" in header
+    assert "pipelineManager_" in header
     assert "previewRuntimes_" in header
     assert "startConfiguredPipelines" in header
     assert "configuredSourcePaths" in header
@@ -291,10 +254,11 @@ def test_cpp_detector_supports_multiple_native_video_pipelines():
     ]
     assert 'QDir(config.outputDir).filePath(QString("camera_%1").arg(index + 1))' in source
     assert "config.previewFps = std::min(config.previewFps, 8);" not in source
-    assert "new VideoPipeline(config)" in source
-    assert "connect(pipeline, &VideoPipeline::done, pipeline, &QObject::deleteLater)" in source
-    assert "connect(pipeline, &VideoPipeline::failed, pipeline, &QObject::deleteLater)" in source
-    assert "connect(thread, &QThread::finished, pipeline, &QObject::deleteLater)" not in source
+    assert "pipelineManager_->start(requests, &error)" in source
+    assert "new VideoPipeline(request.config)" in manager
+    assert "connect(pipeline, &VideoPipeline::done, pipeline, &QObject::deleteLater)" in manager
+    assert "connect(pipeline, &VideoPipeline::failed, pipeline, &QObject::deleteLater)" in manager
+    assert "connect(thread, &QThread::finished, pipeline, &QObject::deleteLater)" not in manager
     assert "new VideoPreviewWorker(source, transport)" in source
     assert "for (int index = 0; index < sources.size(); ++index)" in source
     assert "connect(worker, &VideoPreviewWorker::frameReady, this, [this, cameraId]" in source
@@ -360,7 +324,7 @@ def test_cpp_detector_supports_multiple_native_video_pipelines():
     assert "视频预览失败（%2）：%3" in source
     pipeline = read_text(CPP_APP / "src" / "pipeline" / "VideoPipeline.cpp")
     assert "capture->set(cv::CAP_PROP_BUFFERSIZE, 1)" in pipeline
-    assert "connect(pipeline, &VideoPipeline::frameReady, this, [this, cameraId]" in source
+    assert "connect(pipelineManager_, &PipelineRuntimeManager::frameReady" in source
     assert "composeMultiCameraPreview()" in source
     assert "QProcess" not in source
 
@@ -389,8 +353,9 @@ def test_cpp_detector_multi_camera_rois_and_count_scope_are_camera_aware():
     assert "多路 ROI 尚未完成画面归属" in source
     assert "if (!document.regions.isEmpty() && !regionIds.contains(document.totalCountRegionId))" in source
     assert "document.totalCountRegionId = QStringLiteral(\"__all_count_regions__\")" in source
-    assert "connect(pipeline, &VideoPipeline::dashboardPayloadReady, this, [this, cameraId]" in source
-    assert "updateDashboardForCamera(cameraId, payload)" in source
+    assert "connect(\n        pipelineManager_,"
+    assert "&PipelineRuntimeManager::dashboardPayloadReady" in source
+    assert "&MainWindow::updateDashboardForCamera" in source
     assert "cameraRegionRuntimeStates_" in header
     assert "dashboardRuntimeStates_" in header
     assert "aggregateDashboardFromCameraStates" in header
@@ -464,7 +429,7 @@ def test_cpp_detector_skips_low_information_hikvision_frames():
     assert "cv::meanStdDev" in pipeline
     assert "if (canBeRuntimeSource(source_) && isLowInformationFrame(frame))" in source
     assert "continue;" in source[source.index("void VideoPreviewWorker::run()") : source.index("void VideoPreviewWorker::stop()")]
-    assert "if (isLiveSource(config_.sourcePath) && isLowInformationFrame(*frame))" in pipeline
+    assert "live && isLowInformationFrame(*frame)" in pipeline
     assert "attempt < maxAttempts" in pipeline
     assert "视频流连续输出低信息异常帧" not in pipeline
 
@@ -570,29 +535,80 @@ def test_cpp_detector_readmes_document_native_openvino_ir_only():
         assert token not in combined
 
 
-def test_wcs_readme_documents_openvino_ir_runtime_only():
-    readme = read_text(WCS_APP / "README.md")
-    assert "纯 C++ OpenVINO Runtime" in readme
-    assert ".xml + .bin" in readme
-    assert "OpenVINO 模型目录" in readme
-    assert "cvds_online_parcel_flow_monitor.mp4" in readme
-    assert "flow_events.csv" in readme
-    assert "jam_signals.jsonl" in readme
-    assert "flow_summary.json" in readme
-    assert "cvds_preview.jpg" in readme
-    assert "IO_JAM_ON" in readme
-    assert "IO_JAM_OFF" in readme
+def test_cpp_detector_core_sources_have_chinese_maintenance_comments():
+    expected = [
+        CPP_APP / "src" / "MainWindow.h",
+        CPP_APP / "src" / "RegionConfig.h",
+        CPP_APP / "src" / "inference" / "DetectorBackend.h",
+        CPP_APP / "src" / "pipeline" / "VideoPipeline.h",
+        CPP_APP / "src" / "pipeline" / "PipelineRuntimeManager.h",
+        CPP_APP / "src" / "pipeline" / "FlowCounter.h",
+        CPP_APP / "src" / "pipeline" / "JamDetector.h",
+        CPP_APP / "src" / "pipeline" / "ResultWriter.h",
+        CPP_APP / "src" / "pipeline" / "WcsPayloadPublisher.h",
+        CPP_APP / "src" / "tracking" / "ByteTrack.h",
+        CPP_APP / "src" / "WcsConfig.h",
+        CPP_APP / "src" / "WcsTcpClient.h",
+    ]
+    missing = [str(path) for path in expected if "维护说明" not in read_text(path)]
+    assert missing == []
 
 
 def test_wcs_python_worker_wrapper_removed():
     assert not (WCS_APP / "scripts" / "gpu_infer_worker.py").exists()
 
 
-def test_wcs_main_window_uses_split_layout_and_toggleable_settings_panel():
-    header = read_text(WCS_APP / "include" / "MainWindow.h")
-    source = read_text(WCS_APP / "src" / "MainWindow.cpp")
-    assert "QSplitter" in header
-    assert "settingsToggleButton_" in header
-    assert 'QSplitter(Qt::Horizontal' in source
-    assert '收起控制面板' in source
-    assert '展开控制面板' in source
+def test_cpp_detector_embeds_current_cvds_qss_and_uses_its_kpi_contract():
+    source = read_text(CPP_APP / "src" / "MainWindow.cpp")
+    header = read_text(CPP_APP / "src" / "MainWindow.h")
+    resources = read_text(CPP_APP / "src" / "resources.qrc")
+    qss = read_text(ROOT / "apps" / "cvds_ui_mockup" / "cvds.qss")
+
+    assert 'alias="cvds.qss"' in resources
+    assert 'QFile styleFile(":/styles/cvds.qss")' in source
+    assert "styleFile.readAll()" in source
+    for object_name in ["AppTitle", "SideMenu", "SideSubtitle", "PanelTitle", "topControlButton"]:
+        assert f'setObjectName("{object_name}")' in source
+    for object_name in ["KpiTitle", "KpiValue", "KpiStatusMain"]:
+        assert f'"{object_name}"' in source
+    assert 'new QVBoxLayout(card)' in source
+    assert 'box->setFixedHeight(94)' in source
+    assert 'setAlignment(Qt::AlignCenter)' in source
+    assert 'buildCard("系统状态"' in source
+    assert 'buildCard("当前区域状态"' in source
+    assert "kpiRegionStatusValueLabel_" in header
+    assert 'setProperty("status"' in source
+    assert "kpiStatusValueLabel_->setStyleSheet" not in source
+    for status in ["idle", "jam", "running", "completed"]:
+        assert f'status="{status}"' in qss
+
+
+def test_cpp_detector_matches_confirmed_monitor_preview_and_version():
+    source = read_text(CPP_APP / "src" / "MainWindow.cpp")
+
+    for token in [
+        'brandBar->setFixedHeight(52)',
+        'brandLogo->setFixedSize(32, 32)',
+        'settingsToggleButton_->setFixedWidth(120)',
+        'settingsToggleButton_->setFixedHeight(40)',
+        'monitorHeader->setFixedHeight(34)',
+        'regionPanel->setMinimumHeight(46)',
+        'regionPanel->setMaximumHeight(46)',
+        'regionHeader->setFixedHeight(46)',
+        'setObjectName("footerToggleButton")',
+    ]:
+        assert token in source
+    assert read_text(ROOT / "VERSION.txt").strip() == "2.4.3"
+
+
+def test_cpp_detector_qss_embeds_real_combo_and_spin_arrows():
+    resources = read_text(CPP_APP / "src" / "resources.qrc")
+    qss = read_text(ROOT / "apps" / "cvds_ui_mockup" / "cvds.qss")
+
+    for name in ["arrow_up.xpm", "arrow_down.xpm"]:
+        assert (CPP_APP / "assets" / name).exists()
+        assert f'alias="{name}"' in resources
+        assert f'url(:/styles/{name})' in qss
+    assert "QComboBox::down-arrow" in qss
+    assert "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow" in qss
+    assert "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow" in qss

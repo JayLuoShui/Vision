@@ -1,36 +1,27 @@
-# 多 ROI 看板任务
+# 当前任务清单
 
-- [x] Worker 多 ROI 配置、计数、堵包和输出
-- [x] Qt 多 ROI 新增、命名、绘制、保存和加载
-- [x] Qt KPI、区域状态表和红色闪烁告警
-- [x] 旧 `--roi` 命令兼容
-- [x] 示例配置、发布脚本和项目文档
-- [x] Python 测试、静态检查、C++ 构建和最终 Review
+## 已完成
 
-完成标准：ZIP 文档中的 A01-A10、B01-B04、C01-C05 均有实现或可执行验证。
+- [x] 单一 `CVDS_Cpp_Detector.exe` 纯 C++ 运行端。
+- [x] OpenVINO IR 推理后端。
+- [x] TensorRT engine 推理后端。
+- [x] C++ ByteTrack 跟踪。
+- [x] 多 ROI 计数、主统计区域和区域状态表。
+- [x] 堵包检测、红色告警和 `IO_JAM_ON / IO_JAM_OFF` 输出。
+- [x] 本地视频、普通 RTSP 和海康 RTSP。
+- [x] 多路视频检测和多画面合成。
+- [x] WCS 配置、消息和 TCP 发布模块。
+- [x] Release 打包脚本拦截旧 Python/worker 运行端残留。
 
-## 2.0 发布
+## 当前维护重点
 
-- [x] 复查 C++、worker、配置校验和发布脚本
-- [x] 修复密码持久化、进程超时、运行中配置修改和停止清理
-- [x] 修复模型类别异步读取与失败阻断
-- [x] 生成正式便携目录和安装包
-- [x] 完整测试、环境自检、模型读取、真实推理和 GUI 启动验收
+- [ ] 文档必须以当前 CMake 和发布包为准。
+- [ ] 测试必须覆盖 `PipelineRuntimeManager` 当前架构。
+- [ ] 发布包不能覆盖用户已有正式包，除非明确指定同名 `DistName`。
 
-## COGY UI 重设计
+## 不属于当前运行端
 
-- [x] Google Stitch MCP 生成并确认 A 版“监控画面优先”方案
-- [x] 品牌资源、Qt 资源和 Windows 图标
-- [x] 顶部品牌栏、A 版深色视觉系统和告警样式
-- [x] 源码测试、Release 编译和界面验收
-- [x] 正式目录、安装包和数字签名
-- [x] Review、自检和项目记录
-
-## 在线包裹流量监测升级
-
-- [x] Stitch A 功能对齐：顶栏运行概览、视频源、推理参数和区域详情
-- [x] 视频源仅保留本地文件与海康视频流
-- [x] 海康 RTSP 参数、TCP/UDP、主辅码流和连接测试
-- [x] 统一支持 PT、ONNX、OpenVINO 模型
-- [x] 区域统计详情恢复多行显示和空状态
-- [x] 测试、Review、Release 编译、运行验收和数字签名
+- Python worker。
+- PyInstaller。
+- PT/ONNX 直接推理。
+- 独立 `CVDS_WCS_Multi_Camera_Monitor.exe`。

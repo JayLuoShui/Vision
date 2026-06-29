@@ -1,34 +1,35 @@
-# WCS Multi-Camera Monitor Second Stage
+# WCS Notes
 
-This short English note mirrors the Chinese deployment note and is mainly used by code search and reviewers.
+This note documents the WCS-related code that still lives inside `apps/cvds_cpp_detector`.
 
-## New executable
+## Current state
 
-The build now keeps the original single-source tool and adds a dedicated WCS multi-camera program:
+The current CMake target builds one executable only:
 
 ```text
-CVDS_Cpp_Detector
-CVDS_WCS_Multi_Camera_Monitor
+CVDS_Cpp_Detector.exe
 ```
 
-## New runtime modules
+There is no separate `CVDS_WCS_Multi_Camera_Monitor` executable in the current build.
 
-- `CameraWorker`: per-camera video decoding, RTSP reconnect, target FPS limiting, and runtime snapshots.
-- `CameraTileWidget`: reusable Qt tile for multi-camera preview and alarm highlighting.
-- `WcsInferenceManager`: process-based multi-camera inference orchestration that reuses the existing detector worker.
-- `WcsMonitorWindow`: WCS operator UI with configuration loading, camera table, 2x2/3x3/4x4 grid layout, preview control, monitoring control, and WCS event forwarding.
+## WCS modules
 
-## Event pipeline
+- `WcsConfig.*`: WCS endpoint, camera and multi-camera configuration structs.
+- `WcsMessage.*`: JSON payload builders for heartbeat, camera status, flow update, jam events and errors.
+- `WcsTcpClient.*`: newline-delimited TCP JSON client with reconnect and queueing.
+- `pipeline/WcsPayloadPublisher.*`: optional publisher used by the native video pipeline.
+- `pipeline/DashboardPayloadBuilder.*`: converts runtime states into dashboard payloads.
+
+## Runtime pipeline
 
 ```text
-worker payload
-  -> WcsInferenceManager
-  -> camera_id + roi_id dashboard aggregation
-  -> WcsFlowUpdate / WcsJamEvent / CameraRuntimeSnapshot
-  -> WcsTcpClient
+VideoPipeline
+  -> FlowCounter / JamDetector
+  -> DashboardPayloadBuilder
+  -> optional WcsPayloadPublisher
   -> WCS TCP JSON
 ```
 
-## Scope boundary
+## Boundary
 
-This stage intentionally keeps the inference path process-based for deployment safety. A future phase can replace it with a native C++ TensorRT/ONNXRuntime-GPU batch inference engine.
+Old documentation described a process-based worker WCS stage. That is not the current runtime. The current runtime is native C++ OpenVINO/TensorRT inside `CVDS_Cpp_Detector.exe`.

@@ -5,6 +5,8 @@
 #include <QDateTime>
 #include <QHash>
 
+// 维护说明：JamState 是单个 ROI 的堵包记忆。
+// lastFlowCount/lastFlowTime 用来判断“有包裹但流量不再增长”的持续时间。
 struct JamState {
     bool active = false;
     int lastFlowCount = 0;
@@ -14,6 +16,8 @@ struct JamState {
     bool wasOccupied = false;
 };
 
+// 维护说明：JamDetector 只根据区域状态和轨迹速度判断堵包/解除。
+// 它不写文件、不改 UI，只通过 events 返回 IO_JAM_ON / IO_JAM_OFF。
 class JamDetector {
 public:
     void configure(const QVector<RegionConfig>& regions, double lowSpeedThreshold);

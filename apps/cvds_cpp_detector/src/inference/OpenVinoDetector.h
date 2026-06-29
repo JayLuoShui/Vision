@@ -9,6 +9,8 @@
 
 #include <QString>
 
+// 维护说明：OpenVinoDetector 只加载 OpenVINO IR 或模型目录。
+// 模型目录必须能唯一定位 .xml，并且同目录存在同名 .bin。
 class OpenVinoDetector {
 public:
     bool load(const QString& modelPath, const QString& device, int inputSize, QString* error = nullptr);

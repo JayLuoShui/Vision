@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+// 维护说明：TensorRtDetector 只加载已经构建好的 .engine/.plan。
+// engine 与显卡、驱动、CUDA 和 TensorRT 版本强相关，不在运行端现场转换 ONNX。
 class TensorRtDetector {
 public:
     TensorRtDetector();

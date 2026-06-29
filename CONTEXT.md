@@ -1,5 +1,155 @@
 # 当前上下文
 
+当前正在做什么：2026-06-29 已修复 CVDS Cpp Detector `v2.4.3` 顶栏控制面板按钮高度不一致。
+
+上次停在哪个位置：“收起/展开控制面板”按钮现固定为 120×40px，与顶栏相邻状态框等高；PySide6 mock、正式 EXE 和安装包均已更新，正式发布版已启动完成视觉核对。
+
+近期的关键决定和原因：
+- 根因是按钮只固定宽度，高度仍使用 QPushButton 自身尺寸提示；使用 `setFixedHeight(40)` 与 52px 顶栏及上下 5px 边距直接对齐。
+- 保持版本号 2.4.3，原路径产物已覆盖，不保留同版本旧修复包。
+- 2026-06-29 本次验证结果：相关检查 39/39 通过；Ruff 0 个问题；C++ Release 编译、EXE 签名、安装包生成和签名均通过。
+
+当前正在做什么：2026-06-29 已按确认的 PySide6 预览完成 CVDS Cpp Detector `v2.4.3` 正式发布。
+
+上次停在哪个位置：顶栏“收起控制面板”固定为 120px；正式版同步了 52px 顶栏、94px KPI、34px 监控标题栏和 46px 底栏。便携版位于 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_2.4.3`，安装包位于 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector_2.4.3_Setup_2.4.3.exe`。
+
+近期的关键决定和原因：
+- 使用独立 2.4.3 发布目录，不覆盖已有 2.4.2。
+- 主程序先签名再封装安装包，主程序和安装包签名均为 Valid；正式发布版已实际启动并完成界面核对。
+- 2026-06-29 本次验证结果：相关检查 39/39 通过；Ruff 0 个问题；C++ Release 与安装包生成通过。
+
+当前正在做什么：2026-06-29 已按修改后的 PySide6 mock UI 编译、签名并生成 CVDS Cpp Detector `v2.4.2` 发布版。
+
+上次停在哪个位置：正式版已完成 `2.4.2` 构建与安装包生成，主程序和安装包都已用本机证书签名并验证为 Valid。
+
+近期的关键决定和原因：
+- 本次发布版只跟随已确认的 UI 改动，版本号升到 `2.4.2`。
+- 2026-06-29 本次验证结果：`tests/test_cpp_detector_structure.py` 30/30 通过；`tests/test_cvds_ui_mockup.py` 8/8 通过；正式 EXE 和安装包签名均为 Valid。
+
+当前正在做什么：2026-06-29 已调整 PySide6 mock 顶部“收起控制面板”按钮宽度。
+
+上次停在哪个位置：按钮外框已从 130px 收回到 120px，与顶栏其他按钮更一致；mock 断言也同步更新。
+
+近期的关键决定和原因：
+- 本阶段仍只修改 mock，不同步 C++ 正式版。
+- 2026-06-29 本次验证结果：PySide6 mock 检查待重新跑；自动截图待重新跑。
+
+当前正在做什么：2026-06-29 已按用户参考图完成 CVDS PySide6 监控主界面 mock 预览。
+
+上次停在哪个位置：mock 默认收起 320 侧栏，客户区为 1674×914；品牌栏 52、KPI 94、监控标题 34、双路画面 486、底栏 46。顶部文件名/来源/时间/版本/控制按钮/系统状态、四项 KPI 和双路检测画面均已复刻，右侧 QSS 实时编辑器保留。
+
+近期的关键决定和原因：
+- 本阶段只改 PySide6 mock，不修改或编译 C++ 正式版，先让用户确认视觉方案。
+- 参考图仅用于裁取两路静态视频内容，界面外壳、文字、卡片和按钮仍由真实 Qt 控件渲染。
+- 2026-06-29 本次验证结果：PySide6 mock 检查 8/8 通过；自动 `grab()` 截图通过，预览位于 `apps/cvds_ui_mockup/preview.png`。
+
+当前正在做什么：2026-06-29 已恢复 CVDS Cpp Detector 下拉框和数字框的箭头按钮。
+
+上次停在哪个位置：`arrow_up.xpm`、`arrow_down.xpm` 已通过 `resources.qrc` 嵌入 EXE；`cvds.qss` 的 `QComboBox`、`QSpinBox`、`QDoubleSpinBox` 均使用真实上下箭头，不再显示蓝色方块。
+
+近期的关键决定和原因：
+- 使用 9×5 透明 XPM 资源，避免新增 QtSvg 依赖或发布目录外部图片。
+- 2026-06-29 本次验证结果：相关检查 37/37 通过；Ruff 0 个问题；C++ Release 编译通过；发布 EXE 签名 Valid；SHA256 为 `B47623118CBF77AFF77DAEB8CB5DB21A2A54F258CEA5649252AE0F662943B0E2`。
+
+当前正在做什么：2026-06-29 已完整重编译、签名并生成新的 CVDS Cpp Detector EXE。
+
+上次停在哪个位置：最新 EXE 位于 `dist/CVDS_Cpp_Detector_TensorRT_Fixed/CVDS_Cpp_Detector.exe`；构建产物先签名再复制，构建与发布文件哈希一致。
+
+近期的关键决定和原因：
+- 使用 `--clean-first` 完整重建 Qt 资源、OpenVINO、TensorRT、跟踪和主界面，避免复用旧目标文件。
+- 2026-06-29 本次验证结果：相关检查 36/36 通过；Ruff 0 个问题；构建和发布 EXE 签名均为 Valid；SHA256 为 `7CDF9F6238D108986E5BAD65B21334517378AA9377A3A5C28BA61FC01859A275`。
+- Smart App Control 对本机自签名证书的新哈希仍可能拦截，未修改或绕过系统安全策略。
+
+当前正在做什么：2026-06-29 已按 `apps/cvds_ui_mockup/cvds.qss` 调整 CVDS Cpp Detector 正式界面。
+
+上次停在哪个位置：`cvds.qss` 已通过 `resources.qrc` 嵌入 EXE，C++ 旧内嵌主体样式已删除；正式界面的标题、侧栏、面板和 KPI 对象名已与 QSS 对齐。KPI 改为“累计包裹 / 系统状态 / 当前区域状态 / 堵包次数”，内容居中，状态通过 `status` 属性显示灰蓝、红、蓝、绿。
+
+近期的关键决定和原因：
+- 主体界面只维护一份 `cvds.qss`；堵包闪烁边框保留原有局部运行时样式，避免 Windows Smart App Control 对再次重签的新哈希重复拦截。
+- DPI-aware 正式版截图 `build/cvds_cpp_detector_qss_preview.png` 已确认顶栏、320 侧栏、KPI 和监控区无截断。
+- 2026-06-29 本次验证结果：相关回归检查 36/36 通过；Ruff 0 个问题；C++ Release 编译通过；发布 EXE 签名 Valid，SHA256 为 `0C799A48DB9F0646E0EC633B059F49952CB778B659707AE47A302D22AD757FAB`。
+- 当前限制：Smart App Control 拒绝无云信誉的新哈希；本机自签名证书虽显示 Valid，但不是 Microsoft Trusted Root Program 的受信任提供商证书，最终发布 EXE 暂不能启动。未关闭或绕过系统安全策略。
+
+当前正在做什么：2026-06-29 已更新 CVDS PySide6 mock 的 KPI 字号和状态语义色。
+
+上次停在哪个位置：KPI 标题为 13px、数字为 24px、状态为 16px；状态标签通过 `status` 属性着色：待机灰蓝、堵包红、检测中蓝、已完成绿。当前预览显示“已完成”绿色和区域待机灰蓝色。
+
+近期的关键决定和原因：
+- 使用 Qt 动态属性和 QSS 属性选择器，不按显示文字猜状态。
+- 颜色沿用现有深色工业监控色板，不新增颜色体系。
+- 2026-06-29 本次验证结果：PySide6 回归检查 7/7 通过；自动截图通过。
+
+当前正在做什么：2026-06-29 已居中并协调 CVDS PySide6 mock 的 KPI 卡片字体。
+
+上次停在哪个位置：四张 KPI 卡片的标题和内容已水平、垂直居中；标题保持 12px，数字调整为 22px/700，状态调整为 15px/600，上下留白对称。
+
+近期的关键决定和原因：
+- 卡片原先只在底部放弹性空间，内容会偏上；现改为上下对称弹性空间。
+- 数字与双行状态使用不同字号和字重，但保持相近视觉重量。
+- 2026-06-29 本次验证结果：PySide6 回归检查 6/6 通过；自动截图通过。
+
+当前正在做什么：2026-06-29 已统一 CVDS PySide6 mock 顶部状态控件字体。
+
+上次停在哪个位置：在线监测、版本号、收起控制面板、系统就绪四项已统一为微软雅黑 13px、500 字重、6px/10px 内边距；状态颜色保持不变，顶栏无溢出。
+
+近期的关键决定和原因：
+- 根因是三个标签单独写死为 9px，而按钮继承全局 13px；现统一到一条顶部公共样式规则。
+- 2026-06-29 本次验证结果：PySide6 回归检查 5/5 通过；自动截图通过。
+
+当前正在做什么：2026-06-29 已调整 CVDS PySide6 mock 的 KPI 卡片布局与示例内容。
+
+上次停在哪个位置：四张 KPI 卡片已改为标题在上、内容在下；内容依次为累计包裹 1264、系统状态已完成、当前区域状态“区域1 待机/区域2 待机”、堵包次数 3；卡片条高度为 82，双行状态完整显示。
+
+近期的关键决定和原因：
+- 使用现有 `KpiTitle`、`KpiValue`、`KpiStatusMain` 样式，不新增选择器。
+- 四张卡统一纵向布局，避免为第三张卡做单独补丁。
+- 2026-06-29 本次验证结果：PySide6 回归检查 4/4 通过；自动截图通过。
+
+当前正在做什么：2026-06-29 已按指定字体层级更新 CVDS PySide6 mock stylesheet。
+
+上次停在哪个位置：`cvds.qss` 已统一为微软雅黑/Segoe UI、13px 全局字、指定标题/KPI/表格字号与颜色；`qt_preview.py` 的对象名已同步为 `AppTitle`、`SideMenu`、`SideSubtitle`、`PanelTitle`、`KpiTitle`、`KpiValue`、`KpiStatusMain`，确保规则真实命中。
+
+近期的关键决定和原因：
+- 不保留旧对象名兼容层，避免两套选择器互相覆盖。
+- 只改字体样式契约，不改变 320 侧栏和控件布局。
+- 2026-06-29 本次验证结果：PySide6 回归检查 3/3 通过；自动截图通过，中文、554 和 KPI 均完整显示。
+
+当前正在做什么：2026-06-29 已新增 CVDS PySide6 实时 UI 调整 mock。
+
+上次停在哪个位置：`apps/cvds_ui_mockup/qt_preview.py` 已复刻当前深色 QMainWindow、320 固定侧栏、四个设置页和监控区；右侧可直接编辑 `cvds.qss`，停写 250ms 后自动应用并通过 `grab()` 更新 `preview.png`，也支持外部修改 QSS 自动重载。
+
+近期的关键决定和原因：
+- 正式 C++ 界面不承担试样式工作，mock 只复刻布局和 stylesheet，不接视频与推理业务。
+- 明确加载微软雅黑字体，保证无界面自动截图也能正确显示中文。
+- 2026-06-29 本次验证结果：PySide6 回归检查 2/2 通过；Ruff 0 个问题；Python 编译检查通过；自动截图通过。
+
+当前正在做什么：2026-06-26 已给 CVDS Cpp Detector 核心源码补充中文维护注释。
+
+上次停在哪个位置：已在 `MainWindow.h`、`RegionConfig.h`、推理后端、`VideoPipeline`、`PipelineRuntimeManager`、计数、堵包、输出、WCS 发布、ByteTrack、WCS 配置和 TCP 客户端等维护入口补充“维护说明”注释；注释只解释职责边界和易错点，不改变运行逻辑。
+
+近期的关键决定和原因：
+- 不做逐行注释，只给关键类、结构体和流程入口加中文说明，避免源码变啰嗦。
+- 新增结构检查要求核心源码包含中文维护注释，防止后续回退成无注释状态。
+- 2026-06-26 本次验证结果：中文注释结构检查先失败后通过；Detector 结构测试 28/28 通过；Ruff 0 个问题；C++ Release 增量编译通过。
+
+当前正在做什么：2026-06-26 已按当前源码实际情况重写 `apps/cvds_cpp_detector` 下的 Markdown 文档。
+
+上次停在哪个位置：`README.md`、发布说明、打包说明、部署说明、WCS 说明、多 ROI 手工验收、历史计划、`task_plan.md`、`progress.md` 和 `findings.md` 已统一改为当前纯 C++ OpenVINO/TensorRT、`PipelineRuntimeManager`、单一 `CVDS_Cpp_Detector.exe` 架构；不再把 Python worker、PT/ONNX 直接推理、独立 WCS 程序当作当前运行端。
+
+近期的关键决定和原因：
+- 不删除 Markdown 文件，只重写内容，避免触发文件删除风险。
+- 文档以当前 `CMakeLists.txt`、`src/` 和 `packaging/build_release.ps1` 为准，而不是历史计划。
+- 2026-06-26 本次验证结果：Detector 结构测试 27/27 通过；Ruff 0 个问题。
+
+当前正在做什么：2026-06-26 已在不覆盖原有发布包的前提下，跑通当前 GitHub 分支 `chatgpt-wcs-architecture-cleanup` 的 CVDS Cpp Detector 测试并生成独立发布包。
+
+上次停在哪个位置：新便携版位于 `D:\Demo\Vision\dist\CVDS_Cpp_Detector_GitHubBranch_20260626_Release`，安装包位于 `D:\Demo\Vision\dist_installer\CVDS_Cpp_Detector_GitHubBranch_20260626_Release_Setup_2.4.1.exe`；原 `dist` 下已有发布目录保留未清理。主程序和安装包签名状态均为 Valid。
+
+近期的关键决定和原因：
+- 发布脚本使用独立 `DistName=CVDS_Cpp_Detector_GitHubBranch_20260626_Release`，避免覆盖 `dist` 下原有发布包。
+- 结构测试已按当前 `PipelineRuntimeManager` 架构更新，不再检查已移除的旧 `CVDS_WCS_Multi_Camera_Monitor` 目录。
+- 2026-06-26 本次验证结果：Detector 结构测试 27/27 通过；Ruff 0 个问题；C++ Release + TensorRT 构建通过；启动冒烟通过；便携版 SHA256 为 `AF5AD085B80907FABB840D60A9167FF67625C1BED4D87475390979F10B7D7B38`；安装包 SHA256 为 `22F4E2AAB1D66679439EA4E060C1D6E904E703FBD12409A22EA9BA9C2435D3B4`。
+
 当前正在做什么：2026-06-26 已修复堵包解除后实时监控画面与 KPI 卡片红色边框不恢复的问题。
 
 上次停在哪个位置：最新 `camera_1` 堵包日志显示多次 `IO_JAM_ON` 后都有 `IO_JAM_OFF`，检测解除信号正常；问题在 UI 样式恢复。`updateAlertStyle()` 现在在非报警状态下明确写回正常边框样式，不再只清空 `dashboardRoot_` 样式。

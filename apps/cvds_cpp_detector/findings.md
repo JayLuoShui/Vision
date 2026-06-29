@@ -1,44 +1,14 @@
-# 发现
+# 当前发现
 
-- 当前发布包已是纯 C++ 运行端；核查重点应看最终 `dist` 目录和 CMake 构建列表，而不是源码树里未参与构建的历史脚本。
-- GUI 启动慢的直接原因之一是窗口初始化时扫描 `weights` 下的模型目录；该动作已延后到开始检测时执行。
-- 旧发布目录如果删除失败，`opencv_java*.dll` 这类无关 DLL 会残留；发布脚本现在会失败退出并做最终文件拦截。
-- TensorRT 11 Windows SDK 的库名为 `nvinfer_11.lib`，不是旧版 `nvinfer.lib`；CMake 必须同时探测带版本后缀的库名。
-- 当前机器 CUDA 已安装且为 13.2，无需重装；TensorRT 选择 NVIDIA 官方 `TensorRT-Enterprise-11.0.0.114-Windows-amd64-cuda-13.2-Release-external.zip`。
-- TensorRT engine 与显卡、驱动、CUDA、TensorRT 版本强相关，运行端只加载 `.engine/.plan`，不在软件中现场转换 ONNX。
-- Windows PowerShell 5 会按旧编码解析无 BOM UTF-8 脚本中的中文字符串，发布脚本应使用 PowerShell 7 的 `pwsh` 执行。
-- OpenVINO 报 `Available frontends:` 为空时，优先检查发布目录是否缺少 `openvino_ir_frontend.dll`；这不是模型 XML 路径问题。
-- `yolo26s-seg-wds-1024-best_int8_openvino_model` 的输出是 `[1,300,38]` 和 `[1,32,256,256]`；`38 = 6 + 32`，其中 32 是 mask 系数，不能参与检测类别选择。
-- 视频左上角乱码来自 `cv::putText` 的 Hershey 字体不支持中文，不是模型或编码损坏。当前叠字已改为区域 ID。
-- 当前纯 C++ 流水线已接入仓库内 `ByteTrack`：`VideoPipeline` 中持有 `ByteTrack tracker_`，检测后调用 `tracker_.update()`，区域计数和堵包都使用跟踪后的 `tracks`。
-- 对比 Ultralytics ByteTrack：默认 `track_high_thresh=0.25`、`track_low_thresh=0.1`、`new_track_thresh=0.25`；旧 C++ 默认高阈值 0.5，会让 0.25-0.5 的包裹检测无法启动轨迹，是现场效果偏差的主要原因。
-- 累计包裹数量的业务计数没有等预览帧，`FlowCounter::update()` 每帧运行；延迟来自 `emitFramePayload()` 同时承载图像和统计，只在预览帧发送。已拆成每帧统计 payload 与降频图像 payload。
-- TensorRT 11 `trtexec` 当前不接受旧版 `--fp16` 参数，构建日志显示 Precision 为 Strongly Typed；生成的 engine 在 RTX 4050 上可执行，输出为 `output0 [1,300,38] fp32` 和 `output1 [1,32,256,256] fp32`。
-
-- 顶部累计数量必须只取 `total_count_region`，不能把各 ROI 数量相加。
-- worker 当前把计数、堵包、输出和绘图写在一个循环中；应先抽出纯函数，才能可靠测试多 ROI 行为。
-- Qt 当前只有一个 `flowRoi_`，需要独立区域配置模型；检测 ROI 与流量区域职责不同，继续单独保留。
-- Qt 新流程应在启动前写出严格校验后的 `regions.json`，worker 只读取该文件。
-- 旧 `--roi` 只保留给命令行兼容，不作为新界面的内部数据源。
-- 非法区域配置、写入失败、主统计区域缺失必须立即报错，不做静默修复。
-- 当前工作区在 `master`，按用户规则不创建分支或 worktree。
-- 多边形编辑状态必须显式保存“是否闭合”，不能只用点数推断，否则第三个点会被错误视为完成。
-- 堵包解除后的全局状态必须根据所有区域 `inside_count` 重算，不能固定写成运行中。
-- jam 事件必须携带当前 `jam_count`，Qt 才能在下一帧前实时更新 KPI。
-- 模型类别读取不能在 UI 线程同步等待；读取失败时必须阻止检测启动，不能自动退回全部类别。
-- CUDA 版 PyTorch 2.11 的离线动态库约 4GB，正式目录约 4.9GB 属于 GPU 发布成本，不应通过删除动态库换取体积。
-- 发布 worker 使用 onedir，避免 onefile 每次启动解压大型 CUDA 运行库。
-- Windows 150% 缩放下，普通截图脚本会把最大化窗口误裁成 1295×687；验收截图必须先启用 DPI 感知。
-- Stitch A 的关键比例是左栏约 24%、单行四 KPI、最大化监控区和紧凑底部表格；设置表单不应常驻占用监控空间。
-- 路径输入框必须把真实值保存在控件属性中，界面只显示文件名、目录名或网络主机，业务逻辑不能再读取脱敏后的显示文本。
-- 顶部运行状态依赖 `workerThread_`，线程创建后必须立即刷新一次，不能等待首帧数据。
-- 视频源类型切换后必须隐藏无关设置；视频流模式继续显示本地文件会造成错误操作暗示。
-- ONNX Runtime GPU 包可正常导入和推理，但 Ultralytics 的依赖检查仍可能把它误判为缺少 `onnxruntime`；正式 worker 必须关闭在线自动安装。
-- ONNX 和 OpenVINO 都应从模型元数据明确传入任务类型，不能依赖 Ultralytics 猜测。
-- 发布包的环境自检必须覆盖所有宣称支持的后端，不能只检查 Torch、CUDA 和 OpenCV。
-- Windows 的 `D:\...` 会被 `QUrl` 当成 scheme 为 `d` 的地址；路径脱敏显示必须先用 `://` 明确区分网络地址。
-- worker 的 `stale_seconds` 是内部停滞计时，不等于界面含义上的堵包秒数；对外区域状态在未堵包时必须返回 0。
-- 视频流预览与模型推理是两个独立阶段；预览只负责提供实时画面和 ROI 标定，开始检测时必须先完全释放预览采集。
-- 需要每次重画的现场 ROI 不能在构造函数中读取 `regions.json`，检测 ROI 也不能写入 `QSettings`。
-- 2026-06-22 的 Windows `Application Hang` 日志确认，切换通道时界面线程同步等待旧 RTSP 采集线程退出；OpenCV 仍在打开或读取网络流时，窗口消息循环无法处理，系统判定程序未响应。
-- 通道切换改为异步串行：立即通知旧预览停止，忽略旧帧，只保存最后一次通道请求，旧线程退出后再启动新预览。界面线程不等待，软件关闭时才统一等待线程收尾。
+- 判断运行端要看 `CMakeLists.txt` 和最终发布目录，不以历史脚本或旧文档为准。
+- 当前发布包是纯 C++ 运行端；旧 Python worker、PyInstaller、PT/ONNX 直接推理说明都已过时。
+- 默认模型解析不能放在 GUI 启动阶段，否则会扫描大型 `weights` 目录拖慢开窗。
+- OpenVINO `.xml` 运行需要同名 `.bin`，发布目录还必须包含 `openvino_ir_frontend.dll`。
+- YOLO 分割端到端输出中，前 6 列是框、置信度和类别，后续 mask 系数不能当类别分数。
+- OpenCV `cv::putText` 不支持中文，画面叠字应使用 ASCII 区域 ID。
+- C++ ByteTrack 需要保留低分候选续跟，新轨迹阈值应跟随界面置信度。
+- 顶部 KPI 和区域详情口径不同：KPI 跟随当前计数口径，区域详情展示区域明细。
+- 多路 ROI 画在总画布上，启动检测前必须按子画面映射回每路原图坐标。
+- RTSP 切换不能在界面线程等待采集线程退出；只在软件关闭时等待线程收尾。
+- 发布脚本删除旧目录失败必须直接报错，避免旧 DLL 残留误导验证。
+- 如需不影响原发布包，必须传入新的 `-DistName`。

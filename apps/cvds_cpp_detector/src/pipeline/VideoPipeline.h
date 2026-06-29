@@ -17,11 +17,14 @@
 #include <atomic>
 #include <memory>
 
+// 维护说明：VideoPipeline 是单路视频的完整检测闭环。
+// 多路运行时会创建多个实例；不要在这里保存跨相机的全局 UI 状态。
 class VideoPipeline : public QObject {
     Q_OBJECT
 
 public:
     struct Config {
+        // 维护说明：Config 由 MainWindow 在启动前一次性生成，运行中不再读取界面控件。
         QString modelPath;
         QString sourcePath;
         QString rtspTransport = "tcp";
@@ -58,6 +61,8 @@ signals:
 private:
     struct PipelineRuntimeContext;
 
+    // 维护说明：start() 的主流程按 validate -> initialize -> process loop -> finish 收口。
+    // 遇到模型、视频源或输出目录错误时直接失败，不做静默降级。
     bool validateConfig(QString* error);
     bool initializeRuntime(PipelineRuntimeContext* context, QString* error);
     bool processCurrentFrame(PipelineRuntimeContext* context);

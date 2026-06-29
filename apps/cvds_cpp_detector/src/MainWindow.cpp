@@ -46,6 +46,7 @@
 #include <QSizePolicy>
 #include <QSpinBox>
 #include <QSplitter>
+#include <QStyle>
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QTextCursor>
@@ -469,6 +470,26 @@ QString dashboardStatusForStates(
         return "异常";
     }
     return fallback;
+}
+
+QString statusToneForText(const QString& text, bool running) {
+    if (text.contains("堵包") || text.contains("异常") || text.contains("失败")) {
+        return "jam";
+    }
+    if (text.contains("已完成")) {
+        return "completed";
+    }
+    if (running || text.contains("运行") || text.contains("启动") || text.contains("检测")) {
+        return "running";
+    }
+    return "idle";
+}
+
+void applyStatusTone(QLabel* label, const QString& tone) {
+    label->setProperty("status", tone);
+    label->style()->unpolish(label);
+    label->style()->polish(label);
+    label->update();
 }
 
 QPoint polygonCenter(const QVector<QPoint>& polygon) {
@@ -916,14 +937,14 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto* brandBar = new QFrame(root);
     brandBar->setObjectName("brandBar");
-    brandBar->setFixedHeight(42);
+    brandBar->setFixedHeight(52);
     auto* brandLayout = new QHBoxLayout(brandBar);
-    brandLayout->setContentsMargins(9, 4, 9, 4);
+    brandLayout->setContentsMargins(10, 5, 10, 5);
     brandLayout->setSpacing(8);
 
     auto* brandLogo = new QLabel(brandBar);
     brandLogo->setObjectName("brandLogo");
-    brandLogo->setFixedSize(28, 28);
+    brandLogo->setFixedSize(32, 32);
     brandLogo->setAlignment(Qt::AlignCenter);
     brandLogo->setPixmap(
         QPixmap(":/branding/cogy_mark.png").scaled(
@@ -937,7 +958,7 @@ MainWindow::MainWindow(QWidget* parent)
     productTextLayout->setContentsMargins(0, 0, 0, 0);
     productTextLayout->setSpacing(0);
     auto* productTitle = new QLabel("氪技 COGY · CVDS ONLINE PARCEL FLOW MONITOR", brandBar);
-    productTitle->setObjectName("brandTitle");
+    productTitle->setObjectName("AppTitle");
     auto* productSubtitle = new QLabel("在线包裹流量监测", brandBar);
     productSubtitle->setObjectName("brandSubtitle");
     productTextLayout->addWidget(productTitle);
@@ -961,10 +982,11 @@ MainWindow::MainWindow(QWidget* parent)
     brandLayout->addWidget(channelStatusLabel_);
     brandLayout->addWidget(clockLabel_);
     brandLayout->addWidget(versionLabel);
-    settingsToggleButton_ = new QPushButton("收起控制面板", brandBar);
-    settingsToggleButton_->setObjectName("settingsToggleButton");
+    settingsToggleButton_ = new QPushButton("^  收起控制面板", brandBar);
+    settingsToggleButton_->setObjectName("topControlButton");
     settingsToggleButton_->setCheckable(true);
-    settingsToggleButton_->setMaximumWidth(120);
+    settingsToggleButton_->setFixedWidth(120);
+    settingsToggleButton_->setFixedHeight(40);
     connect(settingsToggleButton_, &QPushButton::toggled, this, [this](bool checked) {
         setSettingsPanelCollapsed(checked);
     });
@@ -996,13 +1018,13 @@ MainWindow::MainWindow(QWidget* parent)
     auto* sidebarTitle = new QLabel("控制面板", sidebarHeader);
     sidebarTitle->setObjectName("sidebarTitle");
     auto* sidebarSubtitle = new QLabel("SYSTEM PARAMETERS", sidebarHeader);
-    sidebarSubtitle->setObjectName("sidebarSubtitle");
+    sidebarSubtitle->setObjectName("SideSubtitle");
     sidebarHeaderLayout->addWidget(sidebarTitle);
     sidebarHeaderLayout->addWidget(sidebarSubtitle);
     leftLayout->addWidget(sidebarHeader);
 
     auto* sidebarNavigation = new QWidget(leftShell);
-    sidebarNavigation->setObjectName("sidebarNavigation");
+    sidebarNavigation->setObjectName("SideMenu");
     auto* sidebarNavigationLayout = new QVBoxLayout(sidebarNavigation);
     sidebarNavigationLayout->setContentsMargins(0, 0, 0, 0);
     sidebarNavigationLayout->setSpacing(0);
@@ -1065,15 +1087,15 @@ MainWindow::MainWindow(QWidget* parent)
     auto* monitorPanel = new QFrame(right);
     monitorPanel->setObjectName("monitorPanel");
     auto* monitorLayout = new QVBoxLayout(monitorPanel);
-    monitorLayout->setContentsMargins(1, 1, 1, 1);
+    monitorLayout->setContentsMargins(0, 0, 0, 0);
     monitorLayout->setSpacing(0);
     auto* monitorHeader = new QFrame(monitorPanel);
     monitorHeader->setObjectName("monitorHeader");
-    monitorHeader->setFixedHeight(28);
+    monitorHeader->setFixedHeight(34);
     auto* monitorHeaderLayout = new QHBoxLayout(monitorHeader);
     monitorHeaderLayout->setContentsMargins(10, 0, 10, 0);
     auto* monitorTitle = new QLabel("实时监控画面", monitorHeader);
-    monitorTitle->setObjectName("sectionTitle");
+    monitorTitle->setObjectName("PanelTitle");
     auto* monitorHint = new QLabel("ROI 可视化 · 实时检测", monitorHeader);
     monitorHint->setObjectName("sectionHint");
     monitorHeaderLayout->addWidget(monitorTitle);
@@ -1088,30 +1110,30 @@ MainWindow::MainWindow(QWidget* parent)
 
     auto* regionPanel = new QFrame(right);
     regionPanel->setObjectName("regionPanel");
-    regionPanel->setMinimumHeight(28);
-    regionPanel->setMaximumHeight(28);
+    regionPanel->setMinimumHeight(46);
+    regionPanel->setMaximumHeight(46);
     regionPanel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     auto* regionPanelLayout = new QVBoxLayout(regionPanel);
     regionPanelLayout->setContentsMargins(0, 0, 0, 0);
     regionPanelLayout->setSpacing(0);
     auto* regionHeader = new QFrame(regionPanel);
     regionHeader->setObjectName("regionHeader");
-    regionHeader->setFixedHeight(28);
+    regionHeader->setFixedHeight(46);
     auto* regionHeaderLayout = new QHBoxLayout(regionHeader);
     regionHeaderLayout->setContentsMargins(10, 0, 6, 0);
     auto* regionTitle = new QLabel("区域统计详情", regionHeader);
-    regionTitle->setObjectName("sectionTitle");
+    regionTitle->setObjectName("PanelTitle");
     regionHeaderLayout->addWidget(regionTitle);
     regionHeaderLayout->addStretch(1);
 
-    regionDetailsToggleButton_ = new QPushButton("展开区域统计", regionHeader);
-    regionDetailsToggleButton_->setObjectName("regionDetailsToggleButton");
+    regionDetailsToggleButton_ = new QPushButton("展开区域统计   ›", regionHeader);
+    regionDetailsToggleButton_->setObjectName("footerToggleButton");
     regionDetailsToggleButton_->setCheckable(true);
     regionDetailsToggleButton_->setMaximumWidth(130);
     regionHeaderLayout->addWidget(regionDetailsToggleButton_);
 
-    logToggleButton_ = new QPushButton("展开运行日志", regionHeader);
-    logToggleButton_->setObjectName("logToggleButton");
+    logToggleButton_ = new QPushButton("展开运行日志   ›", regionHeader);
+    logToggleButton_->setObjectName("footerToggleButton");
     logToggleButton_->setCheckable(true);
     logToggleButton_->setMaximumWidth(130);
     regionHeaderLayout->addWidget(logToggleButton_);
@@ -1148,13 +1170,13 @@ MainWindow::MainWindow(QWidget* parent)
     logEdit_->setVisible(false);
     connect(logToggleButton_, &QPushButton::toggled, this, [this](bool checked) {
         logEdit_->setVisible(checked);
-        logToggleButton_->setText(checked ? "收起运行日志" : "展开运行日志");
+        logToggleButton_->setText(checked ? "收起运行日志   ‹" : "展开运行日志   ›");
     });
     connect(regionDetailsToggleButton_, &QPushButton::toggled, this, [this, regionPanel](bool checked) {
         regionDetailsContent_->setVisible(checked);
-        regionDetailsToggleButton_->setText(checked ? "收起区域统计" : "展开区域统计");
-        regionPanel->setMinimumHeight(checked ? 170 : 28);
-        regionPanel->setMaximumHeight(checked ? 220 : 28);
+        regionDetailsToggleButton_->setText(checked ? "收起区域统计   ‹" : "展开区域统计   ›");
+        regionPanel->setMinimumHeight(checked ? 170 : 46);
+        regionPanel->setMaximumHeight(checked ? 220 : 46);
     });
 
     rightLayout->addWidget(monitorPanel, 1);
@@ -1177,76 +1199,11 @@ MainWindow::MainWindow(QWidget* parent)
     layout->addWidget(splitter, 1);
     setCentralWidget(root);
 
-    setStyleSheet(
-        "QWidget{background:#0B1118;color:#F3F7FA;font-family:'Microsoft YaHei UI';}"
-        "QFrame#brandBar{background:#111B25;border:1px solid #263746;border-radius:3px;}"
-        "QLabel#brandLogo{background:transparent;}"
-        "QLabel#brandTitle{background:transparent;color:#F3F7FA;font-size:13px;font-weight:700;letter-spacing:1px;}"
-        "QLabel#brandSubtitle{background:transparent;color:#8FA5B8;font-size:9px;}"
-        "QLabel#versionBadge{background:#172431;border:1px solid #263746;border-radius:3px;padding:3px 7px;color:#8FA5B8;font-size:9px;}"
-        "QLabel#connectionPill{background:#10251F;border:1px solid #245B47;border-radius:3px;padding:3px 8px;color:#36C98F;font-size:9px;}"
-        "QLabel#channelStatus,QLabel#runtimeClock{background:#172431;border:1px solid #263746;border-radius:3px;padding:3px 7px;color:#B8C8D4;font-size:9px;}"
-        "QLabel#systemStatus{background:#10251F;border:1px solid #245B47;border-radius:3px;padding:3px 8px;color:#36C98F;font-size:10px;font-weight:600;}"
-        "QWidget#settingsPanel{background:#151C24;border:1px solid #263746;}"
-        "QFrame#sidebarHeader{background:#111820;border-bottom:1px solid #263746;}"
-        "QLabel#sidebarTitle{background:transparent;color:#F3F7FA;font-size:12px;font-weight:700;}"
-        "QLabel#sidebarSubtitle{background:transparent;color:#708395;font-size:8px;letter-spacing:1px;}"
-        "QWidget#sidebarNavigation{background:#151C24;border-bottom:1px solid #263746;}"
-        "QPushButton#sidebarNavigationButton{background:#151C24;border:none;border-left:3px solid transparent;border-radius:0;padding:8px 10px;text-align:left;color:#C8D4DE;font-weight:500;}"
-        "QPushButton#sidebarNavigationButton:hover{background:#1A2530;color:#F3F7FA;}"
-        "QPushButton#sidebarNavigationButton:checked{background:#202B36;border-left:3px solid #2F88F5;color:#F3F7FA;}"
-        "QWidget#settingsContent{background:#151C24;}"
-        "QWidget#monitorWorkspace{background:#0B1118;}"
-        "QFrame#monitorPanel,QFrame#regionPanel{background:#080D13;border:1px solid #263746;border-radius:3px;}"
-        "QFrame#monitorHeader{background:#111B25;border-bottom:1px solid #263746;}"
-        "QFrame#regionHeader{background:#111B25;border-bottom:1px solid #263746;}"
-        "QLabel#sectionTitle{background:transparent;color:#F3F7FA;font-weight:600;}"
-        "QLabel#sectionHint{background:transparent;color:#8FA5B8;font-size:9px;}"
-        "QLabel#emptyState{background:#0B1118;color:#708395;padding:5px;border-bottom:1px solid #263746;}"
-        "QLabel#videoSurface{background:#080D13;border:none;}"
-        "QSplitter::handle{background:#172431;}"
-        "QSplitter::handle:hover{background:#2F88F5;}"
-        "QScrollArea{background:#0B1118;border:none;}"
-        "QScrollBar:vertical{background:#0B1118;width:9px;margin:0;border:none;}"
-        "QScrollBar::handle:vertical{background:#3A4D5E;min-height:42px;border-radius:4px;}"
-        "QScrollBar::handle:vertical:hover{background:#4DA3FF;}"
-        "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical{height:0;background:none;border:none;}"
-        "QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical{background:none;}"
-        "QGroupBox{border:1px solid #263746;border-radius:5px;margin-top:12px;padding:8px;color:#8FA5B8;background:#111B25;font-weight:600;}"
-        "QGroupBox::title{subcontrol-origin:margin;left:10px;padding:0 6px;background:#111B25;color:#8FA5B8;}"
-        "QLabel{color:#D7E2EA;}"
-        "QLabel#compactParamLabel{background:#080D13;color:#D7E2EA;padding:3px 4px;border:none;}"
-        "QWidget#dashboardStrip{background:#0B1118;}"
-        "QLabel#dashboardTitle{background:transparent;font-size:9px;color:#8FA5B8;}"
-        "QLabel#dashboardValue{background:transparent;font-size:18px;font-weight:700;color:#F3F7FA;}"
-        "QFrame#dashboardCard{background:#111B25;border:1px solid #263746;border-left:2px solid #2F88F5;border-radius:3px;}"
-        "QLineEdit,QPlainTextEdit,QComboBox,QTableWidget{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:6px;color:#F3F7FA;selection-background-color:#2F88F5;gridline-color:#263746;}"
-        "QLineEdit:focus,QPlainTextEdit:focus,QComboBox:focus{border:1px solid #4DA3FF;}"
-        "QHeaderView::section{background:#172431;color:#8FA5B8;border:none;border-right:1px solid #263746;border-bottom:1px solid #263746;padding:6px;font-weight:600;}"
-        "QSpinBox,QDoubleSpinBox{background:#0B1118;border:1px solid #263746;border-radius:4px;padding:5px 22px 5px 6px;color:#F3F7FA;selection-background-color:#2F88F5;}"
-        "QSpinBox:focus,QDoubleSpinBox:focus{border:1px solid #4DA3FF;}"
-        "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;subcontrol-position:top right;width:18px;background:#172431;border-left:1px solid #263746;border-bottom:1px solid #263746;}"
-        "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;subcontrol-position:bottom right;width:18px;background:#172431;border-left:1px solid #263746;border-top:1px solid #263746;}"
-        "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#21364A;}"
-        "QSpinBox::up-arrow,QDoubleSpinBox::up-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:6px solid #4DA3FF;}"
-        "QSpinBox::down-arrow,QDoubleSpinBox::down-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #4DA3FF;}"
-        "QComboBox::drop-down{background:#172431;border-left:1px solid #263746;width:18px;}"
-        "QComboBox::down-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #4DA3FF;}"
-        "QPushButton{background:#172431;border:1px solid #31485B;border-radius:4px;padding:7px;color:#DCE7EE;}"
-        "QPushButton:hover{background:#21364A;border-color:#4DA3FF;color:#F3F7FA;}"
-        "QPushButton:checked{background:#173B63;border-color:#4DA3FF;color:#F3F7FA;}"
-        "QPushButton#primaryButton{background:#2F88F5;border-color:#4DA3FF;color:white;font-weight:700;}"
-        "QPushButton#primaryButton:hover{background:#4DA3FF;}"
-        "QPushButton#dangerButton{background:#4A2024;border-color:#8D343C;color:#FFDDE0;font-weight:600;}"
-        "QPushButton#dangerButton:hover{background:#67282F;border-color:#F25555;}"
-        "QPushButton#logToggleButton{padding:3px 8px;color:#4DA3FF;background:transparent;border:none;font-size:9px;}"
-        "QPushButton#logToggleButton:hover{background:#172431;border:none;color:#F3F7FA;}"
-        "QWidget#actionDock{background:#151C24;border-top:1px solid #263746;}"
-        "QPushButton:disabled{background:#121B23;border-color:#26323D;color:#536574;}"
-        "QCheckBox{spacing:8px;}"
-        "QCheckBox::indicator{width:16px;height:16px;border:1px solid #3A5367;background:#0B1118;border-radius:3px;}"
-        "QCheckBox::indicator:checked{background:#2F88F5;border:1px solid #4DA3FF;}"
-    );
+    QFile styleFile(":/styles/cvds.qss");
+    if (!styleFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        throw std::runtime_error("无法加载内置界面样式 cvds.qss");
+    }
+    setStyleSheet(QString::fromUtf8(styleFile.readAll()));
 
     flashTimer_ = new QTimer(this);
     flashTimer_->setInterval(500);
@@ -1276,6 +1233,47 @@ MainWindow::MainWindow(QWidget* parent)
         }
     });
     connect(previewLabel_, &RoiPreviewLabel::imageClicked, this, &MainWindow::selectCameraAtPoint);
+
+    pipelineManager_ = new PipelineRuntimeManager(this);
+    connect(pipelineManager_, &PipelineRuntimeManager::frameReady, this, [this](
+        const QString& cameraId,
+        const QImage& image
+    ) {
+        cameraFrames_[cameraId] = image;
+        if (previewComposePending_) {
+            return;
+        }
+        previewComposePending_ = true;
+        QTimer::singleShot(100, this, [this]() {
+            previewComposePending_ = false;
+            composeMultiCameraPreview();
+        });
+    });
+    connect(
+        pipelineManager_,
+        &PipelineRuntimeManager::dashboardPayloadReady,
+        this,
+        &MainWindow::updateDashboardForCamera
+    );
+    connect(pipelineManager_, &PipelineRuntimeManager::log, this, [this](
+        const QString& cameraId,
+        const QString& message
+    ) {
+        appendLog(QString("[%1] %2").arg(cameraId, message));
+    });
+    connect(pipelineManager_, &PipelineRuntimeManager::done, this, [this](
+        const QString& cameraId,
+        const QString& summary
+    ) {
+        appendLog(QString("[%1] %2").arg(cameraId, summary));
+    });
+    connect(pipelineManager_, &PipelineRuntimeManager::failed, this, [this](
+        const QString& cameraId,
+        const QString& error
+    ) {
+        appendLog(QString("[%1] 检测失败：%2").arg(cameraId, error));
+    });
+    connect(pipelineManager_, &PipelineRuntimeManager::allFinished, this, &MainWindow::cleanupWorker);
 
     appendLog("已启动 CVDS 在线包裹流量监测，版本：" + RuntimePaths::versionText());
     appendLog("纯 C++ OpenVINO Runtime 推理引擎已就绪。");
@@ -1308,19 +1306,8 @@ MainWindow::~MainWindow() {
         previewThread_->quit();
         previewThread_->wait();
     }
-    stopDetection();
-    for (const PipelineRuntime& runtime : pipelineRuntimes_) {
-        if (runtime.thread != nullptr) {
-            runtime.thread->quit();
-            runtime.thread->wait();
-        }
-    }
-    pipelineRuntimes_.clear();
-    pipelineThread_ = nullptr;
-    pipeline_ = nullptr;
-    if (pipelineThread_ != nullptr) {
-        pipelineThread_->quit();
-        pipelineThread_->wait();
+    if (pipelineManager_ != nullptr) {
+        pipelineManager_->stopAndWait();
     }
 }
 
@@ -1351,7 +1338,7 @@ void MainWindow::setSettingsPanelCollapsed(bool collapsed) {
     if (settingsToggleButton_ != nullptr) {
         const QSignalBlocker blocker(settingsToggleButton_);
         settingsToggleButton_->setChecked(collapsed);
-        settingsToggleButton_->setText(collapsed ? "展开控制面板" : "收起控制面板");
+        settingsToggleButton_->setText(collapsed ? "v  展开控制面板" : "^  收起控制面板");
     }
     if (!collapsed) {
         QTimer::singleShot(0, this, [this]() {
@@ -1960,7 +1947,7 @@ QPushButton* MainWindow::buildSidebarNavigationButton(
     QWidget* parent
 ) {
     auto* button = new QPushButton(text, parent);
-    button->setObjectName("sidebarNavigationButton");
+    button->setObjectName("navButton");
     button->setCheckable(true);
     button->setAutoExclusive(false);
     sidebarButtons_.push_back(button);
@@ -1988,7 +1975,7 @@ void MainWindow::setSidebarPanelVisible(QWidget* panel, QPushButton* button) {
 QWidget* MainWindow::buildDashboardPanel() {
     auto* box = new QWidget();
     box->setObjectName("dashboardStrip");
-    box->setFixedHeight(56);
+    box->setFixedHeight(94);
     box->setMinimumWidth(0);
     box->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
     auto* layout = new QHBoxLayout(box);
@@ -1996,35 +1983,41 @@ QWidget* MainWindow::buildDashboardPanel() {
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(4);
 
-    auto buildCard = [box](const QString& title, QLabel** valueLabel) {
+    auto buildCard = [box](
+        const QString& title,
+        const QString& valueObjectName,
+        QLabel** valueLabel
+    ) {
         auto* card = new QFrame(box);
         card->setObjectName("dashboardCard");
         card->setMinimumWidth(0);
-        card->setFixedHeight(56);
+        card->setFixedHeight(94);
         card->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
-        auto* cardLayout = new QHBoxLayout(card);
+        auto* cardLayout = new QVBoxLayout(card);
         cardLayout->setSizeConstraint(QLayout::SetNoConstraint);
-        cardLayout->setContentsMargins(9, 3, 9, 3);
-        cardLayout->setSpacing(5);
+        cardLayout->setContentsMargins(12, 7, 12, 7);
+        cardLayout->setSpacing(1);
         auto* titleLabel = new QLabel(title, card);
-        titleLabel->setObjectName("dashboardTitle");
+        titleLabel->setObjectName("KpiTitle");
         titleLabel->setMinimumWidth(0);
-        titleLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+        titleLabel->setAlignment(Qt::AlignCenter);
+        titleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
         *valueLabel = new QLabel("0", card);
-        (*valueLabel)->setObjectName("dashboardValue");
+        (*valueLabel)->setObjectName(valueObjectName);
         (*valueLabel)->setMinimumWidth(0);
-        (*valueLabel)->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        (*valueLabel)->setAlignment(Qt::AlignCenter);
         (*valueLabel)->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-        cardLayout->addWidget(titleLabel);
         cardLayout->addStretch(1);
+        cardLayout->addWidget(titleLabel);
         cardLayout->addWidget(*valueLabel);
+        cardLayout->addStretch(1);
         return card;
     };
 
-    layout->addWidget(buildCard("累计包裹", &kpiTotalCountValueLabel_), 1);
-    layout->addWidget(buildCard("当前状态", &kpiStatusValueLabel_), 1);
-    layout->addWidget(buildCard("区域内包裹", &kpiInsideCountValueLabel_), 1);
-    layout->addWidget(buildCard("堵包次数", &kpiJamCountValueLabel_), 1);
+    layout->addWidget(buildCard("累计包裹", "KpiValue", &kpiTotalCountValueLabel_), 1);
+    layout->addWidget(buildCard("系统状态", "KpiStatusMain", &kpiStatusValueLabel_), 1);
+    layout->addWidget(buildCard("当前区域状态", "KpiStatusMain", &kpiRegionStatusValueLabel_), 1);
+    layout->addWidget(buildCard("堵包次数", "KpiValue", &kpiJamCountValueLabel_), 1);
     return box;
 }
 
@@ -2300,7 +2293,7 @@ void MainWindow::refreshRegionTable() {
             }
         }
 
-        const QString statusText = regionStatusText(state, pipelineThread_ != nullptr);
+        const QString statusText = regionStatusText(state, isDetectionRunning());
         const QString regionName = runtimeRow ? state.name : region.name;
         const bool isKpiRegion = state.id == (currentRegionId_.trimmed().isEmpty()
             ? totalCountRegionId_
@@ -2338,29 +2331,48 @@ void MainWindow::refreshRegionTable() {
     previewLabel_->setAlertFlashVisible(alertVisible);
     kpiTotalCountValueLabel_->setText(QString::number(dashboardTotalCount_));
     kpiStatusValueLabel_->setText(dashboardStatusText_);
-    kpiInsideCountValueLabel_->setText(QString::number(dashboardInsideCount_));
     kpiJamCountValueLabel_->setText(QString::number(dashboardJamCount_));
-    if (dashboardJamActive_ && dashboardFlashVisible_) {
-        kpiStatusValueLabel_->setStyleSheet("color:#F25555;font-size:18px;font-weight:700;");
+    applyStatusTone(
+        kpiStatusValueLabel_,
+        statusToneForText(dashboardStatusText_, isDetectionRunning())
+    );
+
+    QStringList regionStatusLines;
+    QString regionStatusTone = "idle";
+    auto appendRegionStatus = [&](const RegionRuntimeState& state) {
+        const QString statusText = regionStatusText(state, isDetectionRunning());
+        const QString regionName = state.name.trimmed().isEmpty() ? state.id : state.name;
+        regionStatusLines.push_back(regionName + " " + statusText);
+        const QString tone = statusToneForText(statusText, isDetectionRunning());
+        if (tone == "jam" || (tone == "running" && regionStatusTone != "jam")) {
+            regionStatusTone = tone;
+        }
+    };
+    if (!regionRuntimeStates_.isEmpty()) {
+        for (const RegionRuntimeState& state : regionRuntimeStates_) {
+            appendRegionStatus(state);
+        }
     } else {
-        kpiStatusValueLabel_->setStyleSheet("color:#36C98F;font-size:18px;font-weight:700;");
+        for (const RegionConfig& region : regions_) {
+            appendRegionStatus(buildFallbackState(region));
+        }
     }
+    if (regionStatusLines.isEmpty()) {
+        regionStatusLines.push_back("未配置区域");
+    }
+    kpiRegionStatusValueLabel_->setText(regionStatusLines.join('\n'));
+    applyStatusTone(kpiRegionStatusValueLabel_, regionStatusTone);
+
     if (systemStatusLabel_ != nullptr) {
         if (dashboardJamActive_) {
             systemStatusLabel_->setText("●  堵包告警");
-            systemStatusLabel_->setStyleSheet(
-                "background:#35191C;border:1px solid #8D343C;border-radius:3px;"
-                "padding:3px 8px;color:#F25555;font-size:10px;font-weight:600;"
-            );
-        } else if (pipelineThread_ != nullptr) {
+            applyStatusTone(systemStatusLabel_, "jam");
+        } else if (isDetectionRunning()) {
             systemStatusLabel_->setText("●  正在监测");
-            systemStatusLabel_->setStyleSheet(
-                "background:#10251F;border:1px solid #245B47;border-radius:3px;"
-                "padding:3px 8px;color:#36C98F;font-size:10px;font-weight:600;"
-            );
+            applyStatusTone(systemStatusLabel_, "running");
         } else {
             systemStatusLabel_->setText("●  系统就绪");
-            systemStatusLabel_->setStyleSheet({});
+            applyStatusTone(systemStatusLabel_, "idle");
         }
     }
 }
@@ -2723,9 +2735,6 @@ QVector<int> MainWindow::configuredHikvisionChannels() const {
 
 bool MainWindow::startConfiguredPipelines(const QStringList& sources) {
     cameraFrames_.clear();
-    pipelineRuntimes_.clear();
-    pipelineThread_ = nullptr;
-    pipeline_ = nullptr;
 
     const bool multiCamera = sources.size() > 1;
     if (multiCamera) {
@@ -2746,6 +2755,9 @@ bool MainWindow::startConfiguredPipelines(const QStringList& sources) {
             }
         }
     }
+
+    QVector<PipelineStartRequest> requests;
+    requests.reserve(sources.size());
     for (int index = 0; index < sources.size(); ++index) {
         VideoPipeline::Config config = currentDetectConfig();
         config.sourcePath = sources[index];
@@ -2754,67 +2766,25 @@ bool MainWindow::startConfiguredPipelines(const QStringList& sources) {
         if (multiCamera) {
             config.outputDir = QDir(config.outputDir).filePath(QString("camera_%1").arg(index + 1));
         }
+        requests.push_back({cameraId, config});
+    }
 
-        auto* thread = new QThread(this);
-        auto* pipeline = new VideoPipeline(config);
-        pipeline->moveToThread(thread);
-
-        PipelineRuntime runtime;
-        runtime.cameraId = cameraId;
-        runtime.thread = thread;
-        runtime.pipeline = pipeline;
-        pipelineRuntimes_.push_back(runtime);
-        if (index == 0) {
-            pipelineThread_ = thread;
-            pipeline_ = pipeline;
-        }
-
-        connect(thread, &QThread::started, pipeline, &VideoPipeline::start);
-        connect(pipeline, &VideoPipeline::frameReady, this, [this, cameraId](const QImage& image) {
-            cameraFrames_[cameraId] = image;
-            if (previewComposePending_) {
-                return;
-            }
-            previewComposePending_ = true;
-            QTimer::singleShot(100, this, [this]() {
-                previewComposePending_ = false;
-                composeMultiCameraPreview();
-            });
-        });
-        connect(pipeline, &VideoPipeline::dashboardPayloadReady, this, [this, cameraId](const QByteArray& payload) {
-            updateDashboardForCamera(cameraId, payload);
-        });
-        connect(pipeline, &VideoPipeline::log, this, [this, cameraId](const QString& message) {
-            appendLog(QString("[%1] %2").arg(cameraId, message));
-        });
-        connect(pipeline, &VideoPipeline::done, this, [this, cameraId](const QString& summary) {
-            appendLog(QString("[%1] %2").arg(cameraId, summary));
-        });
-        connect(pipeline, &VideoPipeline::failed, this, [this, cameraId](const QString& error) {
-            appendLog(QString("[%1] 检测失败：%2").arg(cameraId, error));
-        });
-        connect(pipeline, &VideoPipeline::done, pipeline, &QObject::deleteLater);
-        connect(pipeline, &VideoPipeline::failed, pipeline, &QObject::deleteLater);
-        connect(pipeline, &VideoPipeline::done, thread, &QThread::quit);
-        connect(pipeline, &VideoPipeline::failed, thread, &QThread::quit);
-        connect(thread, &QThread::finished, this, [this, thread]() {
-            cleanupPipeline(thread);
-        });
+    QString error;
+    if (pipelineManager_ == nullptr || !pipelineManager_->start(requests, &error)) {
+        QMessageBox::warning(this, "启动失败", error.isEmpty() ? "无法启动检测任务。" : error);
+        return false;
     }
 
     startButton_->setEnabled(false);
     stopButton_->setEnabled(true);
     setConfigurationEditingEnabled(false);
     setSettingsPanelCollapsed(true);
-    for (const PipelineRuntime& runtime : pipelineRuntimes_) {
-        runtime.thread->start();
-    }
     appendLog(QString("已启动 %1 路视频在线检测。").arg(sources.size()));
     return true;
 }
 
 void MainWindow::startDetection() {
-    if (pipelineThread_ != nullptr || !pipelineRuntimes_.isEmpty()) {
+    if (isDetectionRunning()) {
         QMessageBox::information(this, "任务运行中", "检测正在运行。");
         return;
     }
@@ -2888,16 +2858,8 @@ void MainWindow::startDetection() {
 }
 
 void MainWindow::stopDetection() {
-    if (!pipelineRuntimes_.isEmpty()) {
-        for (const PipelineRuntime& runtime : pipelineRuntimes_) {
-            if (runtime.pipeline != nullptr) {
-                QMetaObject::invokeMethod(runtime.pipeline, "stop", Qt::DirectConnection);
-            }
-        }
-        return;
-    }
-    if (pipeline_ != nullptr) {
-        QMetaObject::invokeMethod(pipeline_, "stop", Qt::DirectConnection);
+    if (pipelineManager_ != nullptr) {
+        pipelineManager_->stop();
     }
 }
 
@@ -3126,7 +3088,7 @@ void MainWindow::selectDrawingRegionForCamera(const QString& cameraId) {
 }
 
 bool MainWindow::isDetectionRunning() const {
-    return pipelineThread_ != nullptr || !pipelineRuntimes_.isEmpty();
+    return pipelineManager_ != nullptr && pipelineManager_->isRunning();
 }
 
 void MainWindow::appendLog(const QString& message) {
@@ -3189,38 +3151,6 @@ void MainWindow::detectionFailed(const QString& error) {
 }
 
 void MainWindow::cleanupWorker() {
-    pipeline_ = nullptr;
-    if (pipelineThread_ != nullptr) {
-        pipelineThread_->deleteLater();
-        pipelineThread_ = nullptr;
-    }
-    startButton_->setEnabled(true);
-    stopButton_->setEnabled(false);
-    setConfigurationEditingEnabled(true);
-    refreshRuntimeOverview();
-    refreshRegionTable();
-}
-
-void MainWindow::cleanupPipeline(QThread* thread) {
-    for (int i = 0; i < pipelineRuntimes_.size(); ++i) {
-        if (pipelineRuntimes_[i].thread == thread) {
-            if (pipelineRuntimes_[i].thread != nullptr) {
-                pipelineRuntimes_[i].thread->deleteLater();
-            }
-            pipelineRuntimes_.removeAt(i);
-            break;
-        }
-    }
-    if (pipelineThread_ == thread) {
-        pipelineThread_ = pipelineRuntimes_.isEmpty() ? nullptr : pipelineRuntimes_.first().thread;
-        pipeline_ = pipelineRuntimes_.isEmpty() ? nullptr : pipelineRuntimes_.first().pipeline;
-    }
-    if (!pipelineRuntimes_.isEmpty()) {
-        refreshRuntimeOverview();
-        return;
-    }
-    pipelineThread_ = nullptr;
-    pipeline_ = nullptr;
     cameraFrames_.clear();
     cameraRegionRuntimeStates_.clear();
     regionRuntimeStates_.clear();

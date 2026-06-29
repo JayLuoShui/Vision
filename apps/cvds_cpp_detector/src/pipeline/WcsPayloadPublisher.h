@@ -6,11 +6,14 @@
 #include <memory>
 #include <vector>
 
+// 维护说明：WCS 发布配置目前只打开本地 JSONL 旁路；TCP 发送由 WcsTcpClient 负责。
 struct WcsPublisherConfig {
     bool jsonlEnabled = false;
     QString jsonlPath;
 };
 
+// 维护说明：WcsPayloadPublisher 是发布出口接口。
+// VideoPipeline 只依赖该接口，避免把具体发布方式写进检测循环。
 class WcsPayloadPublisher {
 public:
     virtual ~WcsPayloadPublisher() = default;

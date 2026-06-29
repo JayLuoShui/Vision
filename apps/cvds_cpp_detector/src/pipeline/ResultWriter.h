@@ -10,6 +10,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+// 维护说明：ResultWriter 统一管理单路输出文件。
+// 文件名是对外约定，修改前要同步 README、测试和现场交付说明。
 class ResultWriter {
 public:
     bool open(const QString& outputDir, double fps, const cv::Size& frameSize, QString* error = nullptr);

@@ -8,6 +8,8 @@
 #include <QTcpSocket>
 #include <QTimer>
 
+// 维护说明：WcsTcpClient 只负责 TCP 连接、重连和发送队列。
+// 业务消息内容由 WcsMessage 构造，避免网络层掺入检测逻辑。
 class WcsTcpClient : public QObject {
     Q_OBJECT
 
